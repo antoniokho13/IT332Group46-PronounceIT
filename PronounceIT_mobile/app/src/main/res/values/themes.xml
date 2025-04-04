@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-
-    <style name="Theme.PronounceIT" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.PronounceIT" parent="android:Theme.Material.Light.NoActionBar">
+        <item name="colorPrimary">@color/bright_red</item>
+        <item name="colorPrimaryDark">@color/bright_orange</item>
+        <item name="colorAccent">@color/bright_yellow</item>
+        <item name="android:colorBackground">@color/white</item>
+    </style>
 </resources>
