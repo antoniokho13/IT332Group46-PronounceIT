@@ -1,13 +1,8 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:8080/api/auth'; // Replace with your backend URL if different
+const API_BASE_URL = 'http://localhost:8080/api/auth'; // Backend base URL
 
 const AuthService = {
-  /**
-   * Sends a login request to the backend.
-   * @param {Object} credentials - The login credentials (email and password).
-   * @returns {Promise} - The response from the backend.
-   */
   login: async (credentials) => {
     try {
       const response = await axios.post(`${API_BASE_URL}/login`, credentials);
@@ -17,11 +12,6 @@ const AuthService = {
     }
   },
 
-  /**
-   * Sends a register request to the backend.
-   * @param {Object} userData - The user data for registration.
-   * @returns {Promise} - The response from the backend.
-   */
   register: async (userData) => {
     try {
       const response = await axios.post(`${API_BASE_URL}/register`, userData);
