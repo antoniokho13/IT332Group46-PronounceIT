@@ -1,7 +1,16 @@
 import React, { useState } from 'react';
+<<<<<<< Updated upstream
 import './Login.css';
 import logo from '../assets/logo.png';
+<<<<<<< Updated upstream
 import AuthService from '../service/AuthService'; // Import AuthService
+=======
+=======
+import logo from '../assets/images/logo.png';
+import AuthService from '../service/AuthService'; // Import AuthService
+import './Login.css';
+>>>>>>> Stashed changes
+>>>>>>> Stashed changes
 
 const Login = () => {
   const [isLogin, setIsLogin] = useState(true);
