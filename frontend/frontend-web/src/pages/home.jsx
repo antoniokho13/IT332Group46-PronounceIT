@@ -1,17 +1,95 @@
+import { faFacebookF, faInstagram, faTwitter, faYoutube } from '@fortawesome/free-brands-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import React, { useEffect } from 'react';
 import '../assets/css/home.css';
 
 function Home() {
   useEffect(() => {
-    // Smooth scrolling for anchor links
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-      anchor.addEventListener('click', function(e) {
+    // Function to handle smooth scrolling
+    const handleSmoothScroll = (e) => {
+      const href = e.currentTarget.getAttribute('href');
+      
+      // Only handle internal links
+      if (href && href.startsWith('#')) {
         e.preventDefault();
-        document.querySelector(this.getAttribute('href')).scrollIntoView({
-          behavior: 'smooth'
-        });
+        const targetId = href;
+        const targetElement = document.querySelector(targetId);
+        
+        if (targetElement) {
+          const headerOffset = 80; // Adjust based on your header height
+          const elementPosition = targetElement.getBoundingClientRect().top;
+          const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+          
+          window.scrollTo({
+            top: offsetPosition,
+            behavior: 'smooth'
+          });
+        }
+      }
+    };
+  
+    // Add event listeners for smooth scrolling
+    const addSmoothScrollListeners = () => {
+      const anchors = document.querySelectorAll('a[href^="#"]');
+      anchors.forEach(anchor => {
+        // Remove any existing listeners first
+        anchor.removeEventListener('click', handleSmoothScroll);
+        // Add the new listener
+        anchor.addEventListener('click', handleSmoothScroll);
       });
-    });
+    };
+    
+    // Set up intersection observer for scroll animations
+    const setupScrollAnimations = () => {
+      const sections = document.querySelectorAll('section');
+      const animatedElements = document.querySelectorAll(
+        '.feature-card, .team-member, .testimonial-card, .faq-item, .step, h2'
+      );
+      
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('animate-in');
+            
+            // For elements that should bounce
+            if (entry.target.classList.contains('feature-card') || 
+                entry.target.classList.contains('team-member')) {
+              entry.target.classList.add('bounce-in');
+            }
+            
+            // Only animate once
+            observer.unobserve(entry.target);
+          }
+        });
+      }, {
+        threshold: 0.15,
+        rootMargin: '-50px'
+      });
+      
+      // Observe sections
+      sections.forEach(section => {
+        observer.observe(section);
+      });
+      
+      // Observe individual elements
+      animatedElements.forEach(element => {
+        observer.observe(element);
+      });
+    };
+  
+    // Initial setup
+    addSmoothScrollListeners();
+    // Add a small delay to ensure DOM is fully loaded
+    setTimeout(() => {
+      setupScrollAnimations();
+    }, 100);
+    
+    // Clean up function
+    return () => {
+      document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.removeEventListener('click', handleSmoothScroll);
+      });
+    };
   }, []);
 
   return (
@@ -29,8 +107,8 @@ function Home() {
             <ul>
               <li><a href="#features">Features</a></li>
               <li><a href="#how-it-works">How It Works</a></li>
+              <li><a href="#team">Developers</a></li>
               <li><a href="#testimonials">Testimonials</a></li>
-              
               <li><a href="#faq">FAQ</a></li>
             </ul>
           </nav>
@@ -57,33 +135,33 @@ function Home() {
 </section> 
 
       {/* Features Section */}
-      <section id="features">
-        <div className="container">
-          <h2>Why Kids & Parents Love PronounceIT</h2>
-          <div className="features-grid">
-            <div className="feature-card">
-              <div className="feature-icon">🎮</div>
-              <h3>Gamified Learning</h3>
-              <p>Fun challenges and rewards keep kids engaged and excited to learn more.</p>
-            </div>
-            <div className="feature-card">
-              <div className="feature-icon">🏆</div>
-              <h3>Achievements & Rewards</h3>
-              <p>Earn badges, points, and prizes as you make progress on your learning journey.</p>
-            </div>
-            <div className="feature-card">
-              <div className="feature-icon">🏫</div>
-              <h3>For Schools & Parents</h3>
-              <p>Track progress, set goals, and customize learning paths for your children.</p>
-            </div>
-            <div className="feature-card">
-              <div className="feature-icon">🌍</div>
-              <h3>Safe & Kid-Friendly</h3>
-              <p>No ads, no distractions, just a secure environment designed for children.</p>
-            </div>
-          </div>
-        </div>
-      </section>
+<section id="features">
+  <div className="container">
+    <h2>Why Kids & Parents Love PronounceIT</h2>
+    <div className="features-grid">
+      <div className="feature-card">
+        <div className="feature-icon gaming">🎮</div>
+        <h3>Gamified Learning</h3>
+        <p>Fun challenges and rewards keep kids engaged and excited to learn more.</p>
+      </div>
+      <div className="feature-card">
+        <div className="feature-icon trophy">🏆</div>
+        <h3>Achievements & Rewards</h3>
+        <p>Earn badges, points, and prizes as you make progress on your learning journey.</p>
+      </div>
+      <div className="feature-card">
+        <div className="feature-icon school">🏫</div>
+        <h3>For Schools & Parents</h3>
+        <p>Track progress, set goals, and customize learning paths for your children.</p>
+      </div>
+      <div className="feature-card">
+        <div className="feature-icon globe">🌍</div>
+        <h3>Safe & Kid-Friendly</h3>
+        <p>No ads, no distractions, just a secure environment designed for children.</p>
+      </div>
+    </div>
+  </div>
+</section>
 
       {/* How It Works Section */}
       <section id="how-it-works">
@@ -125,6 +203,59 @@ function Home() {
         </div>
       </section>
 
+      {/* Development Team Section */}
+<section id="team">
+  <div className="container">
+    <h2>Meet Our Development Team</h2>
+    <div className="team-grid">
+      <div className="team-member">
+        <div className="team-photo">
+          {/* Placeholder for photo */}
+          <img src={require('../assets/images/mel.png')} alt="Rommel John Pobadora" />
+        </div>
+        <h3>Rommel John Pobadora</h3>
+        <p className="team-role">Frontend Developer</p>
+      </div>
+      
+      <div className="team-member">
+        <div className="team-photo">
+          {/* Placeholder for photo */}
+          <img src={require('../assets/images/raymund.png')} alt="Raymund Christian Laude" />
+        </div>
+        <h3>Raymund Christian Laude</h3>
+        <p className="team-role">Mobile Developer</p>
+      </div>
+      
+      <div className="team-member">
+        <div className="team-photo">
+          {/* Placeholder for photo */}
+          <img src={require('../assets/images/antonio.png')} alt="Antonio Abangan Kho" />
+        </div>
+        <h3>Antonio Abangan Kho</h3>
+        <p className="team-role">Lead Developer</p>
+      </div>
+      
+      <div className="team-member">
+        <div className="team-photo">
+          {/* Placeholder for photo */}
+          <img src={require('../assets/images/barry.png')} alt="Christian Barry Alico" />
+        </div>
+        <h3>Christian Barry Alico</h3>
+        <p className="team-role">Backend Developer</p>
+      </div>
+      
+      <div className="team-member">
+        <div className="team-photo">
+          {/* Placeholder for photo */}
+          <img src={require('../assets/images/rhandulf.png')} alt="Rhandulf Saceda" />
+        </div>
+        <h3>Rhandulf Saceda</h3>
+        <p className="team-role">UI/UX Designer</p>
+      </div>
+    </div>
+  </div>
+</section>
+
       {/* Testimonials Section */}
       <section id="testimonials">
         <div className="container">
@@ -135,7 +266,7 @@ function Home() {
                 <img src="https://placehold.co/100x100/FF9671/FFF?text=Parent" alt="Parent" />
               </div>
               <div className="testimonial-content">
-                <p>"My child loves learning with PronounceIT! It's amazing to see how excited he gets about math now."</p>
+                <p>"My child loves learning with PronounceIT! It's amazing to see how excited he gets about speaking now."</p>
                 <p className="testimonial-author">- Sarah J., Parent</p>
               </div>
             </div>
@@ -145,7 +276,7 @@ function Home() {
               </div>
               <div className="testimonial-content">
                 <p>"As a teacher, I appreciate how PronounceIT makes it easy to track student progress and identify areas where they need help."</p>
-                <p className="testimonial-author">- Michael T., 3rd Grade Teacher</p>
+                <p className="testimonial-author">- Michael T.,  Elementary Teacher</p>
               </div>
             </div>
             <div className="testimonial-card">
@@ -177,11 +308,11 @@ function Home() {
             </div>
             <div className="faq-item">
               <h3>What subjects are covered?</h3>
-              <p>PronounceIT covers core subjects including math, reading, science, and social studies, with content tailored to different age groups from preschool to middle school.</p>
+              <p>PronounceIT content tailored to different age groups from preschool to middle school.</p>
             </div>
             <div className="faq-item">
-              <h3>Can I cancel my subscription anytime?</h3>
-              <p>Yes, you can cancel your subscription at any time. There are no long-term commitments or cancellation fees.</p>
+              <h3>Can I cancel my delete anytime?</h3>
+              <p>Yes, you can cancel your delete at any time. There are no long-term commitments.</p>
             </div>
           </div>
         </div>
@@ -193,7 +324,6 @@ function Home() {
           <h2>Start Your Child's Fun Learning Journey Today!</h2>
           <p>Join thousands of families who are making education exciting with PronounceIT.</p>
           <a href="#" className="btn btn-primary btn-large">Get Started for Free</a>
-          <p className="small">No credit card required. 7-day free trial.</p>
         </div>
       </section>
 
@@ -224,14 +354,22 @@ function Home() {
               </ul>
             </div>
             <div className="footer-col">
-              <h4>Stay Connected</h4>
-              <div className="social-links">
-                <a href="#" className="social-icon">FB</a>
-                <a href="#" className="social-icon">TW</a>
-                <a href="#" className="social-icon">IG</a>
-                <a href="#" className="social-icon">YT</a>
-              </div>
-            </div>
+  <h4>Stay Connected</h4>
+  <div className="social-links">
+    <a href="#" className="social-icon">
+      <FontAwesomeIcon icon={faFacebookF} />
+    </a>
+    <a href="#" className="social-icon">
+      <FontAwesomeIcon icon={faTwitter} />
+    </a>
+    <a href="#" className="social-icon">
+      <FontAwesomeIcon icon={faInstagram} />
+    </a>
+    <a href="#" className="social-icon">
+      <FontAwesomeIcon icon={faYoutube} />
+    </a>
+  </div>
+</div>
           </div>
           <div className="footer-bottom">
             <p>&copy; 2025 PronounceIT. All rights reserved.</p>

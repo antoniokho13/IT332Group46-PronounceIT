@@ -35,6 +35,8 @@ h2 {
 
 section {
   padding: 80px 0;
+  scroll-margin-top: 120px; /* Accounts for fixed header height */
+  scroll-behavior: smooth;
 }
 
 a {
@@ -224,8 +226,127 @@ nav ul li a:hover {
   padding: 30px;
   border-radius: 15px;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
   text-align: center;
+  cursor: pointer;
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+}
+
+/* Rainbow gradient border effect on hover */
+.feature-card::before {
+  content: '';
+  position: absolute;
+  top: -5px;
+  left: -5px;
+  right: -5px;
+  bottom: -5px;
+  z-index: -1;
+  background: linear-gradient(
+    90deg, 
+    #ff8a8a, /* Lighter red */
+    #ffbe7b, /* Lighter orange */
+    #fff07b, /* Lighter yellow */
+    #9affaf, /* Lighter green */
+    #9ebbff, /* Lighter blue */
+    #c48aff, /* Lighter indigo */
+    #ffb0ff  /* Lighter violet */
+  );
+  background-size: 400% 400%;
+  border-radius: 20px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.feature-card:hover::before {
+  opacity: 1;
+  animation: rainbow-wave 3s linear infinite;
+}
+
+@keyframes rainbow-wave {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Ensure card content stays above the gradient */
+.feature-card::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(
+    45deg,
+    rgba(67, 97, 238, 0.05) 0%,    /* Lighter blue tint */
+    rgba(255, 255, 255, 0.9) 45%,  /* Nearly white */
+    rgba(255, 255, 255, 0.9) 55%,  /* Nearly white */
+    rgba(67, 97, 238, 0.05) 100%   /* Lighter blue tint */
+  );
+  background-size: 200% 200%;
+  border-radius: 13px;
+  z-index: -1;
+  transition: background 99s ease;
+}
+
+.feature-card:hover::after {
+  background-color: #f8f9ff;
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: 0% 0%;
+  }
+  50% {
+    background-position: 100% 100%;
+  }
+  100% {
+    background-position: 0% 0%;
+  }
+}
+
+/* Create a subtle highlight effect */
+.feature-card p {
+  position: relative;
+  z-index: 1;
+  color: #333333;  /* Darker text for better contrast */
+}
+
+.feature-card:hover p {
+  color: #333;
+  animation: text-focus 1.5s ease;
+}
+
+@keyframes text-focus {
+  0% {
+    opacity: 0.9;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.9;
+  }
+}
+
+.feature-card h3 {
+  margin-bottom: 15px;
+  color: #1a1a2e;  /* Darker text for headings */
+  transition: color 0.3s ease;
+  position: relative;
+}
+
+.feature-card:hover h3 {
+  color: #3355dd;  /* Slightly lighter blue for contrast */
 }
 
 .feature-card:hover {
@@ -233,14 +354,64 @@ nav ul li a:hover {
   box-shadow: 0 15px 30px rgba(0, 0, 0, 0.1);
 }
 
+/* Feature Icon Animations */
 .feature-icon {
   font-size: 3rem;
   margin-bottom: 20px;
+  transition: transform 0.3s ease;
+  display: inline-block;
+  background-color: rgba(255, 255, 255, 0.8);
+  padding: 10px;
+  border-radius: 50%;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
 }
 
-.feature-card h3 {
-  margin-bottom: 15px;
-  color: #2b2d42;
+/* Gaming icon animation */
+.feature-icon.gaming {
+  transition: transform 0.3s ease;
+}
+
+.feature-card:hover .feature-icon.gaming {
+  animation: wiggle 0.8s ease infinite;
+}
+
+@keyframes wiggle {
+  0% { transform: rotate(0deg); }
+  25% { transform: rotate(-15deg); }
+  50% { transform: rotate(0deg); }
+  75% { transform: rotate(15deg); }
+  100% { transform: rotate(0deg); }
+}
+
+/* Trophy icon animation */
+.feature-card:hover .feature-icon.trophy {
+  animation: bounce 0.8s ease infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-15px); }
+}
+
+/* School icon animation */
+.feature-card:hover .feature-icon.school {
+  animation: pulse 1.2s ease infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+/* Globe icon animation */
+.feature-card:hover .feature-icon.globe {
+  animation: spin 3s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 /* How It Works Section */
@@ -312,6 +483,76 @@ nav ul li a:hover {
   transform: translate(-50%, -50%) scale(1.2);
 }
 
+/* Team Section */
+#team {
+  background-color: #f8f9fa;
+  padding: 80px 0;
+}
+
+.team-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 40px;
+  margin-top: 40px;
+}
+
+.team-member {
+  text-align: center;
+  transition: transform 0.3s ease;
+}
+
+.team-member:hover {
+  transform: translateY(-10px);
+}
+
+.team-photo {
+  width: 150px;
+  height: 150px;
+  border-radius: 50%;
+  overflow: hidden;
+  margin: 0 auto 20px;
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+  background-color: #e9ecef;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.team-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.photo-placeholder {
+  font-size: 3rem;
+  font-weight: bold;
+  color: #4361ee;
+}
+
+.team-member h3 {
+  margin-bottom: 5px;
+  color: #2b2d42;
+}
+
+.team-role {
+  color: #4361ee;
+  font-weight: 600;
+}
+
+/* Responsive styles for team section */
+@media (max-width: 768px) {
+  .team-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 576px) {
+  .team-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* Testimonials Section */
 .testimonials-grid {
   display: grid;
@@ -355,83 +596,14 @@ nav ul li a:hover {
   font-style: normal;
 }
 
-/* Pricing Section */
-#pricing {
-  background-color: #f0f4ff;
-}
-
-.pricing-grid {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 30px;
-  margin-top: 40px;
-}
-
-.pricing-card {
-  background-color: white;
-  border-radius: 15px;
-  padding: 40px 30px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-  flex: 1;
-  min-width: 280px;
-  max-width: 350px;
-  transition: transform 0.3s ease;
-}
-
-.pricing-card:hover {
-  transform: translateY(-10px);
-}
-
-.pricing-card.featured {
-  border: 2px solid #4361ee;
-  transform: scale(1.05);
-}
-
-.pricing-card.featured:hover {
-  transform: scale(1.05) translateY(-10px);
-}
-
-.pricing-header {
-  text-align: center;
-  margin-bottom: 30px;
-}
-
-.pricing-header h3 {
-  color: #2b2d42;
-  font-size: 1.5rem;
-}
-
-.price {
-  font-size: 2.5rem;
-  font-weight: 700;
-  color: #4361ee;
-}
-
-.price span {
-  font-size: 1rem;
-  font-weight: 400;
-  color: #666;
-}
-
-.pricing-features {
-  margin-bottom: 30px;
-}
-
-.pricing-features ul li {
-  padding: 8px 0;
-  border-bottom: 1px solid #eee;
-}
-
-.pricing-features ul li:last-child {
-  border-bottom: none;
-}
-
-.pricing-cta {
-  text-align: center;
-}
 
 /* FAQ Section */
+#faq {
+  padding-top: 80px;
+  position: relative;
+  z-index: 1;
+}
+
 .faq-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
@@ -444,6 +616,12 @@ nav ul li a:hover {
   border-radius: 15px;
   padding: 30px;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s ease;
+}
+
+.faq-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
 }
 
 .faq-item h3 {
@@ -625,4 +803,123 @@ footer {
     flex-wrap: wrap;
     justify-content: center;
   }
+}
+
+section,
+.feature-card,
+.team-member,
+.testimonial-card,
+.faq-item,
+.step,
+section h2 {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
+}
+
+/* Animated state - elements appear with slide up animation */
+.animate-in {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Special bounce animation for feature cards and team members */
+@keyframes bounce-in {
+  0% {
+    transform: translateY(30px);
+    opacity: 0;
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+  75% {
+    transform: translateY(5px);
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.bounce-in {
+  animation: bounce-in 3s cubic-bezier(0.215, 0.610, 0.355, 1.000) forwards;
+}
+
+/* Section headings appear slightly before content */
+section h2 {
+  transition-delay: 0.1s;
+}
+
+/* Staggered animations for children elements in each section */
+section.animate-in .feature-card:nth-child(1),
+section.animate-in .team-member:nth-child(1),
+section.animate-in .testimonial-card:nth-child(1),
+section.animate-in .faq-item:nth-child(1),
+section.animate-in .step:nth-child(1) {
+  transition-delay: 0.2s;
+}
+
+section.animate-in .feature-card:nth-child(2),
+section.animate-in .team-member:nth-child(2),
+section.animate-in .testimonial-card:nth-child(2),
+section.animate-in .faq-item:nth-child(2),
+section.animate-in .step:nth-child(2) {
+  transition-delay: 0.3s;
+}
+
+section.animate-in .feature-card:nth-child(3),
+section.animate-in .team-member:nth-child(3),
+section.animate-in .testimonial-card:nth-child(3),
+section.animate-in .faq-item:nth-child(3),
+section.animate-in .step:nth-child(3) {
+  transition-delay: 0.4s;
+}
+
+section.animate-in .feature-card:nth-child(4),
+section.animate-in .team-member:nth-child(4),
+section.animate-in .faq-item:nth-child(4),
+section.animate-in .step:nth-child(4) {
+  transition-delay: 0.5s;
+}
+
+section.animate-in .team-member:nth-child(5) {
+  transition-delay: 0.6s;
+}
+
+/* Add this at the very end of your CSS file */
+
+/* Ensure hero section is always visible without animation */
+#hero {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Add an extra bounce effect when clicking buttons */
+.btn:active {
+  transform: scale(0.95);
+  transition: transform 0.1s;
+}
+
+/* Enhance hover animations */
+.feature-card:hover,
+.team-member:hover,
+.faq-item:hover {
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes float {
+  0% { transform: translateY(-10px); }
+  50% { transform: translateY(-15px); }
+  100% { transform: translateY(-10px); }
+}
+
+/* Make sure elements above the fold are visible immediately */
+#hero, 
+#hero h1,
+#hero p,
+#hero img,
+#hero .btn,
+header {
+  opacity: 1;
+  transform: translateY(0);
 }
