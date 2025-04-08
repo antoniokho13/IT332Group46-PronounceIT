@@ -141,22 +141,22 @@ function Home() {
     <h2>Why Kids & Parents Love PronounceIT</h2>
     <div className="features-grid">
       <div className="feature-card">
-        <div className="feature-icon gaming">ðŸŽ®</div>
+        <div className="feature-icon gaming">🎮</div>
         <h3>Gamified Learning</h3>
         <p>Fun challenges and rewards keep kids engaged and excited to learn more.</p>
       </div>
       <div className="feature-card">
-        <div className="feature-icon trophy">ðŸ†</div>
+        <div className="feature-icon trophy">🏆</div>
         <h3>Achievements & Rewards</h3>
         <p>Earn badges, points, and prizes as you make progress on your learning journey.</p>
       </div>
       <div className="feature-card">
-        <div className="feature-icon school">ðŸ«</div>
+        <div className="feature-icon school">🏫</div>
         <h3>For Schools & Parents</h3>
         <p>Track progress, set goals, and customize learning paths for your children.</p>
       </div>
       <div className="feature-card">
-        <div className="feature-icon globe">ðŸŒ</div>
+        <div className="feature-icon globe">🌍</div>
         <h3>Safe & Kid-Friendly</h3>
         <p>No ads, no distractions, just a secure environment designed for children.</p>
       </div>
