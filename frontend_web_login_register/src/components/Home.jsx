@@ -312,8 +312,8 @@ function Home() {
               <p>PronounceIT content tailored to different age groups from preschool to middle school.</p>
             </div>
             <div className="faq-item">
-              <h3>Can I cancel my delete anytime?</h3>
-              <p>Yes, you can cancel your delete at any time. There are no long-term commitments.</p>
+              <h3>Can I cancel my subscription at any time?</h3>
+              <p>Yes, you can cancel your subscription at any time. There are no long-term commitments.</p>
             </div>
           </div>
         </div>
