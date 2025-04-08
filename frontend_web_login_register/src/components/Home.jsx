@@ -199,7 +199,7 @@ function Home() {
           <h2>See PronounceIT in Action</h2>
           <div className="demo-container">
             <img src="https://placehold.co/800x450/845EC2/FFF?text=Demo+Video+Placeholder" alt="EduPlay Demo" className="demo-image" />
-            <div className="play-button">â–¶ï¸</div>
+            <div className="play-button">⏯️</div>
           </div>
         </div>
       </section>
