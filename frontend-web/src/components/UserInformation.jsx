@@ -1,78 +1,112 @@
 import {
-    faEdit,
-    faEnvelope,
-    faGraduationCap,
-    faLock,
-    faSave,
-    faTimes,
-    faUser
+  faEdit,
+  faEnvelope,
+  faGraduationCap,
+  faLock,
+  faSave,
+  faTimes,
+  faUser,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import "../assets/css/UserInformation.css";
+import { getUserById, updateUser } from "../services/userService";
 
 const UserInformation = () => {
-  // Mock user data that would typically come from registration or API
-  const [userData, setUserData] = useState({
-    username: "Melgod",
-    email: "melgod@example.com",
-    role: "student"
-  });
-
+  const [userData, setUserData] = useState({ firstName: "", lastName: "", email: "", role: "" });
+  const [formData, setFormData] = useState({ firstName: "", lastName: "", email: "", password: "", confirmPassword: "" });
   const [isEditing, setIsEditing] = useState(false);
-  const [formData, setFormData] = useState({
-    ...userData,
-    password: "",
-    confirmPassword: ""
-  });
-  
   const [passwordError, setPasswordError] = useState("");
+  const [saveError, setSaveError] = useState("");
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const storedUser = JSON.parse(localStorage.getItem("user"));
+        if (token && storedUser && storedUser.userId) {
+          const userData = await getUserById(storedUser.userId, token);
+          setUserData(userData);
+          setFormData({ ...userData, password: "", confirmPassword: "" });
+        } else {
+          throw new Error("User not found in localStorage");
+        }
+      } catch (error) {
+        console.error("Failed to fetch user data:", error);
+        localStorage.removeItem("user");
+        localStorage.removeItem("token");
+        navigate("/login");
+      }
+    };
+
+    fetchUserData();
+  }, [navigate]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
+      [name]: value,
     }));
-    
+
     // Clear password error when typing
     if (name === "password" || name === "confirmPassword") {
       setPasswordError("");
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    
+  
     // Validate passwords match if both are provided
     if (formData.password || formData.confirmPassword) {
       if (formData.password !== formData.confirmPassword) {
         setPasswordError("Passwords do not match");
         return;
       }
-      
+  
       if (formData.password.length < 6) {
         setPasswordError("Password must be at least 6 characters");
         return;
       }
     }
-    
-    // Update user data but exclude password fields
-    const { password, confirmPassword, ...dataToUpdate } = formData;
-    setUserData(dataToUpdate);
-    setIsEditing(false);
+  
+    try {
+      const { password, confirmPassword, ...dataToUpdate } = formData;
+      const token = localStorage.getItem("token");
+      const updatedUser = await updateUser(userData.id, { ...dataToUpdate, password }, token);
+  
+      // Update the userData state with the updated user details
+      setUserData(updatedUser);
+  
+      // Reset the form and exit edit mode
+      setFormData({ ...updatedUser, password: "", confirmPassword: "" });
+      setIsEditing(false);
+      setSaveError(""); // Clear any previous save errors
+    } catch (error) {
+      console.error("Failed to update user data:", error);
+      setSaveError("Failed to save changes. Please try again.");
+    }
   };
 
   const cancelEdit = () => {
-    setFormData({
-      ...userData,
-      password: "",
-      confirmPassword: ""
-    });
+    setFormData({ ...userData, password: "", confirmPassword: "" });
     setPasswordError("");
+    setSaveError("");
     setIsEditing(false);
   };
+
+  const getRoleDisplayName = (role) => {
+    if (role === "USER") return "Student";
+    if (role === "ADMIN") return "Admin";
+    return "Unknown";
+  };
+
+  if (!userData.firstName) {
+    return <div>Loading...</div>; // Show a loading state while fetching data
+  }
 
   return (
     <div className="profile-container">
@@ -81,8 +115,8 @@ const UserInformation = () => {
         <div className="container">
           <div className="logo">
             <Link to="/">
-              <img 
-                src={require('../assets/images/logo.png')} 
+              <img
+                src={require("../assets/images/logo.png")}
                 alt="Pronounceit Logo"
               />
             </Link>
@@ -108,7 +142,7 @@ const UserInformation = () => {
 
           <div className="profile-avatar-section">
             <div className="profile-avatar">
-              <span>{userData.username.charAt(0)}</span>
+              <span>{userData.firstName.charAt(0)}</span>
             </div>
           </div>
 
@@ -118,17 +152,37 @@ const UserInformation = () => {
                 <FontAwesomeIcon icon={faUser} />
               </div>
               <div className="detail-content">
-                <h3>Username</h3>
+                <h3>First Name</h3>
                 {isEditing ? (
                   <input
                     type="text"
-                    name="username"
-                    value={formData.username}
+                    name="firstName"
+                    value={formData.firstName}
                     onChange={handleChange}
                     className="edit-in-place"
                   />
                 ) : (
-                  <p>{userData.username}</p>
+                  <p>{userData.firstName}</p>
+                )}
+              </div>
+            </div>
+
+            <div className="detail-item">
+              <div className="detail-icon">
+                <FontAwesomeIcon icon={faUser} />
+              </div>
+              <div className="detail-content">
+                <h3>Last Name</h3>
+                {isEditing ? (
+                  <input
+                    type="text"
+                    name="lastName"
+                    value={formData.lastName}
+                    onChange={handleChange}
+                    className="edit-in-place"
+                  />
+                ) : (
+                  <p>{userData.lastName}</p>
                 )}
               </div>
             </div>
@@ -159,11 +213,10 @@ const UserInformation = () => {
               </div>
               <div className="detail-content">
                 <h3>Account Type</h3>
-                <p>{userData.role === "student" ? "Student" : "Teacher"}</p>
+                <p>{getRoleDisplayName(userData.role)}</p>
               </div>
             </div>
 
-            {/* Password fields only show in edit mode */}
             {isEditing && (
               <>
                 <div className="detail-item">
@@ -197,28 +250,29 @@ const UserInformation = () => {
                       placeholder="Confirm new password"
                       className="edit-in-place"
                     />
-                    {passwordError && <div className="error-message">{passwordError}</div>}
+                    {passwordError && (
+                      <div className="error-message">{passwordError}</div>
+                    )}
                   </div>
                 </div>
               </>
             )}
           </div>
 
+          {saveError && <div className="error-message">{saveError}</div>}
+
           <div className="profile-footer">
             {!isEditing ? (
-              <>
-                <button className="edit-button footer-edit" onClick={() => setIsEditing(true)}>
-                  <FontAwesomeIcon icon={faEdit} /> Edit Profile
-                </button>
-                <Link to="/user-dashboard" className="back-button">
-                  Back to Dashboard
-                </Link>
-              </>
-            ) : (
-              <Link to="/user-dashboard" className="back-button">
-                Back to Dashboard
-              </Link>
-            )}
+              <button
+                className="edit-button footer-edit"
+                onClick={() => setIsEditing(true)}
+              >
+                <FontAwesomeIcon icon={faEdit} /> Edit Profile
+              </button>
+            ) : null}
+            <Link to="/user-dashboard" className="back-button">
+              Back to Dashboard
+            </Link>
           </div>
         </div>
       </div>
