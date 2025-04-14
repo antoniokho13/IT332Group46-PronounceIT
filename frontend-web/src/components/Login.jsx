@@ -54,7 +54,7 @@ const Login = () => {
     if (isLogin) {
       alert(`Welcome back, ${formData.username}!`);
       // After successful login, navigate to dashboard
-      navigate('/dashboard');
+      navigate('/user-dashboard');
     } else {
       alert(`Account created for ${formData.username} (${formData.role})!\nYou can now log in.`);
       // Reset form after successful registration

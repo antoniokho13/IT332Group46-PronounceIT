@@ -1,0 +1,431 @@
+/* Header styles */
+.profile-header {
+  background-color: #fff;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.08);
+  padding: 8px 0;
+  position: fixed;
+  top: 0; /* Fix the typo "A0" to "0" */
+  left: 0;
+  right: 0;
+  z-index: 1500;
+  width: 100%;
+  overflow: hidden;
+  height: 100px; /* Match Dashboard height of 100px */
+}
+
+.profile-header::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 2px; /* Slightly thinner rainbow line to match Dashboard */
+  background: linear-gradient(
+    90deg, 
+    #ff8a8a, 
+    #ffbe7b, 
+    #fff07b, 
+    #9affaf, 
+    #9ebbff, 
+    #c48aff, 
+    #ffb0ff
+  );
+  background-size: 400% 400%;
+  animation: rainbow-wave 5s linear infinite;
+}
+
+@keyframes rainbow-wave {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.profile-header .container {
+  width: 90%;
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.profile-header .logo {
+  display: flex;
+  align-items: center;
+}
+
+.profile-header .logo img {
+  height: 84px; /* Updated to match Dashboard.css logo height */
+  width: auto;
+  transition: transform 0.3s ease;
+}
+
+.profile-header .logo img:hover {
+  transform: scale(1.05);
+}
+
+/* Profile Content - Add animated gradient background */
+.profile-container {
+  min-height: 100vh;
+  background: linear-gradient(
+    -45deg, 
+    #ee7752, 
+    #e73c7e, 
+    #23a6d5, 
+    #23d5ab
+  );
+  background-size: 400% 400%;
+  animation: gradient-animation 5s ease infinite;
+}
+
+/* Add the animation keyframes for the gradient */
+@keyframes gradient-animation {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Update the profile content to have higher opacity background */
+.profile-content {
+  padding-top: 120px; /* Adjusted for 100px header height */
+  width: 90%;
+  max-width: 800px;
+  margin: 0 auto;
+  padding-bottom: 50px;
+}
+
+/* Enhance card with higher opacity to stand out against gradient */
+.profile-card {
+  background-color: rgba(255, 255, 255, 0.95);
+  border-radius: 15px;
+  box-shadow: 0 6px 30px rgba(0, 0, 0, 0.15);
+  padding: 40px;
+  margin-top: 30px;
+  position: relative;
+  overflow: hidden;
+}
+
+.profile-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  background: linear-gradient(
+    90deg, 
+    #9ebbff, 
+    #c48aff, 
+    #ffb0ff
+  );
+  background-size: 200% 200%;
+  animation: rainbow-wave 5s linear infinite;
+}
+
+.profile-header-section {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.profile-header-section h1 {
+  font-size: 28px;
+  color: #333;
+  margin: 0;
+}
+
+.edit-button, .save-button, .cancel-button {
+  padding: 8px 15px;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.edit-button {
+  background-color: #f0f0ff;
+  color: #4f46e5;
+}
+
+.edit-button:hover {
+  background-color: #e0e0ff;
+  transform: translateY(-2px);
+}
+
+.edit-controls {
+  display: flex;
+  gap: 10px;
+}
+
+.save-button {
+  background-color: #4f46e5;
+  color: white;
+}
+
+.save-button:hover {
+  background-color: #4338ca;
+  transform: translateY(-2px);
+}
+
+.cancel-button {
+  background-color: #f1f1f1;
+  color: #666;
+}
+
+.cancel-button:hover {
+  background-color: #e0e0e0;
+  transform: translateY(-2px);
+}
+
+/* Avatar Section */
+.profile-avatar-section {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 30px;
+}
+
+.profile-avatar {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background-color: #4f46e5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 48px;
+  border: 4px solid white;
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* Profile Details */
+.profile-details {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 25px;
+  margin-bottom: 30px;
+}
+
+.detail-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 15px;
+  padding: 15px;
+  border-radius: 10px;
+  background-color: #f8f9fc;
+  transition: all 0.3s ease;
+  min-height: 70px;
+}
+
+.detail-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.05);
+}
+
+.detail-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background-color: #f0f0ff;
+  color: #4f46e5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.detail-content h3 {
+  margin: 0 0 5px 0;
+  font-size: 14px;
+  color: #666;
+  font-weight: 500;
+}
+
+.detail-content p {
+  margin: 0;
+  font-size: 16px;
+  color: #333;
+  font-weight: 600;
+}
+
+.detail-content .error-message {
+  color: #e53e3e;
+  font-size: 12px;
+  margin-top: 6px;
+  font-weight: 500;
+}
+
+/* Edit Form */
+.profile-form {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group label {
+  font-size: 14px;
+  color: #666;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.form-group input {
+  padding: 12px 15px;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 16px;
+  transition: all 0.2s ease;
+}
+
+.form-group input:focus {
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
+  outline: none;
+}
+
+.error-message {
+  color: #e53e3e;
+  font-size: 12px;
+  margin-top: 4px;
+  font-weight: 500;
+}
+
+.form-group input.error {
+  border-color: #e53e3e;
+}
+
+/* Edit In Place */
+.edit-in-place {
+  padding: 8px 10px;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  font-size: 16px;
+  color: #333;
+  font-weight: 500;
+  width: 100%;
+  transition: all 0.2s ease;
+  background-color: #fff;
+}
+
+.edit-in-place:focus {
+  border-color: #4f46e5;
+  box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.1);
+  outline: none;
+}
+
+/* Profile Footer - Updated to center positioning */
+.profile-footer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 30px;
+  width: 100%;
+  gap: 20px; /* Consistent spacing between buttons */
+}
+
+/* Common button styles for consistency */
+.profile-footer button,
+.profile-footer a {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 150px; /* Set a consistent minimum width */
+  display: flex;
+  align-items: center;
+  justify-content: center; /* Center text and icons */
+  gap: 8px;
+  text-decoration: none;
+  height: 42px; /* Set consistent height */
+  box-sizing: border-box;
+}
+
+/* Edit button in footer */
+.footer-edit {
+  background-color: #f0f0ff;
+  color: #4f46e5;
+  border: none;
+}
+
+.footer-edit:hover {
+  background-color: #e0e0ff;
+  transform: translateY(-2px);
+}
+
+/* Back button styling */
+.back-button {
+  background-color: #f0f0ff;
+  color: #4f46e5;
+  margin-left: 0;
+}
+
+.back-button:hover {
+  background-color: #e0e0ff;
+  transform: translateY(-2px);
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+  .profile-card {
+    padding: 25px;
+  }
+  
+  .profile-header-section {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+  
+  .profile-details {
+    grid-template-columns: 1fr;
+  }
+  
+  .profile-form {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .profile-avatar {
+    width: 100px;
+    height: 100px;
+    font-size: 40px;
+  }
+  
+  .edit-controls {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .edit-button, .save-button, .cancel-button {
+    width: 100%;
+    justify-content: center;
+  }
+}
