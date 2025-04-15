@@ -1,9 +1,10 @@
+
 /* Main Container */
 .login-container {
     display: flex;
     justify-content: center;
     align-items: center;
-    min-height: 100vh;
+    min-height: 86vh;
     background: linear-gradient(135deg, #f0f4f8 0%, #dfe7f0 100%);
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     padding: 20px;
@@ -260,7 +261,7 @@
   /* Footer Styles */
   .login-footer {
     margin-top: 25px;
-    color: #7f8c8d;
+    color: #1b4245;
     font-size: 15px;
   }
   
@@ -332,4 +333,5 @@
     .login-subtitle {
       font-size: 14px;
     }
+    
   }

@@ -1,3 +1,4 @@
+
 import { faFacebookF, faInstagram, faTwitter, faYoutube } from '@fortawesome/free-brands-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import React, { useEffect } from 'react';
@@ -114,7 +115,8 @@ function Home() {
             </ul>
           </nav>
           <div className="cta-button">
-            <Link to="/login" className="btn btn-secondary">Log In</Link>
+             <Link to="/login" className="btn btn-secondary" style={{ marginRight: '15px' }}>Log In</Link>
+             <Link to="/login?mode=signup" className="btn btn-secondary">Sign Up</Link>
           </div>
         </div>
       </header>
