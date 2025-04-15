@@ -122,7 +122,7 @@ const Login = () => {
         <div className="login-container">
           <div className="login-box role-selection">
             <div className="login-header">
-              
+             
               <h1>Join as...</h1>
               <p className="login-subtitle">Are you a Teacher or Student?</p>
             </div>
@@ -188,7 +188,7 @@ const Login = () => {
       <div className="login-container">
         <div className="login-box">
           <div className="login-header">
-           
+            
             <h1>{isLogin ? 'Welcome Back!' : `Sign Up as ${selectedRole}`}</h1>
             <p className="login-subtitle">
               {isLogin ? 'Ready to practice your pronunciation?' : 'Create your account to get started!'}
