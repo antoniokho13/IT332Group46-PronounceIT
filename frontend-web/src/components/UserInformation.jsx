@@ -5,13 +5,14 @@ import {
   faLock,
   faSave,
   faTimes,
+  faTrash, // Import the trash icon
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "../assets/css/UserInformation.css";
-import { getUserById, updateUser } from "../services/userService";
+import { getUserById, updateUser, deleteUser } from "../services/userService"; // Import deleteUser function
 
 const UserInformation = () => {
   const [userData, setUserData] = useState({ firstName: "", lastName: "", email: "", role: "" });
@@ -19,6 +20,7 @@ const UserInformation = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [passwordError, setPasswordError] = useState("");
   const [saveError, setSaveError] = useState("");
+  const [showDeleteModal, setShowDeleteModal] = useState(false); // State for showing the delete confirmation modal
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -102,6 +104,18 @@ const UserInformation = () => {
     if (role === "USER") return "Student";
     if (role === "ADMIN") return "Admin";
     return "Unknown";
+  };
+
+  const handleDeleteAccount = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      await deleteUser(userData.id, token); // Call deleteUser function
+      localStorage.removeItem("user");
+      localStorage.removeItem("token");
+      navigate("/"); // Redirect to the home page after account deletion
+    } catch (error) {
+      console.error("Failed to delete user account:", error);
+    }
   };
 
   if (!userData.firstName) {
@@ -273,9 +287,36 @@ const UserInformation = () => {
             <Link to="/user-dashboard" className="back-button">
               Back to Dashboard
             </Link>
+            <button
+              className="delete-button"
+              onClick={() => setShowDeleteModal(true)} // Show the delete confirmation modal
+            >
+              <FontAwesomeIcon icon={faTrash} /> Delete Account
+            </button>
           </div>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="modal-overlay">
+          <div className="modal">
+            <h2>Confirm Account Deletion</h2>
+            <p>Are you sure you want to delete your account? This action cannot be undone.</p>
+            <div className="modal-actions">
+              <button className="confirm-button" onClick={handleDeleteAccount}>
+                Yes, Delete
+              </button>
+              <button
+                className="cancel-button"
+                onClick={() => setShowDeleteModal(false)} // Close the modal
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
