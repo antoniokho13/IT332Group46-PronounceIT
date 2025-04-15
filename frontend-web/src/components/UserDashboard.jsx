@@ -1,8 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
-import ReactDOM from 'react-dom'; // Add this import
-import { Link } from "react-router-dom";
+import ReactDOM from "react-dom";
+import { Link, useNavigate } from "react-router-dom";
 import "../assets/css/Dashboard.css";
-// Import Font Awesome components
 import {
   faBookOpen,
   faChartLine,
@@ -10,21 +9,62 @@ import {
   faHome,
   faMedal,
   faSignOutAlt,
-  faUser
+  faUser,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { logout } from "../services/authService";
+import { getUserById } from "../services/userService";
 
 const UserDashboard = () => {
-  // State to toggle dropdown visibility
+  const [user, setUser] = useState({ firstName: "", lastName: "" });
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef(null);
-  const userCardRef = useRef(null); // Add this ref for positioning
+  const userCardRef = useRef(null);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const storedUser = JSON.parse(localStorage.getItem("user"));
+        if (token && storedUser && storedUser.userId) {
+          const userData = await getUserById(storedUser.userId, token);
+          setUser({ firstName: userData.firstName, lastName: userData.lastName });
+        } else {
+          throw new Error("User not found in localStorage");
+        }
+      } catch (error) {
+        console.error("Failed to fetch user data:", error);
+        localStorage.removeItem("user");
+        localStorage.removeItem("token");
+        navigate("/login");
+      }
+    };
+
+    fetchUserData();
+  }, [navigate]);
+
+  const handleLogout = async () => {
+    try {
+      await logout(); // Call the logout API
+    } catch (error) {
+      console.error("Logout API failed:", error);
+    } finally {
+      localStorage.removeItem("user"); // Clear user data from localStorage
+      localStorage.removeItem("token"); // Clear token from localStorage
+      navigate("/login"); // Redirect to login page
+    }
+  };
 
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target) &&
-          userCardRef.current && !userCardRef.current.contains(event.target)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target) &&
+        userCardRef.current &&
+        !userCardRef.current.contains(event.target)
+      ) {
         setShowDropdown(false);
       }
     };
@@ -35,47 +75,45 @@ const UserDashboard = () => {
     };
   }, [dropdownRef, userCardRef]);
 
-  // Toggle dropdown function
   const toggleDropdown = (e) => {
-    e.stopPropagation(); // Prevent event bubbling
+    e.stopPropagation();
     setShowDropdown(!showDropdown);
   };
 
-  // Create a portal for the dropdown menu
   const renderDropdown = () => {
     if (!showDropdown) return null;
-    
-    // Get position of user-card for dropdown placement
+
     const rect = userCardRef.current?.getBoundingClientRect();
-    
     if (!rect) return null;
-    
+
     const dropdownStyle = {
-      position: 'fixed',
+      position: "fixed",
       top: `${rect.bottom + 5}px`,
       right: `${window.innerWidth - rect.right}px`,
-      background: 'white',
-      borderRadius: '8px',
-      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+      background: "white",
+      borderRadius: "8px",
+      boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
       zIndex: 9999,
-      width: '200px',
-      padding: '10px 0',
+      width: "200px",
+      padding: "10px 0",
     };
-    
+
     return ReactDOM.createPortal(
-      <div 
-        className="user-dropdown-portal" 
-        style={dropdownStyle}
-        ref={dropdownRef}
-      >
+      <div className="user-dropdown-portal" style={dropdownStyle} ref={dropdownRef}>
         <Link to="/profile" className="dropdown-item">
           <FontAwesomeIcon icon={faUser} className="dropdown-icon" />
           Edit Profile
         </Link>
-        <Link to="/logout" className="dropdown-item">
+        <button
+          onClick={(e) => {
+            e.stopPropagation(); // Prevent dropdown from closing
+            handleLogout();
+          }}
+          className="dropdown-item"
+        >
           <FontAwesomeIcon icon={faSignOutAlt} className="dropdown-icon" />
           Logout
-        </Link>
+        </button>
       </div>,
       document.body
     );
@@ -83,31 +121,28 @@ const UserDashboard = () => {
 
   return (
     <div className="dashboard-container">
-      {/* Header with logo and user profile */}
       <header className="dashboard-header">
         <div className="container">
           <div className="logo">
             <Link to="/">
-              <img 
-                src={require('../assets/images/logo.png')} 
+              <img
+                src={require("../assets/images/logo.png")}
                 alt="Pronounceit Logo"
               />
             </Link>
           </div>
-          {/* User profile in header with dropdown */}
           <div className="user-card" ref={userCardRef} onClick={toggleDropdown}>
             <div className="default-avatar">
-              <span>M</span>
+              <span>{user.firstName.charAt(0)}</span>
             </div>
             <div className="user-info">
-              <p>Melgod</p>
+              <p>{`${user.firstName} ${user.lastName}`}</p>
               <FontAwesomeIcon icon={faChevronDown} className="dropdown-icon" />
             </div>
           </div>
         </div>
       </header>
 
-      {/* Rest of the dashboard */}
       <div className="dashboard single">
         <aside className="sidebar">
           <nav>
@@ -182,7 +217,6 @@ const UserDashboard = () => {
             <h3>Progress Report</h3>
 
             <div className="graph-container animate-bars">
-              {/* Grid lines */}
               <div className="grid-lines">
                 <div className="grid-line" data-percentage="100%"></div>
                 <div className="grid-line" data-percentage="75%"></div>
@@ -190,18 +224,14 @@ const UserDashboard = () => {
                 <div className="grid-line" data-percentage="25%"></div>
                 <div className="grid-line" data-percentage="0%"></div>
               </div>
-              
-              {/* Bars */}
               <div className="chart-bar beginner">
                 <div className="chart-bar-percentage">75%</div>
                 <div className="chart-bar-label">Beginner</div>
               </div>
-              
               <div className="chart-bar intermediate">
                 <div className="chart-bar-percentage">40%</div>
                 <div className="chart-bar-label">Intermediate</div>
               </div>
-              
               <div className="chart-bar advanced">
                 <div className="chart-bar-percentage">15%</div>
                 <div className="chart-bar-label">Advanced</div>
@@ -210,8 +240,7 @@ const UserDashboard = () => {
           </div>
         </main>
       </div>
-      
-      {/* Render dropdown outside the main container */}
+
       {renderDropdown()}
     </div>
   );
