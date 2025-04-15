@@ -4,6 +4,8 @@ import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import '../assets/css/Home.css';
 
+
+
 function Home() {
   useEffect(() => {
     // Function to handle smooth scrolling
