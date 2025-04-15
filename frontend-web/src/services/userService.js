@@ -41,3 +41,24 @@ export const updateUser = async (id, updatedData, token) => {
       throw error;
     }
 };
+
+// Delete user account
+export const deleteUser = async (id, token) => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/${id}`, {
+      method: "DELETE", // HTTP DELETE method
+      headers: {
+        Authorization: `Bearer ${token}`, // Include the token for authentication
+      },
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to delete user: ${response.statusText}`);
+    }
+
+    return { message: "User deleted successfully" }; // Return success message
+  } catch (error) {
+    console.error("Error in deleteUser service:", error);
+    throw error;
+  }
+};
