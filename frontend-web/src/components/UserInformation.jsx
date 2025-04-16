@@ -1,18 +1,19 @@
 import {
+  faArrowLeft,
   faEdit,
   faEnvelope,
   faGraduationCap,
   faLock,
   faSave,
   faTimes,
-  faTrash, // Import the trash icon
+  faTrash,
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "../assets/css/UserInformation.css";
-import { getUserById, updateUser, deleteUser } from "../services/userService"; // Import deleteUser function
+import { deleteUser, getUserById, updateUser } from "../services/userService"; // Import deleteUser function
 
 const UserInformation = () => {
   const [userData, setUserData] = useState({ firstName: "", lastName: "", email: "", role: "" });
@@ -124,34 +125,56 @@ const UserInformation = () => {
 
   return (
     <div className="profile-container">
-      {/* Header with logo */}
-      <header className="profile-header">
+      <div className="profile-header">
         <div className="container">
           <div className="logo">
             <Link to="/">
-              <img
-                src={require("../assets/images/logo.png")}
-                alt="Pronounceit Logo"
-              />
+              <img src={require("../assets/images/logo.png")} alt="Pronounce-IT Logo" />
             </Link>
           </div>
         </div>
-      </header>
-
+      </div>
       <div className="profile-content">
-        <div className="profile-card">
-          <div className="profile-header-section">
-            <h1>User Profile</h1>
-            {isEditing && (
-              <div className="edit-controls">
-                <button className="save-button" onClick={handleSubmit}>
-                  <FontAwesomeIcon icon={faSave} /> Save
-                </button>
-                <button className="cancel-button" onClick={cancelEdit}>
-                  <FontAwesomeIcon icon={faTimes} /> Cancel
-                </button>
-              </div>
+        <div className={`profile-card ${isEditing ? 'editing' : ''}`}>
+          {/* Top navigation buttons */}
+          <div className="profile-nav">
+            {!isEditing && (
+              <Link to="/user-dashboard" className="back-button">
+                <FontAwesomeIcon icon={faArrowLeft} /> Back to Dashboard
+              </Link>
             )}
+            
+            <div className="profile-actions">
+              {!isEditing ? (
+                <>
+                  <button
+                    className="edit-button"
+                    onClick={() => setIsEditing(true)}
+                  >
+                    <FontAwesomeIcon icon={faEdit} /> Edit Profile
+                  </button>
+                  <button
+                    className="delete-button"
+                    onClick={() => setShowDeleteModal(true)}
+                  >
+                    <FontAwesomeIcon icon={faTrash} /> Delete Account
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button className="save-button" onClick={handleSubmit}>
+                    <FontAwesomeIcon icon={faSave} /> Save
+                  </button>
+                  <button className="cancel-button" onClick={cancelEdit}>
+                    <FontAwesomeIcon icon={faTimes} /> Cancel
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+
+          <div className="profile-header-section">
+            <h1>{isEditing ? "Edit Profile" : "User Profile"}</h1>
           </div>
 
           <div className="profile-avatar-section">
@@ -274,26 +297,6 @@ const UserInformation = () => {
           </div>
 
           {saveError && <div className="error-message">{saveError}</div>}
-
-          <div className="profile-footer">
-            {!isEditing ? (
-              <button
-                className="edit-button footer-edit"
-                onClick={() => setIsEditing(true)}
-              >
-                <FontAwesomeIcon icon={faEdit} /> Edit Profile
-              </button>
-            ) : null}
-            <Link to="/user-dashboard" className="back-button">
-              Back to Dashboard
-            </Link>
-            <button
-              className="delete-button"
-              onClick={() => setShowDeleteModal(true)} // Show the delete confirmation modal
-            >
-              <FontAwesomeIcon icon={faTrash} /> Delete Account
-            </button>
-          </div>
         </div>
       </div>
 

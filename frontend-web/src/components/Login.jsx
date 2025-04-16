@@ -1,13 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import '../assets/css/Login.css';
 import logo from '../assets/images/logo.png';
-import { faFacebookF, faInstagram, faTwitter, faYoutube } from '@fortawesome/free-brands-svg-icons';
-
+import { login, register } from '../services/authService'; // Import the auth service
 
 const Login = () => {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
   const [isLogin, setIsLogin] = useState(true);
   const [showRoleSelection, setShowRoleSelection] = useState(false);
   const [selectedRole, setSelectedRole] = useState(null);
@@ -22,13 +20,6 @@ const Login = () => {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    const mode = searchParams.get('mode');
-    if (mode === 'signup') {
-      handleSignUpClick();
-    }
-  }, [searchParams]);
-
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -42,7 +33,6 @@ const Login = () => {
 
   const validateForm = () => {
     const newErrors = {};
-    
     if (!formData.email) newErrors.email = 'Email is required';
     if (!formData.password) newErrors.password = 'Password is required';
     if (!isLogin) {
@@ -53,21 +43,39 @@ const Login = () => {
         newErrors.confirmPassword = 'Passwords do not match';
       }
     }
-    
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    
     if (!validateForm()) return;
-    
-    if (isLogin) {
-      navigate('/user-dashboard');
-    } else {
-      resetForm();
-      setIsLogin(true);
+
+    setLoading(true);
+    try {
+      if (isLogin) {
+        // Call login API
+        const response = await login(formData.email, formData.password);
+        localStorage.setItem('token', response.token); // Save token in localStorage
+        localStorage.setItem('user', JSON.stringify(response)); // Save user data in localStorage
+        alert(`Welcome back, ${response.email}!`);
+        navigate('/user-dashboard'); // Redirect to dashboard
+      } else {
+        // Set role based on account type
+        const role = selectedRole === 'teacher' ? 'ADMIN' : 'USER';
+        const userData = { ...formData, role };
+        delete userData.confirmPassword; // Remove confirmPassword before sending to backend
+
+        // Call register API
+        const response = await register(userData);
+        alert(`Account created for ${response.firstName} ${response.lastName} (${response.email})!`);
+        resetForm();
+        setIsLogin(true); // Switch to login mode
+      }
+    } catch (error) {
+      alert(error); // Show error message
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -95,236 +103,194 @@ const Login = () => {
     setShowRoleSelection(true);
     setIsLogin(false);
   };
-  
+
   if (showRoleSelection) {
     return (
-      <>
-        <div>
-          <header>
-            <div className="container">
-              <div className="logo">
-                <img
-                  src={require('../assets/images/logo.png')}
-                  alt="Pronounceit Logo" />
-              </div>
-              <nav>
-                <ul>
-                  <li><a href="#features">Features</a></li>
-                  <li><a href="#how-it-works">How It Works</a></li>
-                  <li><a href="#team">Developers</a></li>
-                  <li><a href="#testimonials">Testimonials</a></li>
-                  <li><a href="#faq">FAQ</a></li>
-                </ul>
-              </nav>
-            </div>
-          </header>
-        </div>
-        <div className="login-container">
-          <div className="login-box role-selection">
-            <div className="login-header">
-              
-              <h1>Join as...</h1>
-              <p className="login-subtitle">Are you a Teacher or Student?</p>
-            </div>
-
-            <div className="role-options">
-              <button
-                className="role-button teacher"
-                onClick={() => handleRoleSelect('teacher')}
-              >
-                <div className="role-icon">👩‍🏫</div>
-                <h3>Teacher</h3>
-                <p>Create lessons and manage classes</p>
+      <div className="login-container">
+        <div className="login-box role-selection">
+          <div className="login-header">
+            <img 
+              src={logo} 
+              alt="PronounceIT" 
+              className="app-logo" 
+              onClick={() => navigate('/')}
+              style={{ cursor: 'pointer' }}
+            />
+            <h1>Join as...</h1>
+            <p className="login-subtitle">Are you a Teacher or Student?</p>
+          </div>
+          <div className="role-options">
+            <button 
+              className="role-button teacher"
+              onClick={() => handleRoleSelect('teacher')}
+            >
+              <div className="role-icon">👩‍🏫</div>
+              <h3>Teacher</h3>
+              <p>Create lessons and manage classes</p>
+            </button>
+            <button 
+              className="role-button student"
+              onClick={() => handleRoleSelect('student')}
+            >
+              <div className="role-icon">🧑‍🎓</div>
+              <h3>Student</h3>
+              <p>Practice pronunciation and learn</p>
+            </button>
+          </div>
+          <div className="login-footer">
+            <p>Already have an account? 
+              <button onClick={() => {
+                setShowRoleSelection(false);
+                setIsLogin(true);
+              }} className="switch-button">
+                Sign In
               </button>
-
-              <button
-                className="role-button student"
-                onClick={() => handleRoleSelect('student')}
-              >
-                <div className="role-icon">🧑‍🎓</div>
-                <h3>Student</h3>
-                <p>Practice pronunciation and learn</p>
-              </button>
-            </div>
-
-            <div className="login-footer">
-              <p>Already have an account?
-                <button onClick={() => {
-                  setShowRoleSelection(false);
-                  setIsLogin(true);
-                }} className="switch-button">
-                  Sign In
-                </button>
-              </p>
-            </div>
+            </p>
           </div>
         </div>
-      </>
+      </div>
     );
   }
 
   return (
-    <>
-      <div>
-        <header>
-          <div className="container">
-            <div className="logo">
-              <img
-                src={require('../assets/images/logo.png')}
-                alt="Pronounceit Logo" />
-            </div>
-            <nav>
-              <ul>
-                <li><a href="#features">Features</a></li>
-                <li><a href="#how-it-works">How It Works</a></li>
-                <li><a href="#team">Developers</a></li>
-                <li><a href="#testimonials">Testimonials</a></li>
-                <li><a href="#faq">FAQ</a></li>
-              </ul>
-            </nav>
+    <div className="login-container">
+      <div className="login-box">
+        <div className="login-header">
+          <img 
+            src={logo} 
+            alt="PronounceIT" 
+            className="app-logo" 
+            onClick={() => navigate('/')}
+            style={{ cursor: 'pointer' }}
+          />
+          <h1>{isLogin ? 'Welcome Back!' : `Sign Up as ${selectedRole}`}</h1>
+          <p className="login-subtitle">
+            {isLogin ? 'Ready to practice your pronunciation?' : 'Create your account to get started!'}
+          </p>
+        </div>
+        {!isLogin && !selectedRole && (
+          <div className="role-prompt">
+            <p>Please select your role first</p>
+            <button 
+              onClick={() => setShowRoleSelection(true)}
+              className="select-role-button"
+            >
+              Select Role
+            </button>
           </div>
-        </header>
-      </div>
-      <div className="login-container">
-        <div className="login-box">
-          <div className="login-header">
-           
-            <h1>{isLogin ? 'Welcome Back!' : `Sign Up as ${selectedRole}`}</h1>
-            <p className="login-subtitle">
-              {isLogin ? 'Ready to practice your pronunciation?' : 'Create your account to get started!'}
-            </p>
-          </div>
-
-          {!isLogin && !selectedRole && (
-            <div className="role-prompt">
-              <p>Please select your role first</p>
-              <button
-                onClick={() => setShowRoleSelection(true)}
-                className="select-role-button"
-              >
-                Select Role
-              </button>
-            </div>
-          )}
-
-          {(isLogin || selectedRole) && (
-            <form onSubmit={handleSubmit} className="login-form">
-              {!isLogin && (
-                <>
-                  <div className="form-group role-display">
-                    <label>Account Type</label>
-                    <div className="role-chip">
-                      {selectedRole === 'teacher' ? '👩‍🏫 Teacher' : '🧑‍🎓 Student'}
-                      <button
-                        type="button"
-                        className="change-role-button"
-                        onClick={() => setShowRoleSelection(true)}
-                      >
-                        Change
-                      </button>
-                    </div>
+        )}
+        {(isLogin || selectedRole) && (
+          <form onSubmit={handleSubmit} className="login-form">
+            {!isLogin && (
+              <>
+                <div className="form-group role-display">
+                  <label>Account Type</label>
+                  <div className="role-chip">
+                    {selectedRole === 'teacher' ? '👩‍🏫 Teacher' : '🧑‍🎓 Student'}
+                    <button 
+                      type="button" 
+                      className="change-role-button"
+                      onClick={() => setShowRoleSelection(true)}
+                    >
+                      Change
+                    </button>
                   </div>
-                  <div className="form-group">
-                    <label htmlFor="firstName">First Name</label>
-                    <input
-                      type="text"
-                      id="firstName"
-                      name="firstName"
-                      value={formData.firstName}
-                      onChange={handleChange}
-                      placeholder="Enter your first name"
-                      className={errors.firstName ? 'error' : ''}
-                      required
-                    />
-                    {errors.firstName && <span className="error-message">{errors.firstName}</span>}
-                  </div>
-                  <div className="form-group">
-                    <label htmlFor="lastName">Last Name</label>
-                    <input
-                      type="text"
-                      id="lastName"
-                      name="lastName"
-                      value={formData.lastName}
-                      onChange={handleChange}
-                      placeholder="Enter your last name"
-                      className={errors.lastName ? 'error' : ''}
-                      required
-                    />
-                    {errors.lastName && <span className="error-message">{errors.lastName}</span>}
-                  </div>
-                </>
-              )}
-
-              <div className="form-group">
-                <label htmlFor="email">Email</label>
-                <input
-                  type="email"
-                  id="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  placeholder="Enter your email"
-                  className={errors.email ? 'error' : ''}
-                  required
-                />
-                {errors.email && <span className="error-message">{errors.email}</span>}
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="password">Password</label>
-                <input
-                  type="password"
-                  id="password"
-                  name="password"
-                  value={formData.password}
-                  onChange={handleChange}
-                  placeholder="Enter your password"
-                  className={errors.password ? 'error' : ''}
-                  required
-                />
-                {errors.password && <span className="error-message">{errors.password}</span>}
-              </div>
-
-              {!isLogin && (
+                </div>
                 <div className="form-group">
-                  <label htmlFor="confirmPassword">Confirm Password</label>
+                  <label htmlFor="firstName">First Name</label>
                   <input
-                    type="password"
-                    id="confirmPassword"
-                    name="confirmPassword"
-                    value={formData.confirmPassword}
+                    type="text"
+                    id="firstName"
+                    name="firstName"
+                    value={formData.firstName}
                     onChange={handleChange}
-                    placeholder="Re-enter your password"
-                    className={errors.confirmPassword ? 'error' : ''}
+                    placeholder="Enter your first name"
+                    className={errors.firstName ? 'error' : ''}
                     required
                   />
-                  {errors.confirmPassword && <span className="error-message">{errors.confirmPassword}</span>}
+                  {errors.firstName && <span className="error-message">{errors.firstName}</span>}
                 </div>
-              )}
-
-              <button type="submit" className="login-button" disabled={loading}>
-                {loading ? 'Processing...' : isLogin ? 'Sign In' : 'Create Account'}
-              </button>
-            </form>
-          )}
-
-          <div className="login-footer">
-            <p>
-              {isLogin ? "Don't have an account?" : "Already registered?"}
-              <button
-                onClick={isLogin ? handleSignUpClick : () => setIsLogin(true)}
-                className="switch-button"
-              >
-                {isLogin ? 'Sign Up' : 'Sign In'}
-              </button>
-            </p>
-            <div className="home-link">
-              <Link to="/">Back to Home</Link>
+                <div className="form-group">
+                  <label htmlFor="lastName">Last Name</label>
+                  <input
+                    type="text"
+                    id="lastName"
+                    name="lastName"
+                    value={formData.lastName}
+                    onChange={handleChange}
+                    placeholder="Enter your last name"
+                    className={errors.lastName ? 'error' : ''}
+                    required
+                  />
+                  {errors.lastName && <span className="error-message">{errors.lastName}</span>}
+                </div>
+              </>
+            )}
+            <div className="form-group">
+              <label htmlFor="email">Email</label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                placeholder="Enter your email"
+                className={errors.email ? 'error' : ''}
+                required
+              />
+              {errors.email && <span className="error-message">{errors.email}</span>}
             </div>
+            <div className="form-group">
+              <label htmlFor="password">Password</label>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                placeholder="Enter your password"
+                className={errors.password ? 'error' : ''}
+                required
+              />
+              {errors.password && <span className="error-message">{errors.password}</span>}
+            </div>
+            {!isLogin && (
+              <div className="form-group">
+                <label htmlFor="confirmPassword">Confirm Password</label>
+                <input
+                  type="password"
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  value={formData.confirmPassword}
+                  onChange={handleChange}
+                  placeholder="Re-enter your password"
+                  className={errors.confirmPassword ? 'error' : ''}
+                  required
+                />
+                {errors.confirmPassword && <span className="error-message">{errors.confirmPassword}</span>}
+              </div>
+            )}
+            <button type="submit" className="login-button" disabled={loading}>
+              {loading ? 'Processing...' : isLogin ? 'Sign In' : 'Create Account'}
+            </button>
+          </form>
+        )}
+        <div className="login-footer">
+          <p>
+            {isLogin ? "Don't have an account?" : "Already registered?"}
+            <button 
+              onClick={isLogin ? handleSignUpClick : () => setIsLogin(true)} 
+              className="switch-button"
+            >
+              {isLogin ? 'Sign Up' : 'Sign In'}
+            </button>
+          </p>
+          <div className="home-link">
+            <Link to="/">Back to Home</Link>
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 };
 

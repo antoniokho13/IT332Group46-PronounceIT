@@ -20,19 +20,19 @@ body {
   width: 100%;
 }
 
-/* Fixed Header */
+/* Fixed Header - Reduce Height */
 .dashboard-header {
   background-color: #fff;
   box-shadow: 0 1px 6px rgba(0, 0, 0, 0.08);
-  padding: 8px 0;
-  position: fixed; /* Change from sticky to fixed */
+  padding: 5px 0; /* Reduced from 8px */
+  position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  z-index: 1500; /* High z-index, but lower than dropdown */
+  z-index: 1500;
   width: 100%;
   overflow: hidden;
-  height: 100px; /* Set explicit header height to match your logo */
+  height: 70px; /* Reduced from 100px */
 }
 
 .dashboard-header::before {
@@ -73,7 +73,7 @@ body {
 }
 
 .dashboard-header .logo img {
-  height: 84px; /* Increased from 38px but still smaller than the original 50px */
+  height: 60px; /* Reduced from 84px */
   width: auto;
   transition: transform 0.3s ease;
 }
@@ -82,7 +82,7 @@ body {
   transform: scale(1.05); /* Slight growth on hover for interactivity */
 }
 
-/* User Info Styling with Dropdown - Fixed positioning and visibility */
+/* User Info Styling - Simplified and Standardized (without hover effects) */
 .dashboard-header .user-card {
   display: flex;
   align-items: center;
@@ -93,49 +93,76 @@ body {
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   margin-left: auto;
   position: relative;
-  z-index: 2000; /* Increased z-index significantly */
+  z-index: 2000;
   cursor: pointer;
-  transition: all 0.2s ease;
+  /* Removed transition for hover effect */
 }
 
+/* Remove hover style */
 .dashboard-header .user-card:hover {
-  background-color: #f0f0ff;
+  /* Remove all hover styles */
+  background-color: #f8f9fc; /* Same as normal state */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05); /* Same as normal state */
+}
+
+/* Make dropdown icon display visible again */
+.dashboard-header .dropdown-icon {
+  display: inline-block; /* Override previous display: none */
+  color: #4f46e5;
+}
+
+.dashboard-header .user-card img {
+  width: 32px; /* Reduced from 36px */
+  height: 32px; /* Reduced from 36px */
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid white;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Default avatar styling */
+.dashboard-header .user-card .default-avatar {
+  width: 32px; /* Reduced from 36px */
+  height: 32px; /* Reduced from 36px */
+  border-radius: 50%;
+  background-color: #4f46e5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: bold;
+  font-size: 16px;
+  border: 2px solid white;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
 .dashboard-header .user-info {
   display: flex;
   align-items: center;
-  gap: 5px;
 }
 
-.dashboard-header .dropdown-icon {
-  font-size: 12px;
-  color: #777;
-  transition: transform 0.2s ease;
+/* Simplify user info to show only email */
+.dashboard-header .user-card p {
+  font-weight: 500;
+  margin: 0;
+  color: #444;
+  font-size: 13px;
 }
 
-.dashboard-header .user-card:hover .dropdown-icon {
-  color: #4f46e5;
-}
-
-/* Dropdown styling - Override to ensure visibility */
+/* Clean up the dropdown styling since we're simplifying */
 .dashboard-header .user-dropdown {
   position: absolute;
   top: calc(100% + 10px);
   right: 0;
   background-color: white;
   border-radius: 8px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15); /* Stronger shadow */
-  width: 200px; /* Wider dropdown */
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+  width: 180px;
   padding: 10px 0;
-  z-index: 9999; /* Extremely high z-index to override everything */
-  overflow: visible;
+  z-index: 9999;
   border: 1px solid #e0e0e0;
   transform-origin: top right;
   animation: dropdown-appear 0.3s ease-out;
-  visibility: visible !important; /* Force visibility */
-  opacity: 1 !important; /* Force opacity */
-  pointer-events: auto !important; /* Ensure clickable */
 }
 
 /* Dropdown Portal Styling */
@@ -168,6 +195,14 @@ body {
   font-weight: 500;
   font-size: 14px;
   border-bottom: 1px solid #f0f0f0;
+  background: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  border-left: none;
+  border-right: none;
+  border-top: none;
+  box-shadow: none;
 }
 
 .dashboard-header .dropdown-item:last-child {
@@ -177,12 +212,55 @@ body {
 .dashboard-header .dropdown-item:hover {
   background-color: #f0f0ff;
   color: #4f46e5;
-  padding-left: 20px;
 }
 
 .dashboard-header .dropdown-item .dropdown-icon {
   margin-right: 10px;
   width: 16px;
+  color: #4f46e5; /* Match the blue used in the UI */
+}
+
+/* Remove any default button styles that might be causing the black box */
+button.dropdown-item {
+  outline: none;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background: none;
+  border: none;
+  color: #333;
+  padding: 12px 15px;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 14px;
+  font-family: inherit; /* Inherit font from parent */
+  border-bottom: 1px solid #f0f0f0;
+}
+
+button.dropdown-item:hover {
+  background-color: #f0f0ff;
+  color: #4f46e5;
+}
+
+/* Ensure both link and button dropdown items have consistent styling */
+.dropdown-item, 
+button.dropdown-item {
+  display: block;
+  padding: 12px 15px;
+  color: #333;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  font-weight: 500;
+  font-size: 14px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+/* Remove any duplicate styling that might be conflicting */
+.dashboard-header .dropdown-item,
+.user-dropdown-portal .dropdown-item {
+  background: none;
 }
 
 .user-dropdown::before {
@@ -228,76 +306,19 @@ body {
 .dropdown-item:hover {
   background-color: #f0f0ff;
   color: #4f46e5;
-  padding-left: 20px;
 }
 
 .dropdown-item .dropdown-icon {
   margin-right: 10px;
   width: 16px;
-}
-
-.dashboard-header .user-card img {
-  width: 32px; /* Smaller avatar */
-  height: 32px;
-  border-radius: 50%;
-  object-fit: cover;
-  border: 2px solid white; /* Thinner border */
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-}
-
-/* Default avatar styling */
-.dashboard-header .user-card .default-avatar {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background-color: #4f46e5;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-weight: bold;
-  font-size: 16px;
-  border: 2px solid white;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-}
-
-.dashboard-header .user-card .default-avatar span {
-  transform: translateY(1px); /* Slight adjustment for vertical centering */
-}
-
-.dashboard-header .user-card div {
-  display: flex;
-  flex-direction: column;
-  gap: 2px; /* Reduced gap */
-}
-
-.dashboard-header .user-card p {
-  font-weight: 600;
-  margin: 0;
-  color: #444;
-  font-size: 13px; /* Smaller font */
-}
-
-.dashboard-header .user-card button {
-  background-color: #f03;
-  border: none;
-  color: white;
-  font-size: 10px; /* Smaller font */
-  padding: 3px 8px; /* Smaller padding */
-  border-radius: 3px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  font-weight: 600;
-  letter-spacing: 0.5px;
-  position: relative;
-  overflow: hidden;
+  color: #4f46e5; /* Match the blue used in the UI */
 }
 
 /* Main Dashboard Layout - Adjust for fixed header and sidebar */
 .dashboard.single {
   position: relative;
   display: block;
-  padding-top: 100px; /* Add padding equal to header height */
+  padding-top: 70px; /* Updated from 100px */
   min-height: 100vh; /* Use full viewport height */
   width: 100%;
 }
@@ -307,14 +328,14 @@ body {
   width: 280px;
   min-width: 280px;
   background-color: #ffffff;
-  padding: 30px 20px;
+  padding: 20px 15px; /* Reduced padding */
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
   border-right: 1px solid #e0e0e0;
-  height: calc(100vh - 100px); /* Use header height */
+  height: calc(100vh - 70px); /* Updated from 100px */
   position: fixed;
-  top: 100px; /* Use header height */
+  top: 70px; /* Updated from 100px */
   left: 0;
   z-index: 50;
   box-shadow: 4px 0 15px -10px rgba(0, 0, 0, 0.1);
@@ -354,8 +375,9 @@ body {
 }
 
 .sidebar nav ul li {
-  padding: 14px 20px;
-  margin-bottom: 10px;
+  padding: 10px 15px; /* Reduced from 14px 20px */
+  margin-bottom: 8px; /* Reduced from 10px */
+  font-size: 14px; /* Added smaller font size */
   cursor: pointer;
   font-weight: 500;
   border-radius: 10px;
@@ -483,16 +505,16 @@ body {
 
 /* Main Content Area - Correct alignment */
 .content {
-  padding: 30px;
+  padding: 25px; /* Reduced from 30px */
   margin-left: 280px; /* Match sidebar width */
   overflow-y: auto;
   background-color: #f9fafc;
-  min-height: calc(100vh - 100px); /* Use header height */
+  min-height: calc(100vh - 70px); /* Updated from 100px */
   width: calc(100% - 280px);
   position: relative;
 }
 
-/* Metrics Section */
+/* Metrics Section - With colored borders matching cards */
 .metrics {
   display: flex;
   gap: 20px;
@@ -511,6 +533,23 @@ body {
   overflow: hidden;
 }
 
+/* Apply card-like styling to each metric */
+.metric.lessons {
+  background-color: #f0f7ff;
+  border-left: 4px solid #3b82f6; /* Blue like analytics */
+}
+
+.metric.stars {
+  background-color: #fef2f2;
+  border-left: 4px solid #ef4444; /* Red like flow */
+}
+
+.metric.hours {
+  background-color: #f0f8ff;
+  border-left: 4px solid #7c3aed; /* Purple like upgrade */
+}
+
+/* Consistent hover structure for metrics */
 .metric::before {
   content: '';
   position: absolute;
@@ -547,21 +586,10 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  background: white;
+  background: inherit;
   border-radius: 12px;
   z-index: -1;
-}
-
-.metric p {
-  color: #666;
-  margin-bottom: 10px;
-  font-size: 14px;
-}
-
-.metric h4 {
-  font-size: 24px;
-  margin: 0;
-  color: #333;
+  margin: 2px; /* Space for the rainbow border */
 }
 
 /* Cards Section */
@@ -584,6 +612,23 @@ body {
   overflow: hidden;
 }
 
+/* Special Card Styles */
+.card.analytics {
+  background-color: #f0f7ff;
+  border-left: 4px solid #3b82f6;
+}
+
+.card.flow {
+  background-color: #fef2f2;
+  border-left: 4px solid #ef4444;
+}
+
+.card.upgrade {
+  background-color: #f0f8ff; 
+  border-left: 4px solid #7c3aed;
+}
+
+/* Consistent hover structure for cards */
 .card::before {
   content: '';
   position: absolute;
@@ -620,9 +665,10 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  background: white;
+  background: inherit;
   border-radius: 12px;
   z-index: -1;
+  margin: 2px; /* Space for the rainbow border */
 }
 
 .card p {
@@ -652,22 +698,6 @@ body {
   background-color: #4338ca;
 }
 
-/* Special Card Styles */
-.card.analytics {
-  background-color: #f0f7ff;
-  border-left: 4px solid #3b82f6;
-}
-
-.card.flow {
-  background-color: #fef2f2;
-  border-left: 4px solid #ef4444;
-}
-
-.card.upgrade {
-  background-color: #f0f8ff; /* Changed to a light blue background */
-  border-left: 4px solid #7c3aed; /* Changed to purple for achievements */
-}
-
 /* Recent Activities Section */
 .orders {
   background: white;
@@ -675,6 +705,50 @@ body {
   border-radius: 12px;
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
   margin-bottom: 30px;
+  position: relative;
+  overflow: hidden;
+}
+
+.orders::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  z-index: -2;
+  background: linear-gradient(
+    90deg, 
+    #ff8a8a, 
+    #ffbe7b, 
+    #fff07b, 
+    #9affaf, 
+    #9ebbff, 
+    #c48aff, 
+    #ffb0ff
+  );
+  background-size: 400% 400%;
+  border-radius: 14px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.orders:hover::before {
+  opacity: 1;
+  animation: rainbow-wave 3s linear infinite;
+}
+
+.orders::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: inherit;
+  border-radius: 12px;
+  z-index: -1;
+  margin: 2px; /* Space for the rainbow border */
 }
 
 .orders h3 {
@@ -706,6 +780,48 @@ body {
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
   position: relative;
   overflow: hidden;
+}
+
+.report-progress::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  z-index: -2;
+  background: linear-gradient(
+    90deg, 
+    #ff8a8a, 
+    #ffbe7b, 
+    #fff07b, 
+    #9affaf, 
+    #9ebbff, 
+    #c48aff, 
+    #ffb0ff
+  );
+  background-size: 400% 400%;
+  border-radius: 14px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.report-progress:hover::before {
+  opacity: 1;
+  animation: rainbow-wave 3s linear infinite;
+}
+
+.report-progress::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: inherit;
+  border-radius: 12px;
+  z-index: -1;
+  margin: 2px; /* Space for the rainbow border */
 }
 
 .report-progress h3 {
@@ -891,11 +1007,11 @@ body {
 @media (max-width: 1024px) {
   .sidebar {
     position: fixed;
-    top: 100px; /* Use header height */
+    top: 70px; /* Updated from 100px */
     width: 100%;
     min-width: 100%;
     height: auto;
-    max-height: 80px; /* Limit height on smaller screens */
+    max-height: 70px; /* Updated from 80px */
     padding: 15px 20px;
     border-right: none;
     border-bottom: 1px solid #e0e0e0;
@@ -907,7 +1023,7 @@ body {
   
   .content {
     margin-left: 0;
-    margin-top: 80px; /* Add top margin to account for horizontal navigation */
+    margin-top: 70px; /* Updated from 80px */
     width: 100%;
   }
   
@@ -954,6 +1070,144 @@ body {
   }
 }
 
+/* Define a standard rainbow gradient for all hover elements */
+.rainbow-gradient {
+  background: linear-gradient(
+    90deg, 
+    #ff8a8a, 
+    #ffbe7b, 
+    #fff07b, 
+    #9affaf, 
+    #9ebbff, 
+    #c48aff, 
+    #ffb0ff
+  );
+  background-size: 400% 400%;
+}
+
+/* Standard hover animation */
+@keyframes rainbow-wave {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+/* Consistent hover structure for metrics */
+.metric::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  z-index: -2;
+  background: linear-gradient(
+    90deg, 
+    #ff8a8a, 
+    #ffbe7b, 
+    #fff07b, 
+    #9affaf, 
+    #9ebbff, 
+    #c48aff, 
+    #ffb0ff
+  );
+  background-size: 400% 400%;
+  border-radius: 14px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.metric:hover::before {
+  opacity: 1;
+  animation: rainbow-wave 3s linear infinite;
+}
+
+/* Consistent hover structure for cards */
+.card::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  z-index: -2;
+  background: linear-gradient(
+    90deg, 
+    #ff8a8a, 
+    #ffbe7b, 
+    #fff07b, 
+    #9affaf, 
+    #9ebbff, 
+    #c48aff, 
+    #ffb0ff
+  );
+  background-size: 400% 400%;
+  border-radius: 14px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.card:hover::before {
+  opacity: 1;
+  animation: rainbow-wave 3s linear infinite;
+}
+
+/* Add hover effect to Recent Activities and Progress Report */
+.orders, .report-progress {
+  position: relative;
+  overflow: hidden;
+}
+
+.orders::before, .report-progress::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  z-index: -2;
+  background: linear-gradient(
+    90deg, 
+    #ff8a8a, 
+    #ffbe7b, 
+    #fff07b, 
+    #9affaf, 
+    #9ebbff, 
+    #c48aff, 
+    #ffb0ff
+  );
+  background-size: 400% 400%;
+  border-radius: 14px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.orders:hover::before, .report-progress:hover::before {
+  opacity: 1;
+  animation: rainbow-wave 3s linear infinite;
+}
+
+/* Consistent layer structure for all card-like elements */
+.metric::after, .card::after, .orders::after, .report-progress::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: inherit;
+  border-radius: 12px;
+  z-index: -1;
+  margin: 2px; /* Space for the rainbow border */
+}
+
+/* Rainbow Gradient Animation */
 @keyframes shimmer {
   0% {
     background-position: 0% 0%;
