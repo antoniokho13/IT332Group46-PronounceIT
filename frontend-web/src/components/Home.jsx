@@ -4,6 +4,8 @@ import React, { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import '../assets/css/Home.css';
 
+
+
 function Home() {
   useEffect(() => {
     // Function to handle smooth scrolling
@@ -114,7 +116,8 @@ function Home() {
             </ul>
           </nav>
           <div className="cta-button">
-            <Link to="/login" className="btn btn-secondary">Log In</Link>
+             <Link to="/login" className="btn btn-secondary" style={{ marginRight: '15px' }}>Log In</Link>
+             <Link to="/login?mode=signup" className="btn btn-secondary">Sign Up</Link>
           </div>
         </div>
       </header>

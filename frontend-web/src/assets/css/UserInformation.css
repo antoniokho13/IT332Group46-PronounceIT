@@ -55,13 +55,15 @@
   align-items: center;
 }
 
+/* Fix logo display */
 .profile-header .logo {
   display: flex;
   align-items: center;
+  z-index: 1600; /* Ensure logo remains visible */
 }
 
 .profile-header .logo img {
-  height: 84px; /* Updated to match Dashboard.css logo height */
+  height: 84px;
   width: auto;
   transition: transform 0.3s ease;
 }
@@ -70,9 +72,149 @@
   transform: scale(1.05);
 }
 
-/* Profile Content - Add animated gradient background */
+/* Profile navigation - contains back button and action buttons */
+.profile-nav {
+  display: flex;
+  justify-content: space-between;
+  padding: 25px;
+  z-index: 10;
+  width: 100%;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+}
+
+/* Back button styling - position at top left of container */
+.back-button {
+  background-color: #f0f0ff;
+  color: #4f46e5;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 15px;
+  border-radius: 6px;
+  font-weight: 500;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.back-button:hover {
+  background-color: #e0e0ff;
+  transform: translateY(-2px);
+}
+
+/* Profile actions - container for edit and delete buttons */
+.profile-actions {
+  display: flex;
+  gap: 10px;
+  margin-left: auto; /* This pushes the buttons to the right */
+  position: relative;
+  right: 0;
+  top: 0;
+  height: 40px; /* Ensure consistent height */
+}
+
+/* Ensure buttons have consistent positioning */
+.save-button, .cancel-button, .edit-button, .delete-button {
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Edit button styling */
+.edit-button {
+  background-color: #f0f0ff;
+  color: #4f46e5;
+  border: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 15px;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  height: 40px;
+  justify-content: center;
+}
+
+.edit-button:hover {
+  background-color: #e0e0ff;
+  transform: translateY(-2px);
+}
+
+/* Delete button styling */
+.delete-button {
+  background-color: rgba(229, 62, 62, 0.1);
+  color: #e53e3e;
+  border: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 15px;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  height: 40px;
+  justify-content: center;
+}
+
+.delete-button:hover {
+  background-color: rgba(229, 62, 62, 0.2);
+  transform: translateY(-2px);
+}
+
+/* Save button styling */
+.save-button {
+  background-color: #f0f0ff;
+  color: #4f46e5;
+  border: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 15px;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  height: 40px;
+  justify-content: center;
+}
+
+.save-button:hover {
+  background-color: #e0e0ff;
+  transform: translateY(-2px);
+}
+
+/* Cancel button styling */
+.cancel-button {
+  background-color: rgba(113, 113, 122, 0.1);
+  color: #71717a;
+  border: none;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 15px;
+  border-radius: 6px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  height: 40px;
+  justify-content: center;
+}
+
+.cancel-button:hover {
+  background-color: rgba(113, 113, 122, 0.2);
+  transform: translateY(-2px);
+}
+
+/* Profile Content - Update to fixed height container without scrolling */
 .profile-container {
-  min-height: 100vh;
+  height: 100vh; /* Fixed height instead of min-height */
+  overflow: hidden; /* Prevent scrolling */
   background: linear-gradient(
     -45deg, 
     #ee7752, 
@@ -82,6 +224,10 @@
   );
   background-size: 400% 400%;
   animation: gradient-animation 5s ease infinite;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 /* Add the animation keyframes for the gradient */
@@ -97,180 +243,140 @@
   }
 }
 
-/* Update the profile content to have higher opacity background */
+/* Update the profile content to fit within view without scrolling */
 .profile-content {
-  padding-top: 120px; /* Adjusted for 100px header height */
+  padding-top: 0; /* Remove top padding */
   width: 90%;
-  max-width: 800px;
+  max-width: 900px; /* Increased from 800px to use more horizontal space */
   margin: 0 auto;
-  padding-bottom: 50px;
+  margin-top: 110px; /* Slightly reduced from 120px */
+  padding-bottom: 20px; /* Reduced from 30px */
+  height: calc(100vh - 160px); /* Reduced from 180px to gain more vertical space */
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between; /* Keep this to ensure buttons stay at bottom */
+  overflow: hidden; /* Keep hidden to prevent scrolling */
 }
 
-/* Enhance card with higher opacity to stand out against gradient */
+/* Enhance card with better fit */
 .profile-card {
   background-color: rgba(255, 255, 255, 0.95);
   border-radius: 15px;
   box-shadow: 0 6px 30px rgba(0, 0, 0, 0.15);
-  padding: 40px;
-  margin-top: 30px;
+  padding: 25px; /* Reduced from 30px */
+  margin-top: 0;
   position: relative;
-  overflow: hidden;
+  overflow: visible; /* Changed from auto to visible to ensure all content is shown */
+  display: flex;
+  flex-direction: column;
+  flex: 0 1 auto; /* Allow card to shrink but not grow */
+  max-height: none; /* Remove max-height restriction */
 }
 
-.profile-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 5px;
-  background: linear-gradient(
-    90deg, 
-    #9ebbff, 
-    #c48aff, 
-    #ffb0ff
-  );
-  background-size: 200% 200%;
-  animation: rainbow-wave 5s linear infinite;
-}
-
+/* Adjust profile header section to account for the nav buttons */
 .profile-header-section {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 30px;
+  margin-top: 40px;
+  margin-bottom: 15px;
+  text-align: center;
 }
 
-.profile-header-section h1 {
-  font-size: 28px;
-  color: #333;
-  margin: 0;
-}
-
-.edit-button, .save-button, .cancel-button {
-  padding: 8px 15px;
-  border-radius: 8px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  border: none;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.edit-button {
-  background-color: #f0f0ff;
-  color: #4f46e5;
-}
-
-.edit-button:hover {
-  background-color: #e0e0ff;
-  transform: translateY(-2px);
-}
-
-.edit-controls {
-  display: flex;
-  gap: 10px;
-}
-
-.save-button {
-  background-color: #4f46e5;
-  color: white;
-}
-
-.save-button:hover {
-  background-color: #4338ca;
-  transform: translateY(-2px);
-}
-
-.cancel-button {
-  background-color: #f1f1f1;
-  color: #666;
-}
-
-.cancel-button:hover {
-  background-color: #e0e0e0;
-  transform: translateY(-2px);
-}
-
-/* Avatar Section */
+/* Make avatar section smaller and centered */
 .profile-avatar-section {
+  margin-bottom: 15px; /* Reduced from default */
   display: flex;
+  flex-direction: column;
+  align-items: center;
   justify-content: center;
-  margin-bottom: 30px;
 }
 
+/* Fix the avatar styling */
 .profile-avatar {
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  background-color: #4f46e5;
+  width: 80px; /* Slightly increased from 70px */
+  height: 80px; /* Slightly increased from 70px */
+  font-size: 32px; /* Adjusted font size */
+  margin-bottom: 8px; /* Slightly increased from 5px */
+  background-color: #4f46e5; /* Re-add background color */
+  color: #fff; /* Ensure text is white */
+  border-radius: 50%; /* Ensure it's circular */
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
+  text-transform: uppercase;
   font-weight: bold;
-  font-size: 48px;
-  border: 4px solid white;
-  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
 }
 
-/* Profile Details */
+/* Profile Details - make more efficient with better alignment */
 .profile-details {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: 25px;
-  margin-bottom: 30px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px 30px; /* Increased horizontal gap between columns */
+  margin-bottom: 20px; /* Slightly increased */
+  flex-grow: 1;
+  padding: 10px 0; /* Increased padding */
 }
 
+/* Specifically target right column items for formal appearance */
+.profile-details .detail-item:nth-child(even) {
+  border-left: 1px solid rgba(79, 70, 229, 0.1); /* Add subtle separator */
+  padding-left: 20px; /* Add padding on the left side */
+}
+
+/* Make detail items more compact but elegant */
 .detail-item {
   display: flex;
-  align-items: flex-start;
-  gap: 15px;
-  padding: 15px;
-  border-radius: 10px;
-  background-color: #f8f9fc;
-  transition: all 0.3s ease;
-  min-height: 70px;
+  align-items: center;
+  gap: 15px; /* Increased from 10px for better spacing */
+  padding: 10px 5px; /* Adjusted padding */
+  min-height: 60px; /* Increased from 50px for more space */
+  transition: background-color 0.2s ease;
 }
 
+/* Add subtle hover effect */
 .detail-item:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 6px 15px rgba(0, 0, 0, 0.05);
+  background-color: rgba(79, 70, 229, 0.03);
+  border-radius: 6px;
 }
 
+/* Enhance icon styling in detail items */
 .detail-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
+  width: 45px; /* Increased from 40px */
+  height: 45px; /* Increased from 40px */
+  font-size: 18px;
   background-color: #f0f0ff;
   color: #4f46e5;
+  border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
+  box-shadow: 0 2px 5px rgba(79, 70, 229, 0.15); /* Add subtle shadow */
+  transition: transform 0.2s ease;
+}
+
+/* Add subtle hover effect for icons */
+.detail-item:hover .detail-icon {
+  transform: scale(1.05);
+}
+
+/* Improve content spacing and typography */
+.detail-content {
+  flex-grow: 1;
 }
 
 .detail-content h3 {
-  margin: 0 0 5px 0;
-  font-size: 14px;
-  color: #666;
+  margin: 0 0 5px 0; /* Increased from 3px */
+  font-size: 14px; /* Increased from 13px */
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #6b7280; /* More subdued color */
   font-weight: 500;
 }
 
 .detail-content p {
   margin: 0;
   font-size: 16px;
-  color: #333;
+  color: #1f2937; /* Darker text for better contrast */
   font-weight: 600;
-}
-
-.detail-content .error-message {
-  color: #e53e3e;
-  font-size: 12px;
-  margin-top: 6px;
-  font-weight: 500;
+  letter-spacing: 0.2px;
 }
 
 /* Edit Form */
@@ -339,56 +445,16 @@
   outline: none;
 }
 
-/* Profile Footer - Updated to center positioning */
+/* Profile Footer - ensure buttons are at bottom */
 .profile-footer {
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
-  margin-top: 30px;
+  margin-top: auto;
+  padding-top: 15px;
   width: 100%;
-  gap: 20px; /* Consistent spacing between buttons */
-}
-
-/* Common button styles for consistency */
-.profile-footer button,
-.profile-footer a {
-  padding: 10px 20px;
-  border-radius: 8px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  min-width: 150px; /* Set a consistent minimum width */
-  display: flex;
-  align-items: center;
-  justify-content: center; /* Center text and icons */
-  gap: 8px;
-  text-decoration: none;
-  height: 42px; /* Set consistent height */
-  box-sizing: border-box;
-}
-
-/* Edit button in footer */
-.footer-edit {
-  background-color: #f0f0ff;
-  color: #4f46e5;
-  border: none;
-}
-
-.footer-edit:hover {
-  background-color: #e0e0ff;
-  transform: translateY(-2px);
-}
-
-/* Back button styling */
-.back-button {
-  background-color: #f0f0ff;
-  color: #4f46e5;
-  margin-left: 0;
-}
-
-.back-button:hover {
-  background-color: #e0e0ff;
-  transform: translateY(-2px);
+  gap: 15px;
+  flex-shrink: 0;
 }
 
 /* Modal Styles */
@@ -454,22 +520,65 @@
 
 /* Responsive Styles */
 @media (max-width: 768px) {
+  .profile-content {
+    height: calc(100vh - 160px);
+    padding-bottom: 20px;
+  }
+  
   .profile-card {
-    padding: 25px;
+    padding: 20px;
   }
   
   .profile-header-section {
     flex-direction: column;
     align-items: flex-start;
     gap: 15px;
+    margin-top: 80px;
   }
   
   .profile-details {
     grid-template-columns: 1fr;
+    gap: 15px;
+  }
+  
+  /* Remove left border when stacked in mobile */
+  .profile-details .detail-item:nth-child(even) {
+    border-left: none;
+    padding-left: 5px;
   }
   
   .profile-form {
     grid-template-columns: 1fr;
+  }
+  
+  .profile-nav {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    padding: 15px;
+  }
+  
+  .profile-actions {
+    justify-content: space-between;
+  }
+}
+
+@media (max-height: 700px) {
+  .profile-content {
+    margin-top: 110px;
+    height: calc(100vh - 140px);
+  }
+  
+  .profile-avatar {
+    width: 70px;
+    height: 70px;
+    font-size: 28px;
+  }
+  
+  .detail-icon {
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
   }
 }
 
@@ -489,4 +598,72 @@
     width: 100%;
     justify-content: center;
   }
+  
+  .profile-nav {
+    padding: 10px;
+  }
+  
+  .back-button, .edit-button, .delete-button {
+    font-size: 14px;
+    padding: 8px 12px;
+  }
+  
+  .profile-actions {
+    width: 100%;
+  }
+}
+
+/* Add this new section for editing mode adjustments */
+
+/* Hide avatar when editing */
+.editing .profile-avatar-section {
+  display: none;
+}
+
+/* Move content up when editing */
+.editing .profile-header-section {
+  margin-top: 60px; /* Reduced from 40px */
+  margin-bottom: 10px; /* Reduced from 15px */
+}
+
+/* Add more space for form fields */
+.editing .profile-details {
+  margin-top: 20px;
+  max-height: calc(100vh - 240px);
+  overflow-y: auto; /* Allow scrolling if needed */
+}
+
+/* Make password fields more visible */
+.editing .form-group {
+  margin-bottom: 15px;
+}
+
+/* Ensure there's enough space for all form fields */
+.editing .profile-card {
+  max-height: calc(100vh - 180px);
+  overflow-y: auto;
+}
+
+/* Scroll behavior */
+.editing .profile-card::-webkit-scrollbar {
+  width: 8px;
+}
+
+.editing .profile-card::-webkit-scrollbar-track {
+  background: rgba(240, 240, 255, 0.5);
+  border-radius: 10px;
+}
+
+.editing .profile-card::-webkit-scrollbar-thumb {
+  background: rgba(79, 70, 229, 0.3);
+  border-radius: 10px;
+}
+
+.editing .profile-card::-webkit-scrollbar-thumb:hover {
+  background: rgba(79, 70, 229, 0.5);
+}
+
+/* Make editing mode buttons stay in exact same position */
+.editing .profile-nav {
+  justify-content: flex-end !important; /* Changed from space-between to flex-end */
 }

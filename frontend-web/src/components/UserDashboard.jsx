@@ -1,17 +1,16 @@
+import {
+  faBookOpen,
+  faChartLine,
+  faHome,
+  faMedal,
+  faSignOutAlt,
+  faUser
+} from "@fortawesome/free-solid-svg-icons";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React, { useEffect, useRef, useState } from "react";
 import ReactDOM from "react-dom";
 import { Link, useNavigate } from "react-router-dom";
 import "../assets/css/Dashboard.css";
-import {
-  faBookOpen,
-  faChartLine,
-  faChevronDown,
-  faHome,
-  faMedal,
-  faSignOutAlt,
-  faUser,
-} from "@fortawesome/free-solid-svg-icons";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { logout } from "../services/authService";
 import { getUserById } from "../services/userService";
 
@@ -88,7 +87,7 @@ const UserDashboard = () => {
 
     const dropdownStyle = {
       position: "fixed",
-      top: `${rect.bottom + 5}px`,
+      top: `${rect.bottom + 3}px`, // Reduced from 5px for tighter spacing
       right: `${window.innerWidth - rect.right}px`,
       background: "white",
       borderRadius: "8px",
@@ -137,7 +136,7 @@ const UserDashboard = () => {
             </div>
             <div className="user-info">
               <p>{`${user.firstName} ${user.lastName}`}</p>
-              <FontAwesomeIcon icon={faChevronDown} className="dropdown-icon" />
+              {/* Dropdown icon is hidden via CSS */}
             </div>
           </div>
         </div>
@@ -171,15 +170,15 @@ const UserDashboard = () => {
           <h2 className="dashboard-title">Student Dashboard</h2>
 
           <div className="metrics">
-            <div className="metric">
+            <div className="metric lessons">
               <p>Completed Lessons</p>
               <h4>24</h4>
             </div>
-            <div className="metric">
+            <div className="metric stars">
               <p>Stars Earned</p>
               <h4>152</h4>
             </div>
-            <div className="metric">
+            <div className="metric hours">
               <p>Practice Hours</p>
               <h4>18.5</h4>
             </div>
