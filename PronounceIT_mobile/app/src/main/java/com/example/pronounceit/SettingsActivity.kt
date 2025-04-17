@@ -1,6 +1,6 @@
 package com.example.pronounceit
 
-import android.R
+import android.content.SharedPreferences
 import android.os.Bundle
 import android.widget.SeekBar
 import android.widget.TextView
@@ -8,51 +8,64 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.SwitchCompat
 
 class SettingsActivity : AppCompatActivity() {
-    private var soundEffectsSwitch: SwitchCompat? = null
-    private var backgroundMusicSwitch: SwitchCompat? = null
-    private var vibrationSwitch: SwitchCompat? = null
-    private var volumeSeekBar: SeekBar? = null
-    private var volumeLabel: TextView? = null
+    private lateinit var soundEffectsSwitch: SwitchCompat
+    private lateinit var backgroundMusicSwitch: SwitchCompat
+    private lateinit var vibrationSwitch: SwitchCompat
+    private lateinit var volumeSeekBar: SeekBar
+    private lateinit var volumeLabel: TextView
+
+    private lateinit var sharedPreferences: SharedPreferences
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_settings)
 
+        // Initialize SharedPreferences
+        sharedPreferences = getSharedPreferences("PronounceItPrefs", MODE_PRIVATE)
 
         // Initialize UI components
-        soundEffectsSwitch = findViewById<SwitchCompat?>(R.id.soundEffectsSwitch)
-        backgroundMusicSwitch = findViewById<SwitchCompat?>(R.id.backgroundMusicSwitch)
-        vibrationSwitch = findViewById<SwitchCompat?>(R.id.vibrationSwitch)
-        volumeSeekBar = findViewById<SeekBar?>(R.id.volumeSeekBar)
-        volumeLabel = findViewById<TextView?>(R.id.volumeLabel)
+        soundEffectsSwitch = findViewById(R.id.soundEffectsSwitch)
+        backgroundMusicSwitch = findViewById(R.id.backgroundMusicSwitch)
+        vibrationSwitch = findViewById(R.id.vibrationSwitch)
+        volumeSeekBar = findViewById(R.id.volumeSeekBar)
+        volumeLabel = findViewById(R.id.volumeLabel)
 
-
-        // Load saved settings from SharedPreferences
         loadSettings()
-
-
-        // Set up listeners for settings changes
         setupListeners()
     }
 
     private fun loadSettings() {
-        // Load settings from SharedPreferences
-        // Implementation details omitted for brevity
+        soundEffectsSwitch.isChecked = sharedPreferences.getBoolean("soundEffects", true)
+        backgroundMusicSwitch.isChecked = sharedPreferences.getBoolean("backgroundMusic", true)
+        vibrationSwitch.isChecked = sharedPreferences.getBoolean("vibration", true)
+
+        val volume = sharedPreferences.getInt("volume", 50)
+        volumeSeekBar.progress = volume
+        volumeLabel.text = "Volume: $volume%"
     }
 
     private fun setupListeners() {
-        // Set up listeners for settings changes
-        // Implementation details omitted for brevity
+        volumeSeekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                volumeLabel.text = "Volume: $progress%"
+            }
+
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {}
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {}
+        })
     }
 
     override fun onPause() {
         super.onPause()
-        // Save settings when leaving the activity
         saveSettings()
     }
 
     private fun saveSettings() {
-        // Save settings to SharedPreferences
-        // Implementation details omitted for brevity
+        val editor = sharedPreferences.edit()
+        editor.putBoolean("soundEffects", soundEffectsSwitch.isChecked)
+        editor.putBoolean("backgroundMusic", backgroundMusicSwitch.isChecked)
+        editor.putBoolean("vibration", vibrationSwitch.isChecked)
+        editor.putInt("volume", volumeSeekBar.progress)
+        editor.apply()
     }
 }

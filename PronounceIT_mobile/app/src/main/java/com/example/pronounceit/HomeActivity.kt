@@ -34,9 +34,9 @@ class HomeActivity : AppCompatActivity() {
         welcomeTextView.text = "Welcome, $userName!"
 
         // Set click listeners
+        // Temporarily disable the play button functionality
         playButton.setOnClickListener {
-            // Navigate to the game/play screen
-            val intent = Intent(this, GameActivity::class.java)
+            val intent = Intent(this, CategoryActivity::class.java)
             startActivity(intent)
         }
 
