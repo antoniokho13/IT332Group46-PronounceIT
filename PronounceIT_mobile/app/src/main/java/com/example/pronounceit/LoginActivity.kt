@@ -25,7 +25,7 @@ class LoginActivity : AppCompatActivity() {
                 // TODO: Implement authentication logic
                 Toast.makeText(this, "Login successful", Toast.LENGTH_SHORT).show()
                 // Navigate to main screen
-                startActivity(Intent(this, MainActivity::class.java))
+                startActivity(Intent(this, HomeActivity::class.java))
             } else {
                 Toast.makeText(this, "Please fill all fields", Toast.LENGTH_SHORT).show()
             }

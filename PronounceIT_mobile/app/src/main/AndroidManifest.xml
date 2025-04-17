@@ -33,5 +33,15 @@
             android:label="PronounceIT"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar">
         </activity>
+        <activity android:name=".CategoryActivity"
+            android:exported="true"
+            android:label="PronounceIT"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar">
+        </activity>
+        <activity android:name=".SettingsActivity"
+            android:exported="true"
+            android:label="PronounceIT"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar">
+        </activity>
     </application>
 </manifest>

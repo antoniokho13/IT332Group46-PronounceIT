@@ -1,6 +1,5 @@
 package com.example.pronounceit
 
-import android.R
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 
