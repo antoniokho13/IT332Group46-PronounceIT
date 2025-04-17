@@ -9,8 +9,8 @@
     <!-- App Logo -->
     <ImageView
         android:id="@+id/logoImageView"
-        android:layout_width="300dp"
-        android:layout_height="300dp"
+        android:layout_width="350dp"
+        android:layout_height="350dp"
         android:src="@drawable/pronounce_logo"
         android:contentDescription="App Logo"
         app:layout_constraintTop_toTopOf="parent"
