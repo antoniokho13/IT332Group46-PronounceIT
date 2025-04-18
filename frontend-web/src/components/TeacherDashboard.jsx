@@ -7,7 +7,8 @@ import {
   faPlus,
   faSignOutAlt,
   faTrash,
-  faUser
+  faUser,
+  faUsers
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React, { useEffect, useRef, useState } from "react";
@@ -329,6 +330,86 @@ const TeacherDashboard = () => {
                   placeholder="e.g., 1, 2, 3" 
                   defaultValue={isEditing ? editingItem.order : ""}
                 />
+              </div>
+              <div className="modal-actions">
+                <button type="button" className="cancel-btn" onClick={() => setShowModal(false)}>Cancel</button>
+                <button type="submit" className="submit-btn">{isEditing ? "Update" : "Add"}</button>
+              </div>
+            </form>
+          </>
+        );
+      case 'classes':
+        return (
+          <>
+            <h3>{isEditing ? "Edit Class" : "Add New Class"}</h3>
+            <form className="modal-form">
+              <div className="form-group">
+                <label htmlFor="className">Class Name</label>
+                <input 
+                  type="text" 
+                  id="className" 
+                  placeholder="e.g., Pronunciation Basics 101" 
+                  defaultValue={isEditing ? editingItem.name : ""}
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="classDescription">Description</label>
+                <textarea 
+                  id="classDescription" 
+                  placeholder="Describe this class and its purpose"
+                  defaultValue={isEditing ? editingItem.description : ""}
+                ></textarea>
+              </div>
+              <div className="form-group">
+                <label htmlFor="classDifficulty">Difficulty Level</label>
+                <select 
+                  id="classDifficulty"
+                  defaultValue={isEditing ? editingItem.difficulty : ""}
+                >
+                  <option value="">Select difficulty level</option>
+                  <option value="Beginner">Beginner</option>
+                  <option value="Intermediate">Intermediate</option>
+                  <option value="Advanced">Advanced</option>
+                </select>
+              </div>
+              <div className="form-group">
+                <label htmlFor="classCapacity">Student Capacity</label>
+                <input 
+                  type="number" 
+                  id="classCapacity" 
+                  placeholder="e.g., 30" 
+                  defaultValue={isEditing ? editingItem.capacity : ""}
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="classSchedule">Schedule</label>
+                <input 
+                  type="text" 
+                  id="classSchedule" 
+                  placeholder="e.g., Mon, Wed 10:00 AM - 11:30 AM" 
+                  defaultValue={isEditing ? editingItem.schedule : ""}
+                />
+              </div>
+              <div className="form-group">
+                <label>Status</label>
+                <div className="radio-group">
+                  <label>
+                    <input 
+                      type="radio" 
+                      name="status" 
+                      value="active" 
+                      defaultChecked={!isEditing || editingItem.status === "Active"} 
+                    /> Active
+                  </label>
+                  <label>
+                    <input 
+                      type="radio" 
+                      name="status" 
+                      value="inactive" 
+                      defaultChecked={isEditing && editingItem.status === "Inactive"} 
+                    /> Inactive
+                  </label>
+                </div>
               </div>
               <div className="modal-actions">
                 <button type="button" className="cancel-btn" onClick={() => setShowModal(false)}>Cancel</button>
@@ -666,6 +747,99 @@ const TeacherDashboard = () => {
             </div>
           </>
         );
+      case 'classes':
+        return (
+          <>
+            <h2 className="dashboard-title">Classes Management</h2>
+            <div className="section-header">
+              <button className="add-button" onClick={() => openModal('classes')}>
+                <FontAwesomeIcon icon={faPlus} /> Add New Class
+              </button>
+            </div>
+            <div className="existing-items">
+              <h3>Existing Classes</h3>
+              <table className="items-table">
+                <thead>
+                  <tr>
+                    <th>Class Name</th>
+                    <th>Description</th>
+                    <th>Students</th>
+                    <th>Created Date</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr onClick={() => handleRowClick({
+                      name: "Pronunciation Basics 101",
+                      description: "Introductory class for beginners",
+                      students: 24,
+                      created: "2023-03-15"
+                    }, 'classes')}>
+                    <td>Pronunciation Basics 101</td>
+                    <td>Introductory class for beginners</td>
+                    <td>24</td>
+                    <td>2023-03-15</td>
+                    <td>
+                      <button 
+                        className="delete-btn" 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete({ name: "Pronunciation Basics 101" }, 'classes');
+                        }}
+                      >
+                        <FontAwesomeIcon icon={faTrash} />
+                      </button>
+                    </td>
+                  </tr>
+                  <tr onClick={() => handleRowClick({
+                      name: "Advanced Phonetics",
+                      description: "Advanced class focusing on complex phonetics",
+                      students: 18,
+                      created: "2023-04-02"
+                    }, 'classes')}>
+                    <td>Advanced Phonetics</td>
+                    <td>Advanced class focusing on complex phonetics</td>
+                    <td>18</td>
+                    <td>2023-04-02</td>
+                    <td>
+                      <button 
+                        className="delete-btn" 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete({ name: "Advanced Phonetics" }, 'classes');
+                        }}
+                      >
+                        <FontAwesomeIcon icon={faTrash} />
+                      </button>
+                    </td>
+                  </tr>
+                  <tr onClick={() => handleRowClick({
+                      name: "English for Business",
+                      description: "Specialized pronunciation for business contexts",
+                      students: 15,
+                      created: "2023-05-10"
+                    }, 'classes')}>
+                    <td>English for Business</td>
+                    <td>Specialized pronunciation for business contexts</td>
+                    <td>15</td>
+                    <td>2023-05-10</td>
+                    <td>
+                      <button 
+                        className="delete-btn" 
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDelete({ name: "English for Business" }, 'classes');
+                        }}
+                      >
+                        <FontAwesomeIcon icon={faTrash} />
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </>
+        );
       case 'analytics':
         return (
           <>
@@ -835,6 +1009,13 @@ const TeacherDashboard = () => {
               >
                 <FontAwesomeIcon icon={faFolder} className="sidebar-icon" />
                 Add Categories
+              </li>
+              <li 
+                className={activeSection === "classes" ? "active" : ""}
+                onClick={() => handleNavClick("classes")}
+              >
+                <FontAwesomeIcon icon={faUsers} className="sidebar-icon" />
+                Add Classes
               </li>
               <li 
                 className={activeSection === "analytics" ? "active" : ""}
