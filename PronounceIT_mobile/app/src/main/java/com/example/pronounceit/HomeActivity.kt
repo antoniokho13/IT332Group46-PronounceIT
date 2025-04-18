@@ -3,6 +3,8 @@ package com.example.pronounceit
 import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
+import android.view.MotionEvent
+import android.view.animation.AnimationUtils
 import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
@@ -33,36 +35,44 @@ class HomeActivity : AppCompatActivity() {
         // Set welcome message with user's name
         welcomeTextView.text = "Welcome, $userName!"
 
-        // Set click listeners
-        // Temporarily disable the play button functionality
+        // Animation for button press
+        val scaleAnim = AnimationUtils.loadAnimation(this, R.anim.button_scale)
+        val buttons = listOf(playButton, settingsButton, logoutButton)
+        buttons.forEach { btn ->
+            btn.setOnTouchListener { v, event ->
+                if (event.action == MotionEvent.ACTION_DOWN) {
+                    v.startAnimation(scaleAnim)
+                }
+                false
+            }
+        }
+
+        // Play button
         playButton.setOnClickListener {
             val intent = Intent(this, CategoryActivity::class.java)
             startActivity(intent)
+            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
         }
 
+        // Settings button
         settingsButton.setOnClickListener {
-            // Navigate to the settings screen
             val intent = Intent(this, SettingsActivity::class.java)
             startActivity(intent)
+            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
         }
 
+        // Logout button
         logoutButton.setOnClickListener {
-            // Clear logged-in state
-            val editor = sharedPreferences.edit()
-            editor.putBoolean("isLoggedIn", false)
-            editor.apply()
-
-            // Navigate back to login screen
+            sharedPreferences.edit().putBoolean("isLoggedIn", false).apply()
             val intent = Intent(this, LoginActivity::class.java)
             intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
             startActivity(intent)
+            overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
             finish()
-
             Toast.makeText(this, "Logged out successfully", Toast.LENGTH_SHORT).show()
         }
     }
 
-    // Prevent going back to login screen when back button is pressed
     override fun onBackPressed() {
         Toast.makeText(this, "Please use the logout button to exit", Toast.LENGTH_SHORT).show()
     }

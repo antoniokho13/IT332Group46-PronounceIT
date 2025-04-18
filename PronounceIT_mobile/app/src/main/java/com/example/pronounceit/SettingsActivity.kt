@@ -60,6 +60,11 @@ class SettingsActivity : AppCompatActivity() {
         saveSettings()
     }
 
+    override fun onBackPressed() {
+        super.onBackPressed()
+        overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
+    }
+
     private fun saveSettings() {
         val editor = sharedPreferences.edit()
         editor.putBoolean("soundEffects", soundEffectsSwitch.isChecked)
@@ -69,3 +74,5 @@ class SettingsActivity : AppCompatActivity() {
         editor.apply()
     }
 }
+
+
