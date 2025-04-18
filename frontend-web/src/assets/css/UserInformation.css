@@ -1,16 +1,16 @@
-/* Header styles */
+/* Header styles - updated to match Dashboard height */
 .profile-header {
   background-color: #fff;
   box-shadow: 0 1px 6px rgba(0, 0, 0, 0.08);
-  padding: 8px 0;
+  padding: 5px 0; /* Reduced from 8px to match Dashboard */
   position: fixed;
-  top: 0; /* Fix the typo "A0" to "0" */
+  top: 0;
   left: 0;
   right: 0;
   z-index: 1500;
   width: 100%;
   overflow: hidden;
-  height: 100px; /* Match Dashboard height of 100px */
+  height: 70px; /* Reduced from 100px to match Dashboard height */
 }
 
 .profile-header::before {
@@ -19,7 +19,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  height: 2px; /* Slightly thinner rainbow line to match Dashboard */
+  height: 2px;
   background: linear-gradient(
     90deg, 
     #ff8a8a, 
@@ -46,24 +46,15 @@
   }
 }
 
-.profile-header .container {
-  width: 90%;
-  max-width: 1200px;
-  margin: 0 auto;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-/* Fix logo display */
+/* Fix logo display to match Dashboard */
 .profile-header .logo {
   display: flex;
   align-items: center;
-  z-index: 1600; /* Ensure logo remains visible */
+  z-index: 1600;
 }
 
 .profile-header .logo img {
-  height: 84px;
+  height: 60px; /* Reduced from 84px to match Dashboard */
   width: auto;
   transition: transform 0.3s ease;
 }
@@ -243,19 +234,19 @@
   }
 }
 
-/* Update the profile content to fit within view without scrolling */
+/* Update the profile content to account for smaller header */
 .profile-content {
-  padding-top: 0; /* Remove top padding */
+  padding-top: 0;
   width: 90%;
-  max-width: 900px; /* Increased from 800px to use more horizontal space */
+  max-width: 900px;
   margin: 0 auto;
-  margin-top: 110px; /* Slightly reduced from 120px */
-  padding-bottom: 20px; /* Reduced from 30px */
-  height: calc(100vh - 160px); /* Reduced from 180px to gain more vertical space */
+  margin-top: 80px; /* Reduced from 110px to match smaller header */
+  padding-bottom: 20px;
+  height: calc(100vh - 130px); /* Updated from 160px to match smaller header */
   display: flex;
   flex-direction: column;
-  justify-content: space-between; /* Keep this to ensure buttons stay at bottom */
-  overflow: hidden; /* Keep hidden to prevent scrolling */
+  justify-content: space-between;
+  overflow: hidden;
 }
 
 /* Enhance card with better fit */
@@ -273,9 +264,9 @@
   max-height: none; /* Remove max-height restriction */
 }
 
-/* Adjust profile header section to account for the nav buttons */
+/* Adjust profile header section positioning */
 .profile-header-section {
-  margin-top: 40px;
+  margin-top: 30px; /* Reduced from 40px */
   margin-bottom: 15px;
   text-align: center;
 }
@@ -521,7 +512,7 @@
 /* Responsive Styles */
 @media (max-width: 768px) {
   .profile-content {
-    height: calc(100vh - 160px);
+    height: calc(100vh - 130px); /* Updated from 160px */
     padding-bottom: 20px;
   }
   
@@ -533,7 +524,7 @@
     flex-direction: column;
     align-items: flex-start;
     gap: 15px;
-    margin-top: 80px;
+    margin-top: 70px; /* Updated from 80px */
   }
   
   .profile-details {
@@ -565,7 +556,7 @@
 
 @media (max-height: 700px) {
   .profile-content {
-    margin-top: 110px;
+    margin-top: 80px; /* Updated from 110px */
     height: calc(100vh - 140px);
   }
   

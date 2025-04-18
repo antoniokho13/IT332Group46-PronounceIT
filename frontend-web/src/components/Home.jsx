@@ -8,6 +8,9 @@ import '../assets/css/Home.css';
 
 function Home() {
   useEffect(() => {
+    // Add class to body when component mounts
+    document.body.classList.add('home-page');
+
     // Function to handle smooth scrolling
     const handleSmoothScroll = (e) => {
       const href = e.currentTarget.getAttribute('href');
@@ -89,6 +92,7 @@ function Home() {
     
     // Clean up function
     return () => {
+      document.body.classList.remove('home-page');
       document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         anchor.removeEventListener('click', handleSmoothScroll);
       });

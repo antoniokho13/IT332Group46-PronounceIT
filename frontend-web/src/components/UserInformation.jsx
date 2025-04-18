@@ -13,7 +13,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "../assets/css/UserInformation.css";
-import { deleteUser, getUserById, updateUser } from "../services/userService"; // Import deleteUser function
+import { deleteUser, getUserById, updateUser } from "../services/userService";
 
 const UserInformation = () => {
   const [userData, setUserData] = useState({ firstName: "", lastName: "", email: "", role: "" });
@@ -21,7 +21,7 @@ const UserInformation = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [passwordError, setPasswordError] = useState("");
   const [saveError, setSaveError] = useState("");
-  const [showDeleteModal, setShowDeleteModal] = useState(false); // State for showing the delete confirmation modal
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -54,7 +54,6 @@ const UserInformation = () => {
       [name]: value,
     }));
 
-    // Clear password error when typing
     if (name === "password" || name === "confirmPassword") {
       setPasswordError("");
     }
@@ -62,32 +61,28 @@ const UserInformation = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-  
-    // Validate passwords match if both are provided
+
     if (formData.password || formData.confirmPassword) {
       if (formData.password !== formData.confirmPassword) {
         setPasswordError("Passwords do not match");
         return;
       }
-  
+
       if (formData.password.length < 6) {
         setPasswordError("Password must be at least 6 characters");
         return;
       }
     }
-  
+
     try {
       const { password, confirmPassword, ...dataToUpdate } = formData;
       const token = localStorage.getItem("token");
       const updatedUser = await updateUser(userData.id, { ...dataToUpdate, password }, token);
-  
-      // Update the userData state with the updated user details
+
       setUserData(updatedUser);
-  
-      // Reset the form and exit edit mode
       setFormData({ ...updatedUser, password: "", confirmPassword: "" });
       setIsEditing(false);
-      setSaveError(""); // Clear any previous save errors
+      setSaveError("");
     } catch (error) {
       console.error("Failed to update user data:", error);
       setSaveError("Failed to save changes. Please try again.");
@@ -110,53 +105,51 @@ const UserInformation = () => {
   const handleDeleteAccount = async () => {
     try {
       const token = localStorage.getItem("token");
-      await deleteUser(userData.id, token); // Call deleteUser function
+      await deleteUser(userData.id, token);
       localStorage.removeItem("user");
       localStorage.removeItem("token");
-      navigate("/"); // Redirect to the home page after account deletion
+      navigate("/");
     } catch (error) {
       console.error("Failed to delete user account:", error);
     }
   };
 
   if (!userData.firstName) {
-    return <div>Loading...</div>; // Show a loading state while fetching data
+    return <div>Loading...</div>;
   }
 
   return (
     <div className="profile-container">
-      <div className="profile-header">
+      <header className="profile-header">
         <div className="container">
           <div className="logo">
             <Link to="/">
-              <img src={require("../assets/images/logo.png")} alt="Pronounce-IT Logo" />
+              <img
+                src={require("../assets/images/logo.png")}
+                alt="Pronounce-IT Logo"
+                style={{ height: "60px" }}
+              />
             </Link>
           </div>
         </div>
-      </div>
+      </header>
+
       <div className="profile-content">
-        <div className={`profile-card ${isEditing ? 'editing' : ''}`}>
-          {/* Top navigation buttons */}
+        <div className={`profile-card ${isEditing ? "editing" : ""}`}>
           <div className="profile-nav">
             {!isEditing && (
               <Link to="/user-dashboard" className="back-button">
                 <FontAwesomeIcon icon={faArrowLeft} /> Back to Dashboard
               </Link>
             )}
-            
+
             <div className="profile-actions">
               {!isEditing ? (
                 <>
-                  <button
-                    className="edit-button"
-                    onClick={() => setIsEditing(true)}
-                  >
+                  <button className="edit-button" onClick={() => setIsEditing(true)}>
                     <FontAwesomeIcon icon={faEdit} /> Edit Profile
                   </button>
-                  <button
-                    className="delete-button"
-                    onClick={() => setShowDeleteModal(true)}
-                  >
+                  <button className="delete-button" onClick={() => setShowDeleteModal(true)}>
                     <FontAwesomeIcon icon={faTrash} /> Delete Account
                   </button>
                 </>
@@ -287,9 +280,7 @@ const UserInformation = () => {
                       placeholder="Confirm new password"
                       className="edit-in-place"
                     />
-                    {passwordError && (
-                      <div className="error-message">{passwordError}</div>
-                    )}
+                    {passwordError && <div className="error-message">{passwordError}</div>}
                   </div>
                 </div>
               </>
@@ -300,7 +291,6 @@ const UserInformation = () => {
         </div>
       </div>
 
-      {/* Delete Confirmation Modal */}
       {showDeleteModal && (
         <div className="modal-overlay">
           <div className="modal">
@@ -310,10 +300,7 @@ const UserInformation = () => {
               <button className="confirm-button" onClick={handleDeleteAccount}>
                 Yes, Delete
               </button>
-              <button
-                className="cancel-button"
-                onClick={() => setShowDeleteModal(false)} // Close the modal
-              >
+              <button className="cancel-button" onClick={() => setShowDeleteModal(false)}>
                 Cancel
               </button>
             </div>
