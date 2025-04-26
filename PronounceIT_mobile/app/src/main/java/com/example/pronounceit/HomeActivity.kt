@@ -9,6 +9,11 @@ import android.widget.Button
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.example.pronounceit.network.RetrofitInstance
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 class HomeActivity : AppCompatActivity() {
 
@@ -30,10 +35,15 @@ class HomeActivity : AppCompatActivity() {
 
         // Get shared preferences
         sharedPreferences = getSharedPreferences("PronounceItPrefs", MODE_PRIVATE)
-        val userName = sharedPreferences.getString("userName", "Player")
+        val userId = sharedPreferences.getLong("userId", -1)
+        val token = sharedPreferences.getString("token", null)
 
-        // Set welcome message with user's name
-        welcomeTextView.text = "Welcome, $userName!"
+        if (userId != -1L && token != null) {
+            fetchUserDetails(userId, token)
+        } else {
+            Toast.makeText(this, "User not logged in", Toast.LENGTH_SHORT).show()
+            navigateToLogin()
+        }
 
         // Animation for button press
         val scaleAnim = AnimationUtils.loadAnimation(this, R.anim.button_scale)
@@ -63,14 +73,68 @@ class HomeActivity : AppCompatActivity() {
 
         // Logout button
         logoutButton.setOnClickListener {
-            sharedPreferences.edit().putBoolean("isLoggedIn", false).apply()
-            val intent = Intent(this, LoginActivity::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            startActivity(intent)
-            overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
-            finish()
-            Toast.makeText(this, "Logged out successfully", Toast.LENGTH_SHORT).show()
+            if (token != null) {
+                logout(token)
+            } else {
+                navigateToLogin()
+            }
         }
+    }
+
+    private fun logout(token: String) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val response = RetrofitInstance.api.logout("Bearer $token")
+                withContext(Dispatchers.Main) {
+                    if (response.isSuccessful) {
+                        // Clear shared preferences
+                        sharedPreferences.edit().clear().apply()
+
+                        // Navigate to LoginActivity
+                        navigateToLogin()
+                        Toast.makeText(this@HomeActivity, "Logged out successfully", Toast.LENGTH_SHORT).show()
+                    } else {
+                        Toast.makeText(this@HomeActivity, "Failed to log out", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(this@HomeActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
+            }
+        }
+    }
+
+    private fun fetchUserDetails(userId: Long, token: String) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val response = RetrofitInstance.api.getUserById(userId, "Bearer $token")
+                withContext(Dispatchers.Main) {
+                    if (response.isSuccessful) {
+                        val user = response.body()
+                        if (user != null) {
+                            welcomeTextView.text = "Welcome, ${user.firstName} ${user.lastName}!"
+                        }
+                    } else {
+                        Toast.makeText(this@HomeActivity, "Failed to fetch user details", Toast.LENGTH_SHORT).show()
+                        navigateToLogin()
+                    }
+                }
+            } catch (e: Exception) {
+                withContext(Dispatchers.Main) {
+                    Toast.makeText(this@HomeActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                    navigateToLogin()
+                }
+            }
+        }
+    }
+
+    private fun navigateToLogin() {
+        val intent = Intent(this, LoginActivity::class.java)
+        intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
+        startActivity(intent)
+        overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
+        finish()
     }
 
     override fun onBackPressed() {
