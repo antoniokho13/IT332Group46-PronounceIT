@@ -62,11 +62,18 @@ const Login = () => {
         const response = await login(formData.email, formData.password);
         localStorage.setItem('token', response.token);
         localStorage.setItem('user', JSON.stringify(response));
+        
+        // Redirect based on user role
+        const dashboardPath = response.role === "ADMIN" ? '/teacher-dashboard' : '/user-dashboard';
+        
+        // Fix welcome message using the firstName from response or fallback to role
+        const userName = response.firstName || (response.role === "ADMIN" ? "Teacher" : "Student");
+        
         setNotification({
           show: true,
-          message: `Welcome back, ${response.email}!`,
+          message: `Welcome back, ${userName}!`,
           type: 'success',
-          redirect: '/user-dashboard'
+          redirect: dashboardPath
         });
       } else {
         const role = selectedRole === 'teacher' ? 'ADMIN' : 'USER';
@@ -76,7 +83,7 @@ const Login = () => {
         const response = await register(userData);
         setNotification({
           show: true,
-          message: `Account created for ${response.firstName} ${response.lastName} (${response.email})!`,
+          message: `Account created for ${response.firstName} ${response.lastName}!`,
           type: 'success'
         });
         resetForm();

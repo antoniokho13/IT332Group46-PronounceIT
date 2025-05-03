@@ -138,7 +138,10 @@ const UserInformation = () => {
         <div className={`profile-card ${isEditing ? "editing" : ""}`}>
           <div className="profile-nav">
             {!isEditing && (
-              <Link to="/user-dashboard" className="back-button">
+              <Link 
+                to={userData.role === "ADMIN" ? "/teacher-dashboard" : "/user-dashboard"} 
+                className="back-button"
+              >
                 <FontAwesomeIcon icon={faArrowLeft} /> Back to Dashboard
               </Link>
             )}
