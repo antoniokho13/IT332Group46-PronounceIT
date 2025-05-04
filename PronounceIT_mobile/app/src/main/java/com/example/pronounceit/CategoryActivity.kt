@@ -1,8 +1,8 @@
 package com.example.pronounceit
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Button
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 
 class CategoryActivity : AppCompatActivity() {
@@ -20,15 +20,21 @@ class CategoryActivity : AppCompatActivity() {
         placesButton = findViewById(R.id.placesButton)
 
         animalsButton.setOnClickListener {
-            Toast.makeText(this, "Animals selected", Toast.LENGTH_SHORT).show()
+            val intent = Intent(this, LessonActivity::class.java)
+            intent.putExtra("category", "Animals")
+            startActivity(intent)
         }
 
         foodButton.setOnClickListener {
-            Toast.makeText(this, "Food selected", Toast.LENGTH_SHORT).show()
+            val intent = Intent(this, LessonActivity::class.java)
+            intent.putExtra("category", "Food")
+            startActivity(intent)
         }
 
         placesButton.setOnClickListener {
-            Toast.makeText(this, "Places selected", Toast.LENGTH_SHORT).show()
+            val intent = Intent(this, LessonActivity::class.java)
+            intent.putExtra("category", "Places")
+            startActivity(intent)
         }
     }
 }
