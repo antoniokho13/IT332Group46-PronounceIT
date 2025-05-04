@@ -43,5 +43,10 @@
             android:label="PronounceIT"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar">
         </activity>
+        <activity android:name=".LessonActivity"
+            android:exported="true"
+            android:label="PronounceIT"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar">
+        </activity>
     </application>
 </manifest>
