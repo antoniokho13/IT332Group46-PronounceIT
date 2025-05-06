@@ -1,14 +1,17 @@
 package com.capstone.group46.pronounceit.service;
 
+import com.capstone.group46.pronounceit.entity.LessonEntity;
+import com.capstone.group46.pronounceit.entity.UserEntity;
 import com.capstone.group46.pronounceit.entity.WordEntity;
+import com.capstone.group46.pronounceit.repository.LessonRepository;
+import com.capstone.group46.pronounceit.repository.UserRepository;
 import com.capstone.group46.pronounceit.repository.WordRepository;
-import com.capstone.group46.pronounceit.service.TextToSpeechService;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ResourceUtils;
+
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
@@ -16,14 +19,17 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-
 @Service
 public class WordService {
     private final WordRepository wordRepository;
+    private final LessonRepository lessonRepository;
+    private final UserRepository userRepository;
     private final TextToSpeechService textToSpeechService;
 
-    public WordService(WordRepository wordRepository, TextToSpeechService textToSpeechService) {
+    public WordService(WordRepository wordRepository, LessonRepository lessonRepository, UserRepository userRepository, TextToSpeechService textToSpeechService) {
         this.wordRepository = wordRepository;
+        this.lessonRepository = lessonRepository;
+        this.userRepository = userRepository;
         this.textToSpeechService = textToSpeechService;
     }
 
@@ -36,16 +42,35 @@ public class WordService {
     }
 
     public WordEntity createWord(WordEntity word) {
+        // Fetch the LessonEntity from the database
+        Long lessonId = word.getLesson().getLessonId();
+        LessonEntity lesson = lessonRepository.findById(lessonId)
+                .orElseThrow(() -> new IllegalArgumentException("Lesson with ID " + lessonId + " not found"));
+
+        // Fetch the UserEntity from the database
+        Long userId = word.getCreatedBy().getId();
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User with ID " + userId + " not found"));
+
+        // Set the managed entities
+        word.setLesson(lesson);
+        word.setCreatedBy(user);
+
+        // Generate audio for the word using Text-to-Speech
         try {
             byte[] audioContent = textToSpeechService.synthesizeText(word.getWord());
-            String audioURL = storeAudio(audioContent, word.getWord()); // Implement this method to store audio and get URL
+            String audioURL = storeAudio(audioContent, word.getWord());
             word.setAudioURL(audioURL);
-            word.setCreatedDate(LocalDateTime.now()); // Set the creation date
         } catch (IOException e) {
             // Handle exception appropriately (e.g., log it and set a default audio URL or null)
             e.printStackTrace();
             word.setAudioURL(null); // Or a default audio URL
         }
+
+        // Set the creation date
+        word.setCreatedDate(LocalDateTime.now());
+
+        // Save the WordEntity
         return wordRepository.save(word);
     }
 
@@ -55,7 +80,7 @@ public class WordService {
             word.setImageURL(updatedWord.getImageURL());
             try {
                 byte[] audioContent = textToSpeechService.synthesizeText(word.getWord());
-                String audioURL = storeAudio(audioContent, word.getWord()); // Implement this method to store audio and get URL
+                String audioURL = storeAudio(audioContent, word.getWord());
                 word.setAudioURL(audioURL);
             } catch (IOException e) {
                 // Handle exception appropriately

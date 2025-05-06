@@ -1,18 +1,23 @@
 package com.capstone.group46.pronounceit.service;
 
-import com.capstone.group46.pronounceit.entity.CategoryEntity;
-import com.capstone.group46.pronounceit.repository.CategoryRepository;
-import org.springframework.stereotype.Service;
-
 import java.util.List;
 import java.util.Optional;
+
+import org.springframework.stereotype.Service;
+
+import com.capstone.group46.pronounceit.entity.CategoryEntity;
+import com.capstone.group46.pronounceit.entity.UserEntity;
+import com.capstone.group46.pronounceit.repository.CategoryRepository;
+import com.capstone.group46.pronounceit.repository.UserRepository;
 
 @Service
 public class CategoryService {
     private final CategoryRepository categoryRepository;
+    private final UserRepository userRepository;
 
-    public CategoryService(CategoryRepository categoryRepository) {
+    public CategoryService(CategoryRepository categoryRepository, UserRepository userRepository) {
         this.categoryRepository = categoryRepository;
+        this.userRepository = userRepository;
     }
 
     public List<CategoryEntity> getAllCategories() {
@@ -24,6 +29,15 @@ public class CategoryService {
     }
 
     public CategoryEntity createCategory(CategoryEntity category) {
+        // Fetch the UserEntity from the database
+        Long userId = category.getCreatedBy().getId();
+        UserEntity user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("User with ID " + userId + " not found"));
+
+        // Set the managed UserEntity to the CategoryEntity
+        category.setCreatedBy(user);
+
+        // Save the CategoryEntity
         return categoryRepository.save(category);
     }
 
