@@ -221,21 +221,23 @@ const TeacherDashboard = () => {
         <>
           <h3>{isEditing ? "Edit Lesson" : "Add New Lesson"}</h3>
           <form className="modal-form" onSubmit={handleAddLesson}>
-            <div className="form-group">
-              <label htmlFor="lessonCategory">Category</label>
-              <select
-                id="lessonCategory"
-                defaultValue={isEditing ? editingItem.category.categoryId : ""}
-                required
-              >
-                <option value="">Select a category</option>
-                {categories.map((category) => (
-                  <option key={category.categoryId} value={category.categoryId}>
-                    {category.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+            {!isEditing && ( // Only show the category dropdown when not editing
+              <div className="form-group">
+                <label htmlFor="lessonCategory">Category</label>
+                <select
+                  id="lessonCategory"
+                  defaultValue={isEditing ? editingItem.category.categoryId : ""}
+                  required
+                >
+                  <option value="">Select a category</option>
+                  {categories.map((category) => (
+                    <option key={category.categoryId} value={category.categoryId}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
             <div className="form-group">
               <label htmlFor="lessonTitle">Lesson Name</label>
               <input
@@ -979,7 +981,7 @@ const TeacherDashboard = () => {
     if (loading) {
       return (
         <tr>
-          <td colSpan="6">Loading...</td>
+          <td colSpan="7">Loading...</td>
         </tr>
       );
     }
@@ -987,7 +989,7 @@ const TeacherDashboard = () => {
     if (lessons.length === 0) {
       return (
         <tr>
-          <td colSpan="6">No lessons found.</td>
+          <td colSpan="7">No lessons found.</td>
         </tr>
       );
     }
@@ -1001,6 +1003,15 @@ const TeacherDashboard = () => {
         <td>{`${lesson.createdBy.firstName} ${lesson.createdBy.lastName}`}</td>
         <td>{new Date(lesson.createdDate).toLocaleDateString()}</td>
         <td>
+          <button
+            className="edit-btn"
+            onClick={(e) => {
+              e.stopPropagation();
+              openModal("lessons", lesson); // Open modal for editing
+            }}
+          >
+            <FontAwesomeIcon icon={faPlus} /> {/* Replace with an edit icon */}
+          </button>
           <button
             className="delete-btn"
             onClick={(e) => {
@@ -1083,15 +1094,21 @@ const TeacherDashboard = () => {
   const handleAddLesson = async (e) => {
     e.preventDefault();
 
+    // Determine if we are editing or adding a new lesson
+    const isEditing = editingItem !== null;
+
     // Get the input values
-    const categoryId = e.target.lessonCategory.value;
+    const categoryId = isEditing
+      ? editingItem.category.categoryId // Use the existing category ID when editing
+      : e.target.lessonCategory?.value; // Get the value from the dropdown when adding
+
     const name = e.target.lessonTitle.value;
     const focus = e.target.lessonFocus.value;
     const sequence = parseInt(e.target.lessonSequence.value, 10);
 
     // Prepare the lesson object
     const newLesson = {
-      category: { categoryId: parseInt(categoryId, 10) }, // Use the selected category ID
+      category: { categoryId: parseInt(categoryId, 10) }, // Use the selected or existing category ID
       name,
       focus,
       sequence,
@@ -1101,7 +1118,7 @@ const TeacherDashboard = () => {
     };
 
     try {
-      if (editingItem) {
+      if (isEditing) {
         // Call the updateLesson function if editing
         await updateLesson(editingItem.lessonId, newLesson);
         alert("Lesson updated successfully!");
