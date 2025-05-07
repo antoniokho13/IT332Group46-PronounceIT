@@ -96,18 +96,25 @@ public class WordService {
     }
 
     private String storeAudio(byte[] audioContent, String word) throws IOException {
-        File audioDir = ResourceUtils.getFile("classpath:audio/");
-        if (!audioDir.exists()) {
-            audioDir.mkdirs(); // Create the directory if it doesn't exist
+        // Get the resource directory
+        File resourceDir = new File("src/main/resources/audio/");
+
+        // Ensure the directory exists
+        if (!resourceDir.exists()) {
+            resourceDir.mkdirs();
         }
 
         String fileName = UUID.randomUUID().toString() + "_" + word + ".mp3";
-        Path filePath = Paths.get(audioDir.getAbsolutePath(), fileName);
+        Path filePath = Paths.get(resourceDir.getAbsolutePath(), fileName);
 
         try (FileOutputStream fos = new FileOutputStream(filePath.toFile())) {
             fos.write(audioContent);
         }
 
         return "/audio/" + fileName; // Return the relative path to access the audio
+    }
+
+    public byte[] synthesizeAudioForWord(WordEntity word) throws IOException {
+        return textToSpeechService.synthesizeText(word.getWord());
     }
 }
