@@ -8,6 +8,7 @@ import com.capstone.group46.pronounceit.repository.UserRepository;
 import com.capstone.group46.pronounceit.repository.WordRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.util.ResourceUtils;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -116,5 +117,34 @@ public class WordService {
 
     public byte[] synthesizeAudioForWord(WordEntity word) throws IOException {
         return textToSpeechService.synthesizeText(word.getWord());
+    }
+
+    public String uploadImage(MultipartFile imageFile) throws IOException {
+        // Define the directory to store images (relative to the backend folder)
+        Path imageDirPath = Paths.get("./uploads/images/"); // Changed from ../ to ./
+        File imageDir = imageDirPath.toFile();
+
+        // Create the directory if it doesn't exist
+        if (!imageDir.exists()) {
+            imageDir.mkdirs();
+        }
+
+        // Generate a unique file name
+        String fileName = UUID.randomUUID().toString() + "_" + imageFile.getOriginalFilename();
+        Path filePath = imageDirPath.resolve(fileName);
+
+        // Save the file to the directory
+        try (FileOutputStream fos = new FileOutputStream(filePath.toFile())) {
+            fos.write(imageFile.getBytes());
+        }
+
+        // Return the relative URL to access the image
+        return "/uploads/images/" + fileName;
+    }
+
+    public List<WordEntity> getWordsByLessonId(Long lessonId) {
+        return wordRepository.findAll().stream()
+                .filter(word -> word.getLesson().getLessonId().equals(lessonId))
+                .toList();
     }
 }
