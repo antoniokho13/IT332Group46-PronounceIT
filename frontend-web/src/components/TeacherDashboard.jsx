@@ -16,15 +16,20 @@ import ReactDOM from "react-dom";
 import { Link, useNavigate } from "react-router-dom";
 import "../assets/css/Dashboard.css";
 import logo from "../assets/images/logo.png";
-
+import { getAllCategories, createCategory, updateCategory, deleteCategory } from "../services/categoryService"; // Import the service functions
+import { getUserById } from "../services/userService"; // Import the service to fetch user data
+import { getAllLessons, updateLesson, createLesson, deleteLesson } from "../services/lessonService"; // Import the service to fetch lessons
 // Create static version without actual backend connections
 const TeacherDashboard = () => {
-  const [user, setUser] = useState({ firstName: "Teacher", lastName: "User" });
+  const [user, setUser] = useState({ firstName: "", lastName: "", id: null }); // Include `id` in the user state
   const [showDropdown, setShowDropdown] = useState(false);
   const [activeSection, setActiveSection] = useState("dashboard");
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState("");
   const [editingItem, setEditingItem] = useState(null);
+  const [categories, setCategories] = useState([]); // State to store categories
+  const [loading, setLoading] = useState(true); // State to handle loading
+  const [lessons, setLessons] = useState([]); // Ensure lessons is initialized as an empty array
   const dropdownRef = useRef(null);
   const userCardRef = useRef(null);
   const modalRef = useRef(null);
@@ -95,10 +100,35 @@ const TeacherDashboard = () => {
   };
   
   // Function to delete an item (just a placeholder for now)
-  const handleDelete = (item, type) => {
-    if (window.confirm(`Are you sure you want to delete this ${type}?`)) {
-      console.log(`Deleting ${type}:`, item);
-      // In a real app, you would call an API here
+  const handleDelete = async (category) => {
+    if (window.confirm(`Are you sure you want to delete the category "${category.name}"?`)) {
+      try {
+        await deleteCategory(category.categoryId); // Call the deleteCategory service
+        alert("Category deleted successfully!");
+  
+        // Refresh the categories list
+        const updatedCategories = await getAllCategories();
+        setCategories(updatedCategories);
+      } catch (error) {
+        console.error("Error deleting category:", error);
+        alert("Failed to delete category. Please try again.");
+      }
+    }
+  };
+
+  const handleDeleteLesson = async (lesson) => {
+    if (window.confirm(`Are you sure you want to delete the lesson "${lesson.name}"?`)) {
+      try {
+        await deleteLesson(lesson.lessonId); // Call the deleteLesson service
+        alert("Lesson deleted successfully!");
+  
+        // Refresh the lessons list
+        const updatedLessons = await getAllLessons();
+        setLessons(updatedLessons);
+      } catch (error) {
+        console.error("Error deleting lesson:", error);
+        alert("Failed to delete lesson. Please try again.");
+      }
     }
   };
 
@@ -144,7 +174,117 @@ const TeacherDashboard = () => {
   // Render modal content based on type
   const renderModalContent = () => {
     const isEditing = editingItem !== null;
-    
+
+    if (modalType === "categories") {
+      return (
+        <>
+          <h3>{isEditing ? "Edit Category" : "Add New Category"}</h3>
+          <form className="modal-form" onSubmit={handleAddCategory}>
+            <div className="form-group">
+              <label htmlFor="categoryName">Category Name</label>
+              <input
+                type="text"
+                id="categoryName"
+                placeholder="e.g., Vowel Sounds, Consonants"
+                defaultValue={isEditing ? editingItem.name : ""}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="categoryDescription">Description</label>
+              <textarea
+                id="categoryDescription"
+                placeholder="Describe this category of pronunciation"
+                defaultValue={isEditing ? editingItem.description : ""}
+                required
+              ></textarea>
+            </div>
+            <div className="modal-actions">
+              <button
+                type="button"
+                className="cancel-btn"
+                onClick={() => setShowModal(false)}
+              >
+                Cancel
+              </button>
+              <button type="submit" className="submit-btn">
+                {isEditing ? "Update" : "Add"}
+              </button>
+            </div>
+          </form>
+        </>
+      );
+    }
+
+    if (modalType === "lessons") {
+      return (
+        <>
+          <h3>{isEditing ? "Edit Lesson" : "Add New Lesson"}</h3>
+          <form className="modal-form" onSubmit={handleAddLesson}>
+            {!isEditing && ( // Only show the category dropdown when not editing
+              <div className="form-group">
+                <label htmlFor="lessonCategory">Category</label>
+                <select
+                  id="lessonCategory"
+                  defaultValue={isEditing ? editingItem.category.categoryId : ""}
+                  required
+                >
+                  <option value="">Select a category</option>
+                  {categories.map((category) => (
+                    <option key={category.categoryId} value={category.categoryId}>
+                      {category.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+            <div className="form-group">
+              <label htmlFor="lessonTitle">Lesson Name</label>
+              <input
+                type="text"
+                id="lessonTitle"
+                placeholder="Enter lesson name"
+                defaultValue={isEditing ? editingItem.name : ""}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="lessonFocus">Focus</label>
+              <input
+                type="text"
+                id="lessonFocus"
+                placeholder="Enter lesson focus"
+                defaultValue={isEditing ? editingItem.focus : ""}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label htmlFor="lessonSequence">Sequence</label>
+              <input
+                type="number"
+                id="lessonSequence"
+                placeholder="Enter sequence number"
+                defaultValue={isEditing ? editingItem.sequence : ""}
+                required
+              />
+            </div>
+            <div className="modal-actions">
+              <button
+                type="button"
+                className="cancel-btn"
+                onClick={() => setShowModal(false)}
+              >
+                Cancel
+              </button>
+              <button type="submit" className="submit-btn">
+                {isEditing ? "Update" : "Add"}
+              </button>
+            </div>
+          </form>
+        </>
+      );
+    }
+
     switch (modalType) {
       case 'difficulty':
         return (
@@ -288,48 +428,6 @@ const TeacherDashboard = () => {
                     />
                   </label>
                 </div>
-              </div>
-              <div className="modal-actions">
-                <button type="button" className="cancel-btn" onClick={() => setShowModal(false)}>Cancel</button>
-                <button type="submit" className="submit-btn">{isEditing ? "Update" : "Add"}</button>
-              </div>
-            </form>
-          </>
-        );
-      case 'categories':
-        return (
-          <>
-            <h3>{isEditing ? "Edit Category" : "Add New Category"}</h3>
-            <form className="modal-form">
-              <div className="form-group">
-                <label htmlFor="categoryName">Category Name</label>
-                <input 
-                  type="text" 
-                  id="categoryName" 
-                  placeholder="e.g., Vowel Sounds, Consonants" 
-                  defaultValue={isEditing ? editingItem.name : ""}
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="categoryDescription">Description</label>
-                <textarea 
-                  id="categoryDescription" 
-                  placeholder="Describe this category of pronunciation"
-                  defaultValue={isEditing ? editingItem.description : ""}
-                ></textarea>
-              </div>
-              <div className="form-group">
-                <label htmlFor="categoryIcon">Icon (Optional)</label>
-                <input type="file" id="categoryIcon" accept="image/*" />
-              </div>
-              <div className="form-group">
-                <label htmlFor="categoryOrder">Display Order</label>
-                <input 
-                  type="number" 
-                  id="categoryOrder" 
-                  placeholder="e.g., 1, 2, 3" 
-                  defaultValue={isEditing ? editingItem.order : ""}
-                />
               </div>
               <div className="modal-actions">
                 <button type="button" className="cancel-btn" onClick={() => setShowModal(false)}>Cancel</button>
@@ -547,87 +645,16 @@ const TeacherDashboard = () => {
               <table className="items-table">
                 <thead>
                   <tr>
-                    <th>Title</th>
+                    <th>Lesson Name</th>
+                    <th>Focus</th>
+                    <th>Sequence</th>
                     <th>Category</th>
-                    <th>Difficulty</th>
-                    <th>Created</th>
+                    <th>Created By</th>
+                    <th>Created Date</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
-                <tbody>
-                  <tr onClick={() => handleRowClick({
-                      title: "Basic Vowel Sounds",
-                      category: "Vowel Sounds",
-                      difficulty: "Beginner",
-                      created: "2023-04-15",
-                      description: "Introduction to basic vowel sounds",
-                      content: "This lesson covers the fundamental vowel sounds in English..."
-                    }, 'lessons')}>
-                    <td>Basic Vowel Sounds</td>
-                    <td>Vowel Sounds</td>
-                    <td>Beginner</td>
-                    <td>2023-04-15</td>
-                    <td>
-                      <button 
-                        className="delete-btn" 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDelete({ title: "Basic Vowel Sounds" }, 'lessons');
-                        }}
-                      >
-                        <FontAwesomeIcon icon={faTrash} />
-                      </button>
-                    </td>
-                  </tr>
-                  <tr onClick={() => handleRowClick({
-                      title: "Consonant Blends",
-                      category: "Consonant Sounds",
-                      difficulty: "Intermediate",
-                      created: "2023-04-10",
-                      description: "Working with complex consonant combinations",
-                      content: "This lesson explores consonant blends that often cause difficulty..."
-                    }, 'lessons')}>
-                    <td>Consonant Blends</td>
-                    <td>Consonant Sounds</td>
-                    <td>Intermediate</td>
-                    <td>2023-04-10</td>
-                    <td>
-                      <button 
-                        className="delete-btn" 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDelete({ title: "Consonant Blends" }, 'lessons');
-                        }}
-                      >
-                        <FontAwesomeIcon icon={faTrash} />
-                      </button>
-                    </td>
-                  </tr>
-                  <tr onClick={() => handleRowClick({
-                      title: "Word Stress in Multisyllabic Words",
-                      category: "Word Stress",
-                      difficulty: "Advanced",
-                      created: "2023-04-05",
-                      description: "Advanced techniques for word stress",
-                      content: "This lesson focuses on the patterns of stress in longer words..."
-                    }, 'lessons')}>
-                    <td>Word Stress in Multisyllabic Words</td>
-                    <td>Word Stress</td>
-                    <td>Advanced</td>
-                    <td>2023-04-05</td>
-                    <td>
-                      <button 
-                        className="delete-btn" 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDelete({ title: "Word Stress in Multisyllabic Words" }, 'lessons');
-                        }}
-                      >
-                        <FontAwesomeIcon icon={faTrash} />
-                      </button>
-                    </td>
-                  </tr>
-                </tbody>
+                <tbody>{renderLessonsTable()}</tbody>
               </table>
             </div>
           </>
@@ -648,100 +675,13 @@ const TeacherDashboard = () => {
                   <tr>
                     <th>Name</th>
                     <th>Description</th>
-                    <th>Lessons Count</th>
-                    <th>Order</th>
+                    <th>Created By</th>
+                    <th>Created Date</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr onClick={() => handleRowClick({
-                      name: "Vowel Sounds",
-                      description: "All lessons related to vowel pronunciation",
-                      lessonsCount: 8,
-                      order: 1
-                    }, 'categories')}>
-                    <td>Vowel Sounds</td>
-                    <td>All lessons related to vowel pronunciation</td>
-                    <td>8</td>
-                    <td>1</td>
-                    <td>
-                      <button 
-                        className="delete-btn" 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDelete({ name: "Vowel Sounds" }, 'categories');
-                        }}
-                      >
-                        <FontAwesomeIcon icon={faTrash} />
-                      </button>
-                    </td>
-                  </tr>
-                  <tr onClick={() => handleRowClick({
-                      name: "Consonant Sounds",
-                      description: "All lessons related to consonant pronunciation",
-                      lessonsCount: 12,
-                      order: 2
-                    }, 'categories')}>
-                    <td>Consonant Sounds</td>
-                    <td>All lessons related to consonant pronunciation</td>
-                    <td>12</td>
-                    <td>2</td>
-                    <td>
-                      <button 
-                        className="delete-btn" 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDelete({ name: "Consonant Sounds" }, 'categories');
-                        }}
-                      >
-                        <FontAwesomeIcon icon={faTrash} />
-                      </button>
-                    </td>
-                  </tr>
-                  <tr onClick={() => handleRowClick({
-                      name: "Word Stress",
-                      description: "Lessons focused on syllable stress patterns",
-                      lessonsCount: 5,
-                      order: 3
-                    }, 'categories')}>
-                    <td>Word Stress</td>
-                    <td>Lessons focused on syllable stress patterns</td>
-                    <td>5</td>
-                    <td>3</td>
-                    <td>
-                      <button 
-                        className="delete-btn" 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDelete({ name: "Word Stress" }, 'categories');
-                        }}
-                      >
-                        <FontAwesomeIcon icon={faTrash} />
-                      </button>
-                    </td>
-                  </tr>
-                  <tr onClick={() => handleRowClick({
-                      name: "Intonation",
-                      description: "Lessons about sentence rhythm and intonation",
-                      lessonsCount: 3,
-                      order: 4
-                    }, 'categories')}>
-                    <td>Intonation</td>
-                    <td>Lessons about sentence rhythm and intonation</td>
-                    <td>3</td>
-                    <td>4</td>
-                    <td>
-                      <button 
-                        className="delete-btn" 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDelete({ name: "Intonation" }, 'categories');
-                        }}
-                      >
-                        <FontAwesomeIcon icon={faTrash} />
-                      </button>
-                    </td>
-                  </tr>
+                  {renderCategoriesTable()}
                 </tbody>
               </table>
             </div>
@@ -957,6 +897,259 @@ const TeacherDashboard = () => {
         );
     }
   };
+
+  useEffect(() => {
+    // Fetch categories when the component mounts
+    const fetchCategories = async () => {
+      try {
+        const data = await getAllCategories();
+        setCategories(data);
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCategories();
+  }, []);
+
+  useEffect(() => {
+    // Fetch lessons when the component mounts
+    const fetchLessons = async () => {
+      try {
+        const data = await getAllLessons();
+        if (Array.isArray(data)) {
+          setLessons(data); // Only set lessons if data is an array
+        } else {
+          console.error("Invalid data format for lessons:", data);
+          setLessons([]); // Fallback to an empty array
+        }
+      } catch (error) {
+        console.error("Error fetching lessons:", error);
+        setLessons([]); // Fallback to an empty array in case of an error
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchLessons();
+  }, []);
+
+  const renderCategoriesTable = () => {
+    if (loading) {
+      return (
+        <tr>
+          <td colSpan="5">Loading...</td>
+        </tr>
+      );
+    }
+
+    if (categories.length === 0) {
+      return (
+        <tr>
+          <td colSpan="5">No categories found.</td>
+        </tr>
+      );
+    }
+
+    return categories.map((category) => (
+      <tr key={category.categoryId}>
+        <td>{category.name}</td>
+        <td>{category.description}</td>
+        <td>{`${category.createdBy.firstName} ${category.createdBy.lastName}`}</td>
+        <td>{new Date(category.createdDate).toLocaleDateString()}</td>
+        <td>
+          <button
+            className="edit-btn"
+            onClick={(e) => {
+              e.stopPropagation();
+              openModal("categories", category); // Open modal for editing
+            }}
+          >
+            <FontAwesomeIcon icon={faPlus} /> {/* Replace with an edit icon */}
+          </button>
+          <button
+            className="delete-btn"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDelete(category); // Call handleDelete when the trash icon is clicked
+            }}
+          >
+            <FontAwesomeIcon icon={faTrash} />
+          </button>
+        </td>
+      </tr>
+    ));
+  };
+
+  const renderLessonsTable = () => {
+    if (loading) {
+      return (
+        <tr>
+          <td colSpan="7">Loading...</td>
+        </tr>
+      );
+    }
+
+    if (lessons.length === 0) {
+      return (
+        <tr>
+          <td colSpan="7">No lessons found.</td>
+        </tr>
+      );
+    }
+
+    return lessons.map((lesson) => (
+      <tr key={lesson.lessonId}>
+        <td>{lesson.name}</td>
+        <td>{lesson.focus}</td>
+        <td>{lesson.sequence}</td>
+        <td>{lesson.category.name}</td>
+        <td>{`${lesson.createdBy.firstName} ${lesson.createdBy.lastName}`}</td>
+        <td>{new Date(lesson.createdDate).toLocaleDateString()}</td>
+        <td>
+          <button
+            className="edit-btn"
+            onClick={(e) => {
+              e.stopPropagation();
+              openModal("lessons", lesson); // Open modal for editing
+            }}
+          >
+            <FontAwesomeIcon icon={faPlus} /> {/* Replace with an edit icon */}
+          </button>
+          <button
+            className="delete-btn"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDeleteLesson(lesson); // Call handleDeleteLesson when the trash icon is clicked
+            }}
+          >
+            <FontAwesomeIcon icon={faTrash} />
+          </button>
+        </td>
+      </tr>
+    ));
+  };
+
+  const fetchUserData = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const storedUser = JSON.parse(localStorage.getItem("user"));
+      if (token && storedUser && storedUser.userId) {
+        const userData = await getUserById(storedUser.userId, token);
+        setUser({
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          id: userData.id, // Store the user ID
+        });
+      } else {
+        throw new Error("User not found in localStorage");
+      }
+    } catch (error) {
+      console.error("Failed to fetch user data:", error);
+      localStorage.removeItem("user");
+      localStorage.removeItem("token");
+      navigate("/login");
+    }
+  };
+
+  useEffect(() => {
+    fetchUserData(); // Fetch user data when the component mounts
+  }, []);
+
+  const handleAddCategory = async (e) => {
+    e.preventDefault();
+
+    // Get the input values
+    const name = e.target.categoryName.value;
+    const description = e.target.categoryDescription.value;
+
+    // Prepare the category object
+    const newCategory = {
+      name,
+      description,
+      createdBy: { id: user.id }, // Use the user ID from the state
+      createdDate: new Date().toISOString(), // Automatically set to today's date
+      active: true, // Always set to true
+    };
+
+    try {
+      if (editingItem) {
+        // Call the updateCategory function if editing
+        await updateCategory(editingItem.categoryId, newCategory);
+        alert("Category updated successfully!");
+      } else {
+        // Call the createCategory function if adding a new category
+        await createCategory(newCategory, user.id);
+        alert("Category added successfully!");
+      }
+
+      // Refresh the categories list
+      const updatedCategories = await getAllCategories();
+      setCategories(updatedCategories);
+
+      // Close the modal
+      setShowModal(false);
+    } catch (error) {
+      console.error("Error saving category:", error);
+      alert("Failed to save category. Please try again.");
+    }
+  };
+
+  const handleAddLesson = async (e) => {
+    e.preventDefault();
+
+    // Determine if we are editing or adding a new lesson
+    const isEditing = editingItem !== null;
+
+    // Get the input values
+    const categoryId = isEditing
+      ? editingItem.category.categoryId // Use the existing category ID when editing
+      : e.target.lessonCategory?.value; // Get the value from the dropdown when adding
+
+    const name = e.target.lessonTitle.value;
+    const focus = e.target.lessonFocus.value;
+    const sequence = parseInt(e.target.lessonSequence.value, 10);
+
+    // Prepare the lesson object
+    const newLesson = {
+      category: { categoryId: parseInt(categoryId, 10) }, // Use the selected or existing category ID
+      name,
+      focus,
+      sequence,
+      createdBy: { id: user.id }, // Use the logged-in user's ID
+      createdDate: new Date().toISOString(), // Automatically set to today's date
+      active: true, // Always set to true
+    };
+
+    try {
+      if (isEditing) {
+        // Call the updateLesson function if editing
+        await updateLesson(editingItem.lessonId, newLesson);
+        alert("Lesson updated successfully!");
+      } else {
+        // Call the createLesson function if adding a new lesson
+        await createLesson(newLesson, user.id);
+        alert("Lesson added successfully!");
+      }
+
+      // Refresh the lessons list
+      const updatedLessons = await getAllLessons();
+      setLessons(updatedLessons);
+
+      // Close the modal
+      setShowModal(false);
+    } catch (error) {
+      console.error("Error saving lesson:", error);
+      alert("Failed to save lesson. Please try again.");
+    }
+  };
+
+  localStorage.setItem("userId", user.id); // Replace `user.id` with the actual user ID from the login response
+
+  const userId = localStorage.getItem("userId");
+  console.log("Retrieved userId:", userId);
 
   return (
     <div className="dashboard-container">
