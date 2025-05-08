@@ -29,7 +29,7 @@ const TeacherDashboard = () => {
   const [editingItem, setEditingItem] = useState(null);
   const [categories, setCategories] = useState([]); // State to store categories
   const [loading, setLoading] = useState(true); // State to handle loading
-  const [lessons, setLessons] = useState([]); // State to store lessons
+  const [lessons, setLessons] = useState([]); // Ensure lessons is initialized as an empty array
   const dropdownRef = useRef(null);
   const userCardRef = useRef(null);
   const modalRef = useRef(null);
@@ -919,9 +919,15 @@ const TeacherDashboard = () => {
     const fetchLessons = async () => {
       try {
         const data = await getAllLessons();
-        setLessons(data); // Store the fetched lessons in state
+        if (Array.isArray(data)) {
+          setLessons(data); // Only set lessons if data is an array
+        } else {
+          console.error("Invalid data format for lessons:", data);
+          setLessons([]); // Fallback to an empty array
+        }
       } catch (error) {
         console.error("Error fetching lessons:", error);
+        setLessons([]); // Fallback to an empty array in case of an error
       } finally {
         setLoading(false);
       }
