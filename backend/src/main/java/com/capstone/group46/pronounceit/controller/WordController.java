@@ -2,12 +2,14 @@ package com.capstone.group46.pronounceit.controller;
 
 import com.capstone.group46.pronounceit.entity.WordEntity;
 import com.capstone.group46.pronounceit.service.WordService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.nio.file.Path;
@@ -65,8 +67,30 @@ public class WordController {
         return ResponseEntity.ok(words);
     }
 
+    @GetMapping("/lesson/{lessonId}")
+    public ResponseEntity<List<WordEntity>> getWordsByLessonId(@PathVariable Long lessonId) {
+        List<WordEntity> words = wordService.getWordsByLessonId(lessonId);
+        return ResponseEntity.ok(words);
+    }
+
     @PostMapping
     public WordEntity createWord(@RequestBody WordEntity word) {
+        return wordService.createWord(word);
+    }
+
+    @PostMapping(consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
+    public WordEntity createWord(
+            @RequestPart("word") String wordJson,
+            @RequestPart("image") MultipartFile imageFile) throws IOException {
+        // Convert the JSON string to a WordEntity object
+        ObjectMapper objectMapper = new ObjectMapper();
+        WordEntity word = objectMapper.readValue(wordJson, WordEntity.class);
+
+        // Upload the image and set the image URL
+        String imageUrl = wordService.uploadImage(imageFile);
+        word.setImageURL(imageUrl);
+
+        // Save the WordEntity
         return wordService.createWord(word);
     }
 

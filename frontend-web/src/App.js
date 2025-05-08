@@ -7,6 +7,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import TeacherDashboard from './components/TeacherDashboard';
 import UserDashboard from './components/UserDashboard';
 import UserInformation from './components/UserInformation';
+import Words from './components/Words'; // Import the Words component
 
 function App() {
   return (
@@ -23,6 +24,10 @@ function App() {
           element={<ProtectedRoute component={TeacherDashboard} requiredRole="ADMIN" />} 
         />
         <Route path="/profile" element={<ProtectedRoute component={UserInformation} />} />
+        <Route 
+          path="/words/:lessonId" 
+          element={<ProtectedRoute component={Words} requiredRole="ADMIN" />} 
+        /> {/* Add the Words route */}
       </Routes>
     </Router>
   );

@@ -1027,6 +1027,13 @@ const TeacherDashboard = () => {
           >
             <FontAwesomeIcon icon={faTrash} />
           </button>
+          {/* Add Words Button */}
+          <button
+            className="words-btn"
+            onClick={() => navigate(`/words/${lesson.lessonId}`, { state: { lessonName: lesson.name } })}
+          >
+            Words
+          </button>
         </td>
       </tr>
     ));
