@@ -95,6 +95,11 @@ const Words = () => {
     return () => document.removeEventListener("mousedown", closeModal);
   }, [showModal]);
 
+  const playAudio = (audioURL) => {
+    const audio = new Audio(`http://localhost:8080${audioURL}`); // Add the base URL
+    audio.play();
+  };
+
   return (
     <div className="dashboard-container">
       <h1 className="dashboard-title">Words for Lesson: {lessonName}</h1>
@@ -111,6 +116,7 @@ const Words = () => {
             <tr>
               <th>Word</th>
               <th>Image</th>
+              <th>Audio</th> {/* Moved Audio column after Image */}
               <th>Created By</th>
               <th>Created Date</th>
               <th>Actions</th>
@@ -126,6 +132,18 @@ const Words = () => {
                     alt={word.word}
                     style={{ width: "100px", height: "auto", borderRadius: "5px" }}
                   />
+                </td>
+                <td>
+                  {word.audioURL ? (
+                    <button
+                      className="play-audio-btn"
+                      onClick={() => playAudio(word.audioURL)}
+                    >
+                      Play Audio
+                    </button>
+                  ) : (
+                    <span>No Audio</span>
+                  )}
                 </td>
                 <td>{`${word.createdBy.firstName} ${word.createdBy.lastName}`}</td>
                 <td>{new Date(word.createdDate).toLocaleDateString()}</td>
