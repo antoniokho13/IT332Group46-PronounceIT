@@ -1,18 +1,21 @@
 import React, { useEffect, useState, useRef } from "react";
-import { useLocation, useParams } from "react-router-dom";
-import { getWordsByLessonId, createWord, deleteWord } from "../services/wordService";
+import { useLocation, useParams, useNavigate } from "react-router-dom"; // Import useNavigate
+import { getWordsByLessonId, createWord, deleteWord, updateWord } from "../services/wordService";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faTrash } from "@fortawesome/free-solid-svg-icons";
 
 const Words = () => {
   const { lessonId } = useParams(); // Get the lesson ID from the URL
   const location = useLocation(); // Get the lesson name from the navigation state
+  const navigate = useNavigate(); // Initialize navigate for navigation
   const [lessonName, setLessonName] = useState(location.state?.lessonName || ""); // Default to empty if not provided
   const [words, setWords] = useState([]); // State to store words
   const [loading, setLoading] = useState(true); // State to handle loading
   const [showModal, setShowModal] = useState(false); // State to handle modal visibility
   const [newWord, setNewWord] = useState({ word: "" }); // State for new word
   const [imageFile, setImageFile] = useState(null); // State for uploaded image
+  const [editingWord, setEditingWord] = useState(null); // State for the word being edited
+  const [editImageFile, setEditImageFile] = useState(null); // State for the updated image
   const modalRef = useRef(null);
 
   useEffect(() => {
@@ -34,24 +37,40 @@ const Words = () => {
   const handleAddWord = async (e) => {
     e.preventDefault();
 
-    const userId = localStorage.getItem("userId"); // Fetch user ID from localStorage
-    const createdDate = new Date().toISOString(); // Automatically set created date
+    const userId = localStorage.getItem("userId");
+    const createdDate = new Date().toISOString();
 
     try {
-      await createWord(newWord.word, imageFile, lessonId, userId, createdDate);
-      alert("Word added successfully!");
+      if (editingWord) {
+        const updatedWord = {
+          word: newWord.word,
+          lesson: { lessonId },
+          createdBy: { id: userId },
+        };
+        const formData = new FormData();
+        formData.append("word", JSON.stringify(updatedWord));
+        if (editImageFile) {
+          formData.append("image", editImageFile);
+        }
 
-      // Refresh the words list
+        await updateWord(editingWord.wordId, formData);
+        alert("Word updated successfully!");
+      } else {
+        await createWord(newWord.word, imageFile, lessonId, userId, createdDate);
+        alert("Word added successfully!");
+      }
+
       const updatedWords = await getWordsByLessonId(lessonId);
       setWords(updatedWords);
 
-      // Close the modal
       setShowModal(false);
       setNewWord({ word: "" });
       setImageFile(null);
+      setEditingWord(null);
+      setEditImageFile(null);
     } catch (error) {
-      console.error("Error adding word:", error);
-      alert("Failed to add word. Please try again.");
+      console.error("Error saving word:", error);
+      alert("Failed to save word. Please try again.");
     }
   };
 
@@ -71,8 +90,10 @@ const Words = () => {
     }
   };
 
-  const handleImageChange = (e) => {
-    setImageFile(e.target.files[0]);
+  const handleEditWord = (word) => {
+    setEditingWord(word);
+    setNewWord({ word: word.word });
+    setShowModal(true);
   };
 
   const handleInputChange = (e) => {
@@ -102,10 +123,32 @@ const Words = () => {
 
   return (
     <div className="dashboard-container">
-      <h1 className="dashboard-title">Words for Lesson: {lessonName}</h1>
-      <button className="add-button" onClick={() => setShowModal(true)}>
-        Add Word
+      {/* Back Button */}
+      <button className="back-button" onClick={() => navigate("/teacher-dashboard")}>
+        Back to Dashboard
       </button>
+
+      <h1 className="dashboard-title">Words for Lesson: {lessonName}</h1>
+
+      {/* Add Word Button */}
+      <button
+        className="add-button"
+        style={{
+          float: "right",
+          marginBottom: "10px",
+          padding: "5px 15px", // Adjust padding to make it shorter
+          fontSize: "14px", // Adjust font size
+          backgroundColor: "#007bff", // Add a blue background
+          color: "white", // White text
+          border: "none", // Remove border
+          borderRadius: "5px", // Add rounded corners
+          cursor: "pointer", // Add pointer cursor
+        }}
+        onClick={() => setShowModal(true)}
+      >
+        Add
+      </button>
+
       {loading ? (
         <p>Loading...</p>
       ) : words.length === 0 ? (
@@ -116,7 +159,7 @@ const Words = () => {
             <tr>
               <th>Word</th>
               <th>Image</th>
-              <th>Audio</th> {/* Moved Audio column after Image */}
+              <th>Audio</th>
               <th>Created By</th>
               <th>Created Date</th>
               <th>Actions</th>
@@ -128,7 +171,7 @@ const Words = () => {
                 <td>{word.word}</td>
                 <td>
                   <img
-                    src={`http://localhost:8080${word.imageURL}`} // Add the base URL
+                    src={`http://localhost:8080${word.imageURL}`}
                     alt={word.word}
                     style={{ width: "100px", height: "auto", borderRadius: "5px" }}
                   />
@@ -149,6 +192,12 @@ const Words = () => {
                 <td>{new Date(word.createdDate).toLocaleDateString()}</td>
                 <td>
                   <button
+                    className="edit-btn"
+                    onClick={() => handleEditWord(word)}
+                  >
+                    Edit
+                  </button>
+                  <button
                     className="delete-btn"
                     onClick={() => handleDeleteWord(word.wordId)}
                   >
@@ -164,7 +213,7 @@ const Words = () => {
       {showModal && (
         <div className="modal-overlay">
           <div className="modal-container" ref={modalRef}>
-            <h3>Add New Word</h3>
+            <h3>{editingWord ? "Edit Word" : "Add New Word"}</h3>
             <form onSubmit={handleAddWord}>
               <div className="form-group">
                 <label htmlFor="word">Word</label>
@@ -184,16 +233,26 @@ const Words = () => {
                   type="file"
                   id="image"
                   accept="image/*"
-                  onChange={handleImageChange}
-                  required
+                  onChange={(e) =>
+                    editingWord
+                      ? setEditImageFile(e.target.files[0])
+                      : setImageFile(e.target.files[0])
+                  }
                 />
               </div>
               <div className="modal-actions">
-                <button type="button" className="cancel-btn" onClick={() => setShowModal(false)}>
+                <button
+                  type="button"
+                  className="cancel-btn"
+                  onClick={() => {
+                    setShowModal(false);
+                    setEditingWord(null);
+                  }}
+                >
                   Cancel
                 </button>
                 <button type="submit" className="submit-btn">
-                  Add Word
+                  {editingWord ? "Update Word" : "Add Word"}
                 </button>
               </div>
             </form>

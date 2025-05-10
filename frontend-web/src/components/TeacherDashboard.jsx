@@ -1030,9 +1030,18 @@ const TeacherDashboard = () => {
           {/* Add Words Button */}
           <button
             className="words-btn"
+            style={{
+              backgroundColor: "#007bff",
+              color: "white",
+              padding: "10px 20px",
+              fontSize: "16px",
+              borderRadius: "5px",
+              border: "none",
+              cursor: "pointer",
+            }}
             onClick={() => navigate(`/words/${lesson.lessonId}`, { state: { lessonName: lesson.name } })}
           >
-            Words
+            Manage Words
           </button>
         </td>
       </tr>

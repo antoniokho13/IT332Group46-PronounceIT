@@ -92,6 +92,40 @@ public class WordService {
         });
     }
 
+    public Optional<WordEntity> updateWord(Long wordId, WordEntity updatedWord, MultipartFile imageFile) {
+        return wordRepository.findById(wordId).map(word -> {
+            // Check if the word has been updated
+            boolean isWordUpdated = !word.getWord().equals(updatedWord.getWord());
+
+            // Update the word field
+            word.setWord(updatedWord.getWord());
+
+            // Update the image if provided
+            if (imageFile != null && !imageFile.isEmpty()) {
+                try {
+                    String imageUrl = uploadImage(imageFile);
+                    word.setImageURL(imageUrl);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            // Generate new audio only if the word has been updated
+            if (isWordUpdated) {
+                try {
+                    byte[] audioContent = textToSpeechService.synthesizeText(word.getWord());
+                    String audioURL = storeAudio(audioContent, word.getWord());
+                    word.setAudioURL(audioURL);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    word.setAudioURL(null); // Or retain the existing audio URL
+                }
+            }
+
+            return wordRepository.save(word);
+        });
+    }
+
     public void deleteWord(Long wordId) {
         wordRepository.deleteById(wordId);
     }
