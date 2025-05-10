@@ -70,9 +70,16 @@ export const createWord = async (word, imageFile, lessonId, userId) => {
 };
 
 // Update a word
-export const updateWord = async (wordId, updatedWord) => {
+export const updateWord = async (wordId, formData) => {
     try {
-        const response = await axios.put(`${API_URL}/${wordId}`, updatedWord, { headers: getAuthHeader() });
+        console.log("FormData being sent:", formData); // Debugging
+
+        const response = await axios.put(`${API_URL}/${wordId}`, formData, {
+            headers: {
+                ...getAuthHeader(), // Ensure the Authorization header is included
+                "Content-Type": "multipart/form-data",
+            },
+        });
         return response.data;
     } catch (error) {
         console.error(`Error updating word with ID ${wordId}:`, error);

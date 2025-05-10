@@ -101,6 +101,23 @@ public class WordController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @PutMapping(value = "/{wordId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<WordEntity> updateWord(
+            @PathVariable Long wordId,
+            @RequestPart("word") String wordJson,
+            @RequestPart(value = "image", required = false) MultipartFile imageFile) {
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            WordEntity updatedWord = objectMapper.readValue(wordJson, WordEntity.class);
+
+            Optional<WordEntity> updatedEntity = wordService.updateWord(wordId, updatedWord, imageFile);
+            return updatedEntity.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+        } catch (IOException e) {
+            e.printStackTrace();
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+    }
+
     @DeleteMapping("/{wordId}")
     public ResponseEntity<Void> deleteWord(@PathVariable Long wordId) {
         wordService.deleteWord(wordId);

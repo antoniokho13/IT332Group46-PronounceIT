@@ -1,15 +1,5 @@
 package com.capstone.group46.pronounceit.service;
 
-import com.capstone.group46.pronounceit.entity.LessonEntity;
-import com.capstone.group46.pronounceit.entity.UserEntity;
-import com.capstone.group46.pronounceit.entity.WordEntity;
-import com.capstone.group46.pronounceit.repository.LessonRepository;
-import com.capstone.group46.pronounceit.repository.UserRepository;
-import com.capstone.group46.pronounceit.repository.WordRepository;
-import org.springframework.stereotype.Service;
-import org.springframework.util.ResourceUtils;
-import org.springframework.web.multipart.MultipartFile;
-
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -19,6 +9,16 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+
+import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.capstone.group46.pronounceit.entity.LessonEntity;
+import com.capstone.group46.pronounceit.entity.UserEntity;
+import com.capstone.group46.pronounceit.entity.WordEntity;
+import com.capstone.group46.pronounceit.repository.LessonRepository;
+import com.capstone.group46.pronounceit.repository.UserRepository;
+import com.capstone.group46.pronounceit.repository.WordRepository;
 
 @Service
 public class WordService {
@@ -92,27 +92,65 @@ public class WordService {
         });
     }
 
+    public Optional<WordEntity> updateWord(Long wordId, WordEntity updatedWord, MultipartFile imageFile) {
+        return wordRepository.findById(wordId).map(word -> {
+            // Check if the word has been updated
+            boolean isWordUpdated = !word.getWord().equals(updatedWord.getWord());
+
+            // Update the word field
+            word.setWord(updatedWord.getWord());
+
+            // Update the image if provided
+            if (imageFile != null && !imageFile.isEmpty()) {
+                try {
+                    String imageUrl = uploadImage(imageFile);
+                    word.setImageURL(imageUrl);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
+            // Generate new audio only if the word has been updated
+            if (isWordUpdated) {
+                try {
+                    byte[] audioContent = textToSpeechService.synthesizeText(word.getWord());
+                    String audioURL = storeAudio(audioContent, word.getWord());
+                    word.setAudioURL(audioURL);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    word.setAudioURL(null); // Or retain the existing audio URL
+                }
+            }
+
+            return wordRepository.save(word);
+        });
+    }
+
     public void deleteWord(Long wordId) {
         wordRepository.deleteById(wordId);
     }
 
     private String storeAudio(byte[] audioContent, String word) throws IOException {
-        // Get the resource directory
-        File resourceDir = new File("src/main/resources/audio/");
+        // Define the directory to store audio files (relative to the backend folder)
+        Path audioDirPath = Paths.get("backend", "src", "main", "resources", "audio");
+        File audioDir = audioDirPath.toFile();
 
-        // Ensure the directory exists
-        if (!resourceDir.exists()) {
-            resourceDir.mkdirs();
+        // Create the directory if it doesn't exist
+        if (!audioDir.exists()) {
+            audioDir.mkdirs();
         }
 
+        // Generate a unique file name
         String fileName = UUID.randomUUID().toString() + "_" + word + ".mp3";
-        Path filePath = Paths.get(resourceDir.getAbsolutePath(), fileName);
+        Path filePath = audioDirPath.resolve(fileName);
 
+        // Save the file to the directory
         try (FileOutputStream fos = new FileOutputStream(filePath.toFile())) {
             fos.write(audioContent);
         }
 
-        return "/audio/" + fileName; // Return the relative path to access the audio
+        // Return the relative path to access the audio
+        return "/audio/" + fileName;
     }
 
     public byte[] synthesizeAudioForWord(WordEntity word) throws IOException {
@@ -121,7 +159,7 @@ public class WordService {
 
     public String uploadImage(MultipartFile imageFile) throws IOException {
         // Define the directory to store images (relative to the backend folder)
-        Path imageDirPath = Paths.get("./uploads/images/"); // Changed from ../ to ./
+        Path imageDirPath = Paths.get("backend", "src", "main", "resources", "images");
         File imageDir = imageDirPath.toFile();
 
         // Create the directory if it doesn't exist
@@ -138,8 +176,8 @@ public class WordService {
             fos.write(imageFile.getBytes());
         }
 
-        // Return the relative URL to access the image
-        return "/uploads/images/" + fileName;
+        // Return the relative path to access the image
+        return "/images/" + fileName;
     }
 
     public List<WordEntity> getWordsByLessonId(Long lessonId) {
