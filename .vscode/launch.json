@@ -1,0 +1,25 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        
+        {
+            "type": "java",
+            "name": "Current File",
+            "request": "launch",
+            "mainClass": "${file}"
+        },
+        {
+            "type": "java",
+            "name": "PronounceItApplication",
+            "request": "launch",
+            "mainClass": "com.capstone.group46.pronounceit.PronounceItApplication",
+            "projectName": "PronounceIT",
+            "env": {
+                "GOOGLE_APPLICATION_CREDENTIALS": "C:\\Users\\Strevvv\\Downloads\\pronounceit-459014-ac6b197506b2.json"
+            }
+        }
+    ]
+}
