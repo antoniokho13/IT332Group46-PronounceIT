@@ -8,61 +8,15 @@
 
     <ImageView
         android:id="@+id/logoImageView"
-        android:layout_width="423dp"
-        android:layout_height="275dp"
-        android:layout_marginTop="236dp"
+        android:layout_width="307dp"
+        android:layout_height="156dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="80dp"
+        android:adjustViewBounds="true"
         android:contentDescription="App Logo"
         android:src="@drawable/pronounce_logo2"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.494"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
-
-    <!-- Buttons Container as separate LinearLayout centered in the screen -->
-
-    <!-- Character Image positioned independently -->
-
-    <TextView
-        android:id="@+id/welcomeTextView"
-        android:layout_width="224dp"
-        android:layout_height="97dp"
-        android:text="Welcome, Player!"
-        android:textColor="@android:color/white"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        app:layout_constraintBottom_toTopOf="@+id/logoImageView"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.215" />
-
-    <LinearLayout
-        android:id="@+id/linearLayout"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:gravity="center"
-        android:orientation="vertical"
-        android:padding="20dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.495"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/logoImageView">
-
-        <ImageView
-            android:id="@+id/playButton"
-            android:layout_width="340dp"
-            android:layout_height="120dp"
-            app:srcCompat="@drawable/playbutton" />
-
-        <ImageView
-            android:id="@+id/logoutButton"
-            android:layout_width="340dp"
-            android:layout_height="120dp"
-            app:srcCompat="@drawable/logout" />
-
-    </LinearLayout>
 
     <TextView
         android:id="@+id/versionTextView"
@@ -86,5 +40,39 @@
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.181"
         app:srcCompat="@drawable/mutebutton" />
+
+    <ImageView
+        android:id="@+id/playButton"
+        android:layout_width="340dp"
+        android:layout_height="120dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/guideline"
+        app:srcCompat="@drawable/playbutton" />
+
+    <ImageView
+        android:id="@+id/settingsButton"
+        android:layout_width="340dp"
+        android:layout_height="120dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/playButton"
+        app:srcCompat="@drawable/settings" />
+
+    <ImageView
+        android:id="@+id/logoutButton"
+        android:layout_width="340dp"
+        android:layout_height="120dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/settingsButton"
+        app:srcCompat="@drawable/logout" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guideline"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        app:layout_constraintGuide_begin="340dp" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
