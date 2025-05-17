@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Settings Screen Layout -->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -9,7 +8,8 @@
     <LinearLayout
         android:orientation="vertical"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="wrap_content"
+        android:gravity="center">
 
         <!-- Top Banner -->
         <TextView
@@ -22,68 +22,39 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content" />
 
-        <!-- Settings Container -->
-        <!-- Teal card-style section -->
-        <LinearLayout
+        <!-- My Progress Button -->
+        <Button
+            android:id="@+id/myProgressButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:background="@drawable/rounded_card"
-            android:padding="16dp"
+            android:text="My Progress"
+            android:textSize="16sp"
+            android:padding="12dp"
             android:layout_marginBottom="16dp"
-            android:elevation="4dp"
-            android:layout_marginTop="4dp"
-            android:clipToPadding="false"
-            android:layout_marginHorizontal="4dp">
+            android:backgroundTint="#6200EE"
+            android:textColor="#FFFFFF" />
 
-            <androidx.appcompat.widget.SwitchCompat
-                android:id="@+id/soundEffectsSwitch"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Sound Effects" />
-
-            <androidx.appcompat.widget.SwitchCompat
-                android:id="@+id/backgroundMusicSwitch"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Background Music"
-                android:layout_marginTop="8dp" />
-
-            <androidx.appcompat.widget.SwitchCompat
-                android:id="@+id/vibrationSwitch"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="Vibration"
-                android:layout_marginTop="8dp" />
-        </LinearLayout>
-
-        <!-- Volume Section -->
-        <LinearLayout
+        <!-- Edit User Profile Button -->
+        <Button
+            android:id="@+id/editUserProfileButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:background="@drawable/rounded_card"
-            android:padding="16dp"
-            android:elevation="4dp"
-            android:layout_marginTop="4dp"
-            android:clipToPadding="false"
-            android:layout_marginHorizontal="4dp">
+            android:text="Edit User Profile"
+            android:textSize="16sp"
+            android:padding="12dp"
+            android:layout_marginBottom="16dp"
+            android:backgroundTint="#6200EE"
+            android:textColor="#FFFFFF" />
 
-            <TextView
-                android:id="@+id/volumeLabel"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="Volume: 50%"
-                android:textSize="16sp"
-                android:textColor="#000" />
-
-            <SeekBar
-                android:id="@+id/volumeSeekBar"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:max="100"
-                android:progress="50"
-                android:layout_marginTop="8dp" />
-        </LinearLayout>
+        <!-- Volume On/Off Button -->
+        <Button
+            android:id="@+id/volumeToggleButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Volume On/Off"
+            android:textSize="16sp"
+            android:padding="12dp"
+            android:backgroundTint="#6200EE"
+            android:textColor="#FFFFFF" />
     </LinearLayout>
 </ScrollView>

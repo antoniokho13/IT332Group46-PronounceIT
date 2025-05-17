@@ -19,6 +19,7 @@ class HomeActivity : AppCompatActivity() {
     private lateinit var playButton: ImageView
     private lateinit var logoutButton: ImageView
     private lateinit var musicToggleButton: ImageView
+    private lateinit var settingsButton: ImageView
     private lateinit var sharedPreferences: SharedPreferences
     private lateinit var buttonSound: MediaPlayer
     private lateinit var backgroundMusic: MediaPlayer
@@ -32,6 +33,7 @@ class HomeActivity : AppCompatActivity() {
         playButton = findViewById(R.id.playButton)
         logoutButton = findViewById(R.id.logoutButton)
         musicToggleButton = findViewById(R.id.musicToggleButton)
+        settingsButton = findViewById(R.id.settingsButton)
 
         // Initialize button sound
         buttonSound = MediaPlayer.create(this, R.raw.button_click)
@@ -63,6 +65,14 @@ class HomeActivity : AppCompatActivity() {
         playButton.setOnClickListener {
             playButtonSound()
             val intent = Intent(this, CategoryActivity::class.java)
+            startActivity(intent)
+            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+        }
+
+        // Settings button with sound
+        settingsButton.setOnClickListener {
+            playButtonSound()
+            val intent = Intent(this, SettingsActivity::class.java)
             startActivity(intent)
             overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
         }

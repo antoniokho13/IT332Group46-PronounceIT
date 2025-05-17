@@ -63,5 +63,12 @@
             android:label="PronounceIT"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
 
+        <activity
+            android:name=".EditUserProfileActivity"
+            android:exported="true"
+            android:label="PronounceIT"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+
+
     </application>
 </manifest>
