@@ -45,6 +45,7 @@ object RetrofitInstance {
             .registerTypeAdapter(LocalDateTime::class.java, LocalDateTimeDeserializer())
             .create()
 
+
         Retrofit.Builder()
             .baseUrl(BASE_URL)
             .client(client)

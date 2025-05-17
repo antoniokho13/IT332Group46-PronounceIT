@@ -24,6 +24,7 @@ class CategoryAdapter(
         return CategoryViewHolder(binding)
     }
 
+
     override fun getItemCount(): Int = categoryList.size
 
     override fun onBindViewHolder(holder: CategoryViewHolder, position: Int) {

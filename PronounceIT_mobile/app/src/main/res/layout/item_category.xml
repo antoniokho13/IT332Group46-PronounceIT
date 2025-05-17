@@ -23,4 +23,5 @@
             android:textAllCaps="true"
             android:text="Category Name" /> </LinearLayout>
 
+
 </androidx.cardview.widget.CardView>

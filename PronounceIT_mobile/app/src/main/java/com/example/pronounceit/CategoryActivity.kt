@@ -49,6 +49,7 @@ class CategoryActivity : AppCompatActivity() {
         }
     }
 
+
     private fun setupRecyclerView(categories: List<CategoryEntity>) {
         binding.categoryRecyclerView.layoutManager = LinearLayoutManager(this)
         binding.categoryRecyclerView.adapter = CategoryAdapter(this, categories)
