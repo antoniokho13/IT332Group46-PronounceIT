@@ -2,10 +2,12 @@ package com.example.pronounceit
 
 import android.content.Intent
 import android.content.SharedPreferences
+import android.media.MediaPlayer
 import android.os.Bundle
 import android.view.MotionEvent
 import android.view.animation.AnimationUtils
 import android.widget.Button
+import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -17,11 +19,14 @@ import kotlinx.coroutines.withContext
 
 class HomeActivity : AppCompatActivity() {
 
-    private lateinit var playButton: Button
-    private lateinit var settingsButton: Button
-    private lateinit var logoutButton: Button
+    private lateinit var playButton: ImageView
+    private lateinit var logoutButton: ImageView
     private lateinit var welcomeTextView: TextView
+    private lateinit var musicToggleButton: ImageView
     private lateinit var sharedPreferences: SharedPreferences
+    private lateinit var buttonSound: MediaPlayer
+    private lateinit var backgroundMusic: MediaPlayer
+    private var isMusicPlaying = true
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -29,9 +34,23 @@ class HomeActivity : AppCompatActivity() {
 
         // Initialize UI elements
         playButton = findViewById(R.id.playButton)
-        settingsButton = findViewById(R.id.settingsButton)
         logoutButton = findViewById(R.id.logoutButton)
         welcomeTextView = findViewById(R.id.welcomeTextView)
+        musicToggleButton = findViewById(R.id.musicToggleButton)
+
+        // Initialize button sound
+        buttonSound = MediaPlayer.create(this, R.raw.button_click)
+
+        // Initialize background music
+        setupBackgroundMusic()
+
+        // Set up music toggle button
+        setupMusicToggleButton()
+
+        // Apply bounce animation to the logo
+        val logoImageView = findViewById<ImageView>(R.id.logoImageView)
+        val bounceAnimation = AnimationUtils.loadAnimation(this, R.anim.logo_bounce)
+        logoImageView.startAnimation(bounceAnimation)
 
         // Get shared preferences
         sharedPreferences = getSharedPreferences("PronounceItPrefs", MODE_PRIVATE)
@@ -45,39 +64,87 @@ class HomeActivity : AppCompatActivity() {
             navigateToLogin()
         }
 
-        // Animation for button press
-        val scaleAnim = AnimationUtils.loadAnimation(this, R.anim.button_scale)
-        val buttons = listOf(playButton, settingsButton, logoutButton)
-        buttons.forEach { btn ->
-            btn.setOnTouchListener { v, event ->
-                if (event.action == MotionEvent.ACTION_DOWN) {
-                    v.startAnimation(scaleAnim)
-                }
-                false
-            }
-        }
-
-        // Play button
+        // Play button with sound
         playButton.setOnClickListener {
+            playButtonSound()
             val intent = Intent(this, CategoryActivity::class.java)
             startActivity(intent)
             overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
         }
 
-        // Settings button
-        settingsButton.setOnClickListener {
-            val intent = Intent(this, SettingsActivity::class.java)
-            startActivity(intent)
-            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
-        }
-
-        // Logout button
+        // Logout button with sound
         logoutButton.setOnClickListener {
+            playButtonSound()
             if (token != null) {
                 logout(token)
             } else {
                 navigateToLogin()
             }
+        }
+    }
+
+    private fun setupMusicToggleButton() {
+        // Initially show the mute button since music is playing
+        musicToggleButton.setImageResource(R.drawable.mutebutton)
+
+        musicToggleButton.setOnClickListener {
+            playButtonSound() // Play click sound
+
+            if (isMusicPlaying) {
+                // Currently playing, so mute it
+                backgroundMusic.pause()
+                musicToggleButton.setImageResource(R.drawable.mutebutton)
+                isMusicPlaying = false
+            } else {
+                // Currently muted, so play it
+                backgroundMusic.start()
+                musicToggleButton.setImageResource(R.drawable.musicbutton)
+                isMusicPlaying = true
+            }
+        }
+    }
+
+    private fun setupBackgroundMusic() {
+        backgroundMusic = MediaPlayer.create(this, R.raw.homemusic)
+        backgroundMusic.isLooping = true
+        backgroundMusic.setVolume(0.5f, 0.5f)
+        backgroundMusic.start()
+    }
+
+    // Method to play the button sound
+    private fun playButtonSound() {
+        if (buttonSound.isPlaying) {
+            buttonSound.stop()
+            buttonSound.release()
+            buttonSound = MediaPlayer.create(this, R.raw.button_click)
+        }
+        buttonSound.start()
+    }
+
+    // Pause background music when activity is not in foreground
+    override fun onPause() {
+        super.onPause()
+        if (::backgroundMusic.isInitialized && backgroundMusic.isPlaying) {
+            backgroundMusic.pause()
+        }
+    }
+
+    // Resume background music when activity returns to foreground
+    override fun onResume() {
+        super.onResume()
+        if (::backgroundMusic.isInitialized && !backgroundMusic.isPlaying && isMusicPlaying) {
+            backgroundMusic.start()
+        }
+    }
+
+    // Clean up MediaPlayer resources when activity is destroyed
+    override fun onDestroy() {
+        super.onDestroy()
+        if (::buttonSound.isInitialized) {
+            buttonSound.release()
+        }
+        if (::backgroundMusic.isInitialized) {
+            backgroundMusic.release()
         }
     }
 
