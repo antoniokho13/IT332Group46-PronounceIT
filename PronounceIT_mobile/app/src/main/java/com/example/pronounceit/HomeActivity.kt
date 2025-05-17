@@ -4,11 +4,8 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.media.MediaPlayer
 import android.os.Bundle
-import android.view.MotionEvent
 import android.view.animation.AnimationUtils
-import android.widget.Button
 import android.widget.ImageView
-import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.pronounceit.network.RetrofitInstance
@@ -21,7 +18,6 @@ class HomeActivity : AppCompatActivity() {
 
     private lateinit var playButton: ImageView
     private lateinit var logoutButton: ImageView
-    private lateinit var welcomeTextView: TextView
     private lateinit var musicToggleButton: ImageView
     private lateinit var sharedPreferences: SharedPreferences
     private lateinit var buttonSound: MediaPlayer
@@ -35,7 +31,6 @@ class HomeActivity : AppCompatActivity() {
         // Initialize UI elements
         playButton = findViewById(R.id.playButton)
         logoutButton = findViewById(R.id.logoutButton)
-        welcomeTextView = findViewById(R.id.welcomeTextView)
         musicToggleButton = findViewById(R.id.musicToggleButton)
 
         // Initialize button sound
@@ -58,7 +53,7 @@ class HomeActivity : AppCompatActivity() {
         val token = sharedPreferences.getString("token", null)
 
         if (userId != -1L && token != null) {
-            fetchUserDetails(userId, token)
+            // User is logged in, but no need to fetch details for welcome text anymore
         } else {
             Toast.makeText(this, "User not logged in", Toast.LENGTH_SHORT).show()
             navigateToLogin()
@@ -167,30 +162,6 @@ class HomeActivity : AppCompatActivity() {
             } catch (e: Exception) {
                 withContext(Dispatchers.Main) {
                     Toast.makeText(this@HomeActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
-                }
-            }
-        }
-    }
-
-    private fun fetchUserDetails(userId: Long, token: String) {
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                val response = RetrofitInstance.api.getUserById(userId, "Bearer $token")
-                withContext(Dispatchers.Main) {
-                    if (response.isSuccessful) {
-                        val user = response.body()
-                        if (user != null) {
-                            welcomeTextView.text = "Welcome, ${user.firstName} ${user.lastName}!"
-                        }
-                    } else {
-                        Toast.makeText(this@HomeActivity, "Failed to fetch user details", Toast.LENGTH_SHORT).show()
-                        navigateToLogin()
-                    }
-                }
-            } catch (e: Exception) {
-                withContext(Dispatchers.Main) {
-                    Toast.makeText(this@HomeActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
-                    navigateToLogin()
                 }
             }
         }
