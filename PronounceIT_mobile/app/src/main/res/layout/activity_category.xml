@@ -5,32 +5,29 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".CategoryActivity"
-    android:background="@color/white"
+    android:background="@drawable/testbackground"
     android:padding="16dp">
 
-    <TextView
+    <ImageView
         android:id="@+id/categoryTitle"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="Select Category"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        android:textColor="@android:color/black"
+        android:src="@drawable/category"
+        android:adjustViewBounds="true"
         android:layout_marginBottom="16dp"
-        android:background="@drawable/black_border"  android:textAllCaps="true"
+        android:contentDescription="Select Category"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        android:gravity="center_horizontal"/>
+        app:layout_constraintEnd_toEndOf="parent" />
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/categoryRecyclerView"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" app:layout_constraintTop_toBottomOf="@id/categoryTitle"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        app:layout_constraintTop_toBottomOf="@id/categoryTitle"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintBottom_toBottomOf="parent" />
-
 
 </androidx.constraintlayout.widget.ConstraintLayout>

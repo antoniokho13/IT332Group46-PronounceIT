@@ -1,7 +1,6 @@
 package com.example.pronounceit
 
 import android.content.Intent
-import android.graphics.drawable.AnimationDrawable
 import android.media.MediaPlayer
 import android.os.Bundle
 import android.view.animation.AnimationUtils
@@ -27,13 +26,6 @@ class RegisterActivity : AppCompatActivity() {
 
         // Initialize sound effect
         buttonClickSound = MediaPlayer.create(this, R.raw.button_click)
-
-        // Start background animation
-        val constraintLayout = findViewById<ConstraintLayout>(R.id.registerConstraintLayout)
-        val animationDrawable = constraintLayout.background as AnimationDrawable
-        animationDrawable.setEnterFadeDuration(1000)
-        animationDrawable.setExitFadeDuration(2000)
-        animationDrawable.start()
 
         // Add bouncing animation to logo
         val logoImageView = findViewById<ImageView>(R.id.logoImageView)
