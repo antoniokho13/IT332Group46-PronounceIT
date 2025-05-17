@@ -1,12 +1,15 @@
 package com.example.pronounceit.network
 
+import android.content.Context
 import android.os.Build
 import androidx.annotation.RequiresApi
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonDeserializationContext
 import com.google.gson.JsonDeserializer
 import com.google.gson.JsonElement
+import okhttp3.Interceptor
 import okhttp3.OkHttpClient
+import okhttp3.Response
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
@@ -29,6 +32,39 @@ object RetrofitInstance {
         ): LocalDateTime? {
             return json?.asString?.let { LocalDateTime.parse(it, formatter) }
         }
+    }
+
+    class AuthInterceptor(private val context: Context) : Interceptor {
+        override fun intercept(chain: Interceptor.Chain): Response {
+            val prefs = context.getSharedPreferences("PronounceItPrefs", Context.MODE_PRIVATE)
+            val token = prefs.getString("token", null)
+            val requestBuilder = chain.request().newBuilder()
+            if (!token.isNullOrEmpty()) {
+                requestBuilder.addHeader("Authorization", "Bearer $token")
+            }
+            return chain.proceed(requestBuilder.build())
+        }
+    }
+
+    // Add this function to get an API instance with context (for token)
+    fun getApi(context: Context): AuthApi {
+        val logging = HttpLoggingInterceptor()
+        logging.setLevel(HttpLoggingInterceptor.Level.BODY)
+        val client = OkHttpClient.Builder()
+            .addInterceptor(AuthInterceptor(context))
+            .addInterceptor(logging)
+            .build()
+
+        val gson = GsonBuilder()
+            .registerTypeAdapter(LocalDateTime::class.java, LocalDateTimeDeserializer())
+            .create()
+
+        return Retrofit.Builder()
+            .baseUrl(BASE_URL)
+            .client(client)
+            .addConverterFactory(GsonConverterFactory.create(gson))
+            .build()
+            .create(AuthApi::class.java)
     }
 
     private val client by lazy {

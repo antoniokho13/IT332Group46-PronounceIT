@@ -29,7 +29,7 @@ class CategoryActivity : AppCompatActivity() {
     private fun fetchCategories() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val response = RetrofitInstance.api.getAllCategories()
+                val response = RetrofitInstance.getApi(this@CategoryActivity).getAllCategories()
                 if (response.isSuccessful) {
                     val categories = response.body() ?: emptyList()
                     withContext(Dispatchers.Main) {
