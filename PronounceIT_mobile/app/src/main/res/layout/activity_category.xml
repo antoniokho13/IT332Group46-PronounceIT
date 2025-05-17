@@ -1,41 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/categoryLayout"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:orientation="vertical"
-    android:padding="24dp"
-    android:gravity="center"
-    android:background="@color/white">
+    tools:context=".CategoryActivity"
+    android:background="@color/white"
+    android:padding="16dp">
 
     <TextView
         android:id="@+id/categoryTitle"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="Select Category"
         android:textSize="24sp"
         android:textStyle="bold"
         android:textColor="@android:color/black"
-        android:layout_marginBottom="24dp" />
+        android:layout_marginBottom="16dp"
+        android:background="@drawable/black_border"  android:textAllCaps="true"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:gravity="center_horizontal"/>
 
-    <Button
-        android:id="@+id/animalsButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Animals"
-        android:layout_marginBottom="16dp" />
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/categoryRecyclerView"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager" app:layout_constraintTop_toBottomOf="@id/categoryTitle"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent" />
 
-    <Button
-        android:id="@+id/foodButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Food"
-        android:layout_marginBottom="16dp" />
 
-    <Button
-        android:id="@+id/placesButton"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Places" />
-
-</LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>
