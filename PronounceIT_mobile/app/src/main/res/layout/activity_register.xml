@@ -11,7 +11,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:padding="20dp"
-        android:background="@drawable/animated_background">
+        android:background="@drawable/testbackground">
 
         <!-- App Logo -->
         <ImageView
@@ -26,6 +26,7 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
 
+        <!-- Rest of the existing XML remains unchanged -->
         <!-- First Name -->
         <EditText
             android:id="@+id/firstNameEditText"
