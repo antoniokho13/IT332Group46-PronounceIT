@@ -3,58 +3,73 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="24dp"
-    android:background="#F0F8FF"> <!-- Light blue background -->
+    android:background="@drawable/background4">
 
-    <LinearLayout
-        android:orientation="vertical"
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center">
+        android:layout_height="wrap_content">
 
-        <!-- Top Banner -->
-        <TextView
-            android:text="Settings"
-            android:textSize="26sp"
-            android:textStyle="bold"
-            android:textColor="#333"
-            android:layout_gravity="center"
-            android:layout_marginBottom="30dp"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
-
-        <!-- My Progress Button -->
-        <Button
-            android:id="@+id/myProgressButton"
+        <!-- Settings Image - now outside LinearLayout -->
+        <ImageView
+            android:id="@+id/settingsImage"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="My Progress"
-            android:textSize="16sp"
-            android:padding="12dp"
-            android:layout_marginBottom="16dp"
-            android:backgroundTint="#6200EE"
-            android:textColor="#FFFFFF" />
+            android:layout_alignParentTop="true"
+            android:layout_marginTop="60dp"
+            android:layout_marginBottom="40dp"
+            android:adjustViewBounds="true"
+            android:contentDescription="Settings"
+            android:src="@drawable/settingsinfo" />
 
-        <!-- Edit User Profile Button -->
-        <Button
-            android:id="@+id/editUserProfileButton"
+        <!-- LinearLayout with buttons remains unchanged -->
+        <LinearLayout
+            android:orientation="vertical"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Edit User Profile"
-            android:textSize="16sp"
-            android:padding="12dp"
-            android:layout_marginBottom="16dp"
-            android:backgroundTint="#6200EE"
-            android:textColor="#FFFFFF" />
+            android:gravity="center"
+            android:layout_below="@id/settingsImage"
+            android:layout_marginTop="20dp">
 
-        <!-- Volume On/Off Button -->
-        <Button
-            android:id="@+id/volumeToggleButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="Volume On/Off"
-            android:textSize="16sp"
-            android:padding="12dp"
-            android:backgroundTint="#6200EE"
-            android:textColor="#FFFFFF" />
-    </LinearLayout>
+            <!-- My Progress Button - increased height and minWidth -->
+            <Button
+                android:id="@+id/myProgressButton"
+                android:layout_width="wrap_content"
+                android:layout_height="48dp"
+                android:text="My Progress"
+                android:textSize="18sp"
+                android:padding="8dp"
+                android:layout_marginBottom="30dp"
+                android:background="@drawable/pushable_button_teal"
+                android:textColor="#FFFFFF"
+                android:minWidth="240dp"
+                android:fontFamily="@font/wonderbar" />
+
+            <!-- Edit User Profile Button - increased height and minWidth -->
+            <Button
+                android:id="@+id/editUserProfileButton"
+                android:layout_width="wrap_content"
+                android:layout_height="48dp"
+                android:text="Edit User Profile"
+                android:textSize="18sp"
+                android:padding="8dp"
+                android:layout_marginBottom="30dp"
+                android:background="@drawable/pushable_button_teal"
+                android:textColor="#FFFFFF"
+                android:minWidth="240dp"
+                android:fontFamily="@font/wonderbar" />
+
+            <!-- Volume On/Off Button - increased height and minWidth -->
+            <Button
+                android:id="@+id/volumeToggleButton"
+                android:layout_width="wrap_content"
+                android:layout_height="48dp"
+                android:background="@drawable/pushable_button_teal"
+                android:fontFamily="@font/wonderbar"
+                android:minWidth="240dp"
+                android:padding="8dp"
+                android:text="Volume On/Off"
+                android:textColor="#FFFFFF"
+                android:textSize="18sp" />
+        </LinearLayout>
+    </RelativeLayout>
 </ScrollView>
