@@ -14,6 +14,7 @@ class LessonAdapter(private val context: Context, private val lessons: List<Less
     RecyclerView.Adapter<LessonAdapter.LessonViewHolder>() {
 
     private var buttonSound: MediaPlayer? = null
+    var onItemClick: ((LessonEntity) -> Unit)? = null // Add this property
 
     init {
         // Initialize button sound
@@ -31,7 +32,7 @@ class LessonAdapter(private val context: Context, private val lessons: List<Less
 
         holder.itemView.setOnClickListener {
             playButtonSound()
-            // Additional action when item is clicked, e.g., navigate to lesson details
+            onItemClick?.invoke(lesson) // Use the onItemClick listener
         }
     }
 

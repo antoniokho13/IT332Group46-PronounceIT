@@ -1,18 +1,18 @@
 package com.example.pronounceit
 
 import android.content.Context
+import android.content.Intent
 import android.os.Bundle
 import android.util.Log
 import android.view.animation.AnimationUtils
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
-import com.example.pronounceit.adapters.LessonAdapter
 import com.example.pronounceit.databinding.ActivityLessonBinding
 import com.example.pronounceit.network.AuthApi
 import com.example.pronounceit.network.RetrofitInstance
 import com.example.pronounceit.network.models.LessonEntity
+import com.example.pronounceit.adapters.LessonAdapter
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.launch
@@ -24,6 +24,7 @@ class LessonActivity : AppCompatActivity() {
     private lateinit var binding: ActivityLessonBinding
     private lateinit var lessonAdapter: LessonAdapter
     private lateinit var api: AuthApi
+    private var userId: Long = -1
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,6 +39,8 @@ class LessonActivity : AppCompatActivity() {
         api = RetrofitInstance.getApi(this)
 
         val categoryId = intent.getLongExtra("categoryId", -1L)
+        userId = intent.getLongExtra("userId", -1L)
+
         if (categoryId != -1L) {
             fetchLessons(categoryId)
         } else {
@@ -91,6 +94,14 @@ class LessonActivity : AppCompatActivity() {
         binding.lessonRecyclerView.apply {
             layoutManager = LinearLayoutManager(this@LessonActivity)
             adapter = lessonAdapter
+        }
+
+        lessonAdapter.onItemClick = { lesson: LessonEntity ->
+            val intent = Intent(this@LessonActivity, WordActivity::class.java).apply {
+                putExtra("lessonId", lesson.lessonId)
+                putExtra("userId", userId)
+            }
+            startActivity(intent)
         }
     }
 

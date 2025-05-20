@@ -1,23 +1,33 @@
 package com.capstone.group46.pronounceit.controller;
 
-import com.capstone.group46.pronounceit.entity.WordEntity;
-import com.capstone.group46.pronounceit.service.SpeechToTextService;
-import com.capstone.group46.pronounceit.service.WordService;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.cloud.speech.v1.RecognitionConfig;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
-
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
+
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
+
+import com.capstone.group46.pronounceit.entity.WordEntity;
+import com.capstone.group46.pronounceit.service.SpeechToTextService;
+import com.capstone.group46.pronounceit.service.WordService;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.cloud.speech.v1.RecognitionConfig;
 
 @RestController
 @RequestMapping("/api/words")
@@ -79,24 +89,35 @@ public class WordController {
     }
 
     @PostMapping
-    public WordEntity createWord(@RequestBody WordEntity word) {
-        return wordService.createWord(word);
+    public ResponseEntity<?> createWord(@RequestBody WordEntity word) {
+        try {
+            WordEntity createdWord = wordService.createWord(word);
+            return ResponseEntity.ok(createdWord);
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error creating word");
+        }
     }
 
     @PostMapping(consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
-    public WordEntity createWord(
+    public ResponseEntity<?> createWord(
             @RequestPart("word") String wordJson,
             @RequestPart("image") MultipartFile imageFile) throws IOException {
-        // Convert the JSON string to a WordEntity object
-        ObjectMapper objectMapper = new ObjectMapper();
-        WordEntity word = objectMapper.readValue(wordJson, WordEntity.class);
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            WordEntity word = objectMapper.readValue(wordJson, WordEntity.class);
 
-        // Upload the image and set the image URL
-        String imageUrl = wordService.uploadImage(imageFile);
-        word.setImageURL(imageUrl);
+            String imageUrl = wordService.uploadImage(imageFile);
+            word.setImageURL(imageUrl);
 
-        // Save the WordEntity
-        return wordService.createWord(word);
+            WordEntity createdWord = wordService.createWord(word);
+            return ResponseEntity.ok(createdWord);
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error creating word");
+        }
     }
 
     @PutMapping("/{wordId}")
