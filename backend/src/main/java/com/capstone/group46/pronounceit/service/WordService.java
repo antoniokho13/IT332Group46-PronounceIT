@@ -48,6 +48,15 @@ public class WordService {
         LessonEntity lesson = lessonRepository.findById(lessonId)
                 .orElseThrow(() -> new IllegalArgumentException("Lesson with ID " + lessonId + " not found"));
 
+        // Check the current number of words for this lesson
+        long wordCount = wordRepository.findAll().stream()
+                .filter(w -> w.getLesson().getLessonId().equals(lessonId))
+                .count();
+
+        if (wordCount >= lesson.getSequence()) {
+            throw new IllegalStateException("Word limit reached for this lesson.");
+        }
+
         // Fetch the UserEntity from the database
         Long userId = word.getCreatedBy().getId();
         UserEntity user = userRepository.findById(userId)
