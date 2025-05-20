@@ -1,6 +1,7 @@
 package com.example.pronounceit.adapters
 
 import android.content.Context
+import android.media.MediaPlayer
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -9,10 +10,15 @@ import androidx.recyclerview.widget.RecyclerView
 import com.example.pronounceit.R
 import com.example.pronounceit.network.models.LessonEntity
 
-
-// Lesson Adapter
 class LessonAdapter(private val context: Context, private val lessons: List<LessonEntity>) :
     RecyclerView.Adapter<LessonAdapter.LessonViewHolder>() {
+
+    private var buttonSound: MediaPlayer? = null
+
+    init {
+        // Initialize button sound
+        buttonSound = MediaPlayer.create(context, R.raw.button_click)
+    }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): LessonViewHolder {
         val view = LayoutInflater.from(context).inflate(R.layout.item_lesson, parent, false)
@@ -22,9 +28,28 @@ class LessonAdapter(private val context: Context, private val lessons: List<Less
     override fun onBindViewHolder(holder: LessonViewHolder, position: Int) {
         val lesson = lessons[position]
         holder.bind(lesson)
+
+        holder.itemView.setOnClickListener {
+            playButtonSound()
+            // Additional action when item is clicked, e.g., navigate to lesson details
+        }
     }
 
     override fun getItemCount(): Int = lessons.size
+
+    private fun playButtonSound() {
+        if (buttonSound?.isPlaying == true) {
+            buttonSound?.stop()
+            buttonSound?.release()
+            buttonSound = MediaPlayer.create(context, R.raw.button_click)
+        }
+        buttonSound?.start()
+    }
+
+    fun releaseResources() {
+        buttonSound?.release()
+        buttonSound = null
+    }
 
     class LessonViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
         private val lessonNameTextView: TextView = itemView.findViewById(R.id.lessonNameTextView)

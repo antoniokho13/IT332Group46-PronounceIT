@@ -5,13 +5,18 @@
     android:layout_height="wrap_content"
     android:layout_margin="8dp"
     app:cardCornerRadius="8dp"
-    app:cardElevation="4dp">
+    app:cardElevation="4dp"
+    android:foreground="?android:attr/selectableItemBackground"
+    android:clickable="true"
+    android:focusable="true"
+    android:background="@drawable/purple_gem_button">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="16dp">
+        android:padding="16dp"
+        android:background="@drawable/purple_gem_button">
 
         <TextView
             android:id="@+id/lessonNameTextView"
@@ -19,7 +24,7 @@
             android:layout_height="wrap_content"
             android:textSize="18sp"
             android:textStyle="bold"
-            android:textColor="@android:color/black"
+            android:textColor="@android:color/white"
             android:text="Lesson Name" />
 
         <TextView
@@ -27,7 +32,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textSize="16sp"
-            android:textColor="@android:color/darker_gray"
+            android:textColor="@android:color/white"
             android:text="Lesson Description" />
 
         <TextView
@@ -35,7 +40,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:textSize="14sp"
-            android:textColor="@android:color/holo_blue_dark"
+            android:textColor="#E0F7FA"
             android:text="Lesson Category" />
 
     </LinearLayout>
