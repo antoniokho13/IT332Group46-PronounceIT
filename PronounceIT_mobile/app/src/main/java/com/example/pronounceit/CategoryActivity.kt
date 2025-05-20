@@ -2,6 +2,7 @@ package com.example.pronounceit
 
 import android.os.Bundle
 import android.util.Log
+import android.view.animation.AnimationUtils
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -17,11 +18,16 @@ import kotlinx.coroutines.withContext
 class CategoryActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityCategoryBinding
+    private lateinit var categoryAdapter: CategoryAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityCategoryBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        // Apply zoom in/out animation to the category title image
+        val zoomAnimation = AnimationUtils.loadAnimation(this, R.anim.category_zoom)
+        binding.categoryTitle.startAnimation(zoomAnimation)
 
         fetchCategories()
     }
@@ -49,9 +55,16 @@ class CategoryActivity : AppCompatActivity() {
         }
     }
 
-
     private fun setupRecyclerView(categories: List<CategoryEntity>) {
+        categoryAdapter = CategoryAdapter(this, categories)
         binding.categoryRecyclerView.layoutManager = LinearLayoutManager(this)
-        binding.categoryRecyclerView.adapter = CategoryAdapter(this, categories)
+        binding.categoryRecyclerView.adapter = categoryAdapter
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        if (::categoryAdapter.isInitialized) {
+            categoryAdapter.releaseResources()
+        }
     }
 }

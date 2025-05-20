@@ -4,38 +4,43 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.util.Log
+import android.view.animation.AnimationUtils
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
-import androidx.recyclerview.widget.RecyclerView
 import com.example.pronounceit.databinding.ActivityLessonBinding
 import com.example.pronounceit.network.AuthApi
 import com.example.pronounceit.network.RetrofitInstance
 import com.example.pronounceit.network.models.LessonEntity
+import com.example.pronounceit.adapters.LessonAdapter
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.IO
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.Dispatchers.Main
-import com.example.pronounceit.adapters.LessonAdapter // Import the LessonAdapter
 
 class LessonActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityLessonBinding
     private lateinit var lessonAdapter: LessonAdapter
     private lateinit var api: AuthApi
-    private var userId: Long = -1 // Add userId
+    private var userId: Long = -1
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityLessonBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Use the context-aware API instance
+        // Apply zoom in/out animation to the lesson title image
+        val zoomAnimation = AnimationUtils.loadAnimation(this, R.anim.lesson_zoom)
+        binding.lessonTitle.startAnimation(zoomAnimation)
+
+        // Use the context-aware API instance so AuthInterceptor adds the token
         api = RetrofitInstance.getApi(this)
 
         val categoryId = intent.getLongExtra("categoryId", -1L)
-        userId = intent.getLongExtra("userId", -1L) // Get userId from intent
+        userId = intent.getLongExtra("userId", -1L)
+
         if (categoryId != -1L) {
             fetchLessons(categoryId)
         } else {
@@ -85,20 +90,18 @@ class LessonActivity : AppCompatActivity() {
     }
 
     private fun setupRecyclerView(lessons: List<LessonEntity>) {
-        lessonAdapter = LessonAdapter(this, lessons)  // Use the provided adapter
+        lessonAdapter = LessonAdapter(this, lessons)
         binding.lessonRecyclerView.apply {
             layoutManager = LinearLayoutManager(this@LessonActivity)
             adapter = lessonAdapter
         }
 
-        // Set item click listener here, inside setupRecyclerView
-        lessonAdapter.onItemClick = { lesson: LessonEntity ->  // Fix: Add type annotation LessonEntity
-            // Start WordActivity and pass lesson ID and user ID
-            val intent = Intent(this@LessonActivity, WordActivity::class.java).apply { // Fix: use this@LessonActivity
+        lessonAdapter.onItemClick = { lesson: LessonEntity ->
+            val intent = Intent(this@LessonActivity, WordActivity::class.java).apply {
                 putExtra("lessonId", lesson.lessonId)
-                putExtra("userId", userId) // Pass userId
+                putExtra("userId", userId)
             }
-            startActivity(intent) // Fix: use this@LessonActivity
+            startActivity(intent)
         }
     }
 
