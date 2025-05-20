@@ -18,6 +18,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.IOException
+import okhttp3.Interceptor
+import okhttp3.Response
 
 class WordActivity : AppCompatActivity() {
 
@@ -45,7 +47,7 @@ class WordActivity : AppCompatActivity() {
     private fun fetchWords(lessonId: Long) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val response = RetrofitInstance.api.getWordsByLessonId(lessonId)
+                val response = RetrofitInstance.getApi(this@WordActivity).getWordsByLessonId(lessonId)
                 if (response.isSuccessful) {
                     words = response.body() ?: emptyList()
                     withContext(Dispatchers.Main) {
@@ -82,14 +84,29 @@ class WordActivity : AppCompatActivity() {
             binding.lessonNameTextView.text = "Lesson: ${currentWord.lesson.name}"
             binding.wordTextView.text = currentWord.word
 
-            // Load image using Glide
+            val baseUrl = "http://10.0.2.2:8080"
+            // Ensure correct URL for image
+            val imageUrl = if (currentWord.imageURL?.startsWith("/") == true) {
+                baseUrl + currentWord.imageURL
+            } else {
+                baseUrl + "/" + (currentWord.imageURL ?: "")
+            }
+            Log.d("WordActivity", "Loading image: $imageUrl")
+
             Glide.with(this)
-                .load(currentWord.imageURL)
+                .load(imageUrl)
                 .into(binding.wordImageView)
 
             binding.playAudioButton.setOnClickListener {
-                currentWord.audioURL?.let { url ->  // Use let to handle nullability
-                    playSound(url)
+                currentWord.audioURL?.let { url ->
+                    // Ensure correct URL for audio
+                    val audioUrl = if (url.startsWith("/")) {
+                        baseUrl + url
+                    } else {
+                        baseUrl + "/" + url
+                    }
+                    Log.d("WordActivity", "Playing audio: $audioUrl")
+                    playSound(audioUrl)
                 } ?: run {
                     Toast.makeText(this@WordActivity, "Audio not available", Toast.LENGTH_SHORT).show()
                     Log.e("WordActivity", "audioURL is null")
@@ -104,7 +121,6 @@ class WordActivity : AppCompatActivity() {
     private fun playSound(audioUrl: String) {
         mediaPlayer?.release()
         mediaPlayer = MediaPlayer()
-
         try {
             mediaPlayer?.setDataSource(audioUrl)
             mediaPlayer?.prepareAsync()
@@ -116,7 +132,6 @@ class WordActivity : AppCompatActivity() {
                 Toast.makeText(this, "Error playing audio", Toast.LENGTH_SHORT).show()
                 true
             }
-
         } catch (e: IOException) {
             Log.e("WordActivity", "Error setting data source: ${e.message}", e)
             Toast.makeText(this, "Error playing audio", Toast.LENGTH_SHORT).show()
@@ -133,5 +148,23 @@ class WordActivity : AppCompatActivity() {
     fun nextWord(view: android.view.View) {
         currentWordIndex++
         updateUI()
+    }
+}
+
+class AuthInterceptor(private val context: Context) : Interceptor {
+    override fun intercept(chain: Interceptor.Chain): Response {
+        val request = chain.request()
+        val url = request.url.toString()
+        // Don't add Authorization header for static resources
+        if (url.contains("/images/") || url.contains("/audio/")) {
+            return chain.proceed(request)
+        }
+        val sharedPreferences = context.getSharedPreferences("PronounceItPrefs", Context.MODE_PRIVATE)
+        val token = sharedPreferences.getString("token", null)
+        val requestBuilder = request.newBuilder()
+        if (!token.isNullOrEmpty()) {
+            requestBuilder.addHeader("Authorization", "Bearer $token")
+        }
+        return chain.proceed(requestBuilder.build())
     }
 }

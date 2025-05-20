@@ -122,7 +122,7 @@ interface AuthApi {
         @Body updatedWord: WordEntity
     ): Response<WordEntity>
 
-    @GET("/api/lesson/{lessonId}")  // New endpoint to get words by lesson ID
+    @GET("/api/words/lesson/{lessonId}")  // New endpoint to get words by lesson ID
     suspend fun getWordsByLessonId(@Path("lessonId") lessonId: Long): Response<List<WordEntity>>
 
     @DELETE("/api/words/{wordId}")
