@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.capstone.group46.pronounceit.entity.CategoryEntity;
+import com.capstone.group46.pronounceit.entity.LessonEntity;
 import com.capstone.group46.pronounceit.service.CategoryService;
 
 @CrossOrigin(origins = "*")
@@ -55,5 +56,12 @@ public class CategoryController {
     public ResponseEntity<Void> deleteCategory(@PathVariable Long categoryId) {
         categoryService.deleteCategory(categoryId);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{categoryId}/lessons")
+    public ResponseEntity<List<LessonEntity>> getLessonsByCategory(@PathVariable Long categoryId) {
+        return categoryService.getCategoryById(categoryId)
+                .map(category -> ResponseEntity.ok(category.getLessons()))
+                .orElse(ResponseEntity.notFound().build());
     }
 }
