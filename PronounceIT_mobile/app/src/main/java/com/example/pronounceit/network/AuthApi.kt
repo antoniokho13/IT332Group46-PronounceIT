@@ -48,8 +48,6 @@ interface AuthApi {
     @GET("/api/lessons")
     suspend fun getAllLessons(): Response<List<LessonEntity>>
 
-    @GET("/api/categories/{categoryId}/lessons")  // Added this endpoint
-    suspend fun getLessonsByCategoryId(@Path("categoryId") categoryId: Long): Response<List<LessonEntity>>
 
     // Progress Tracker Controller Endpoints
     @GET("/api/progress-trackers/{progressId}")
@@ -126,4 +124,7 @@ interface AuthApi {
 
     @DELETE("/api/words/{wordId}")
     suspend fun deleteWord(@Path("wordId") wordId: Long): Response<Void>
+
+    @GET("/api/categories/{categoryId}/lessons") // Added this endpoint
+    suspend fun getLessonsByCategoryId(@Path("categoryId") categoryId: Long): Response<List<LessonEntity>>
 }

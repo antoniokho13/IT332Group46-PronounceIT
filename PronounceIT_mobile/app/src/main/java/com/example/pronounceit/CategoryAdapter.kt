@@ -32,7 +32,7 @@ class CategoryAdapter(
         holder.binding.categoryName.text = category.name
         holder.binding.root.setOnClickListener {
             val intent = Intent(context, LessonActivity::class.java)
-            intent.putExtra("category", category.name)
+            intent.putExtra("categoryId", category.categoryId) // Pass the ID, not just the name
             context.startActivity(intent)
         }
     }
