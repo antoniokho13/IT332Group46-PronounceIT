@@ -1,48 +1,47 @@
 package com.capstone.group46.pronounceit.controller;
 
-import java.io.IOException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.List;
-import java.util.Optional;
-
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RequestPart;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
-
 import com.capstone.group46.pronounceit.entity.WordEntity;
 import com.capstone.group46.pronounceit.service.SpeechToTextService;
 import com.capstone.group46.pronounceit.service.WordService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.cloud.speech.v1.RecognitionConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.core.io.FileSystemResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+import ws.schild.jave.Encoder;
+import ws.schild.jave.MultimediaObject;
+import ws.schild.jave.encode.AudioAttributes;
+import ws.schild.jave.encode.EncodingAttributes;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/words")
 public class WordController {
+    private static final Logger logger = LoggerFactory.getLogger(WordController.class);
     private final WordService wordService;
-    private final SpeechToTextService speechToTextService; // Declare the new service
+    private final SpeechToTextService speechToTextService;
 
-    // Update the constructor to include the new service
     public WordController(WordService wordService, SpeechToTextService speechToTextService) {
         this.wordService = wordService;
-        this.speechToTextService = speechToTextService; // Initialize the new service
+        this.speechToTextService = speechToTextService;
     }
 
     @GetMapping("/{wordId}")
     public ResponseEntity<?> getWordById(@PathVariable Long wordId) {
+        logger.info("Fetching word with ID: {}", wordId);
         Optional<WordEntity> wordOptional = wordService.getWordById(wordId);
 
         if (wordOptional.isPresent()) {
@@ -61,41 +60,48 @@ public class WordController {
 
                         return new ResponseEntity<>(fileSystemResource, headers, HttpStatus.OK);
                     } else {
+                        logger.error("Audio file not found at path: {}", audioPath);
                         return new ResponseEntity<>("Audio file not found", HttpStatus.NOT_FOUND);
                     }
-
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    logger.error("Error serving audio file for wordId {}: {}", wordId, e.getMessage(), e);
                     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error serving audio file");
                 }
             } else {
+                logger.warn("Audio URL is not set for wordId: {}", wordId);
                 return new ResponseEntity<>("Audio URL is not set for this word", HttpStatus.NOT_FOUND);
             }
         } else {
+            logger.warn("Word not found for wordId: {}", wordId);
             return ResponseEntity.notFound().build();
         }
     }
 
     @GetMapping
     public ResponseEntity<List<WordEntity>> getAllWords() {
+        logger.info("Fetching all words");
         List<WordEntity> words = wordService.getAllWords();
         return ResponseEntity.ok(words);
     }
 
     @GetMapping("/lesson/{lessonId}")
     public ResponseEntity<List<WordEntity>> getWordsByLessonId(@PathVariable Long lessonId) {
+        logger.info("Fetching words for lessonId: {}", lessonId);
         List<WordEntity> words = wordService.getWordsByLessonId(lessonId);
         return ResponseEntity.ok(words);
     }
 
     @PostMapping
     public ResponseEntity<?> createWord(@RequestBody WordEntity word) {
+        logger.info("Creating new word: {}", word.getWord());
         try {
             WordEntity createdWord = wordService.createWord(word);
             return ResponseEntity.ok(createdWord);
         } catch (IllegalStateException e) {
+            logger.error("Error creating word: {}", e.getMessage());
             return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
+            logger.error("Unexpected error creating word: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error creating word");
         }
     }
@@ -104,6 +110,7 @@ public class WordController {
     public ResponseEntity<?> createWord(
             @RequestPart("word") String wordJson,
             @RequestPart("image") MultipartFile imageFile) throws IOException {
+        logger.info("Creating word with image upload");
         try {
             ObjectMapper objectMapper = new ObjectMapper();
             WordEntity word = objectMapper.readValue(wordJson, WordEntity.class);
@@ -114,17 +121,23 @@ public class WordController {
             WordEntity createdWord = wordService.createWord(word);
             return ResponseEntity.ok(createdWord);
         } catch (IllegalStateException e) {
+            logger.error("Error creating word with image: {}", e.getMessage());
             return ResponseEntity.badRequest().body(e.getMessage());
         } catch (Exception e) {
+            logger.error("Unexpected error creating word with image: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error creating word");
         }
     }
 
     @PutMapping("/{wordId}")
     public ResponseEntity<WordEntity> updateWord(@PathVariable Long wordId, @RequestBody WordEntity updatedWord) {
+        logger.info("Updating word with ID: {}", wordId);
         return wordService.updateWord(wordId, updatedWord)
                 .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+                .orElseGet(() -> {
+                    logger.warn("Word not found for update, wordId: {}", wordId);
+                    return ResponseEntity.notFound().build();
+                });
     }
 
     @PutMapping(value = "/{wordId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
@@ -132,31 +145,38 @@ public class WordController {
             @PathVariable Long wordId,
             @RequestPart("word") String wordJson,
             @RequestPart(value = "image", required = false) MultipartFile imageFile) {
+        logger.info("Updating word with ID: {} and image", wordId);
         try {
             ObjectMapper objectMapper = new ObjectMapper();
             WordEntity updatedWord = objectMapper.readValue(wordJson, WordEntity.class);
 
             Optional<WordEntity> updatedEntity = wordService.updateWord(wordId, updatedWord, imageFile);
-            return updatedEntity.map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
+            return updatedEntity.map(ResponseEntity::ok).orElseGet(() -> {
+                logger.warn("Word not found for update, wordId: {}", wordId);
+                return ResponseEntity.notFound().build();
+            });
         } catch (IOException e) {
-            e.printStackTrace();
+            logger.error("Error updating word with image, wordId {}: {}", wordId, e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
     }
 
     @DeleteMapping("/{wordId}")
     public ResponseEntity<Void> deleteWord(@PathVariable Long wordId) {
+        logger.info("Deleting word with ID: {}", wordId);
         wordService.deleteWord(wordId);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping(value = "/audio/{filename}", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
     public ResponseEntity<FileSystemResource> getAudioFile(@PathVariable String filename) throws IOException {
+        logger.info("Fetching audio file: {}", filename);
         try {
             Path audioPath = Paths.get("src", "main", "resources", "audio", filename);
             FileSystemResource fileSystemResource = new FileSystemResource(audioPath);
 
             if (!fileSystemResource.exists()) {
+                logger.error("Audio file not found: {}", audioPath);
                 return new ResponseEntity<>(HttpStatus.NOT_FOUND);
             }
 
@@ -164,100 +184,104 @@ public class WordController {
                     .contentType(MediaType.parseMediaType("audio/mpeg"))
                     .body(fileSystemResource);
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Error fetching audio file {}: {}", filename, e.getMessage(), e);
             return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
-    /**
-     * Endpoint to receive user's pronunciation audio and compare it to the target word.
-     * The frontend should send the audio file as multipart/form-data with the parameter name "audio".
-     * @param wordId The ID of the word the user is pronouncing.
-     * @param audioFile The audio recording from the user.
-     * @return A response indicating if the pronunciation was correct and providing feedback.
-     */
+
     @PostMapping("/{wordId}/check-pronunciation")
     public ResponseEntity<?> checkPronunciation(@PathVariable Long wordId,
-                                                @RequestParam("audio") MultipartFile audioFile) {
+                                               @RequestParam("audio") MultipartFile audioFile) {
+        logger.info("Received pronunciation check request for wordId: {}, audio size: {} bytes", wordId, audioFile.getSize());
+
         // 1. Fetch the correct text of the word
         Optional<WordEntity> wordOptional = wordService.getWordById(wordId);
         if (!wordOptional.isPresent()) {
+            logger.warn("Word not found for wordId: {}", wordId);
             return new ResponseEntity<>("Word not found", HttpStatus.NOT_FOUND);
         }
-        String correctWordText = wordOptional.get().getWord(); // Use getWord() to get the text of the word
+        String correctWordText = wordOptional.get().getWord();
+        logger.debug("Correct word text: {}", correctWordText);
 
-        // 2. Receive and process the audio file
+        // 2. Validate audio file
         if (audioFile.isEmpty()) {
+            logger.error("Audio file is empty for wordId: {}", wordId);
             return new ResponseEntity<>("Audio file is empty", HttpStatus.BAD_REQUEST);
         }
 
         try {
-            byte[] audioBytes = audioFile.getBytes();
+            // 3. Convert audio to PCM WAV
+            File inputFile = File.createTempFile("audio", ".mp4");
+            audioFile.transferTo(inputFile);
+            File outputWavFile = convertToPcmWav(inputFile);
+            byte[] audioBytes = Files.readAllBytes(outputWavFile.toPath());
+            logger.debug("Converted audio to PCM WAV, size: {} bytes", audioBytes.length);
 
-            // --- Crucial Configuration for STT ---
-            // You MUST know the exact audio encoding and sample rate used by your
-            // frontend when recording. This is vital for accurate transcription.
-            // Examples:
-            // For LINEAR16 (WAV), sample rate is typically 16000 Hz for speech.
-            // For MP3, sample rates can vary (e.g., 8000, 16000, 44100 Hz).
-            //
-            // Adjust these parameters based on your frontend's audio recording implementation:
-            RecognitionConfig.AudioEncoding encoding = RecognitionConfig.AudioEncoding.MP3; // Or LINEAR16, OGG_OPUS, etc.
-            int sampleRateHertz = 16000; // Replace with the actual sample rate from your frontend
+            // 4. Send audio to Speech-to-Text Service
+            RecognitionConfig.AudioEncoding encoding = RecognitionConfig.AudioEncoding.LINEAR16;
+            int sampleRateHertz = 16000;
+            String languageCode = "en-US";
+            String transcribedText = speechToTextService.transcribeAudio(audioBytes, languageCode, encoding, sampleRateHertz);
+            logger.info("Transcribed text: {}", transcribedText);
 
-            // You might add logic to inspect the audio file headers if necessary,
-            // but it's often simpler to standardize the frontend recording format.
-
-
-            // 3. Send audio to Speech-to-Text Service for transcription
-            // Use the transcribeAudio method or a helper specific to your encoding
-            String transcribedText = speechToTextService.transcribeAudio(audioBytes, "en-US", encoding, sampleRateHertz);
-            // Consider supporting other languages if needed
-
-            // 4. Compare the transcribed text with the correct word text
+            // 5. Compare transcribed text with correct word
             boolean isCorrect = false;
             String feedbackMessage;
 
             if (transcribedText != null && !transcribedText.trim().isEmpty()) {
-                // Perform a case-insensitive and trimmed comparison
                 if (correctWordText.trim().equalsIgnoreCase(transcribedText.trim())) {
                     isCorrect = true;
                     feedbackMessage = "Correct!";
                 } else {
-                    // Provide feedback including what was transcribed
                     feedbackMessage = "Try again. You said: \"" + transcribedText + "\"";
                 }
             } else {
                 feedbackMessage = "Could not understand. Please try again.";
             }
 
-            // 5. Return result to frontend
-            // Use the inner class defined below for the response body
+            // Clean up temporary files
+            inputFile.delete();
+            outputWavFile.delete();
+
+            // 6. Return result to frontend
             return new ResponseEntity<>(new PronunciationCheckResponse(isCorrect, feedbackMessage, transcribedText), HttpStatus.OK);
 
         } catch (IOException e) {
-            e.printStackTrace(); // Log the file processing error
+            logger.error("Error reading audio file for wordId {}: {}", wordId, e.getMessage(), e);
             return new ResponseEntity<>("Error reading audio file.", HttpStatus.INTERNAL_SERVER_ERROR);
         } catch (Exception e) {
-            // Catch potential errors from the Google Cloud STT call
-            e.printStackTrace(); // Log the transcription error
-            return new ResponseEntity<>("Error during transcription.", HttpStatus.INTERNAL_SERVER_ERROR);
+            logger.error("Error during transcription for wordId {}: {}", wordId, e.getMessage(), e);
+            return new ResponseEntity<>("Error during transcription: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
-    // Inner class to define the response structure for the frontend
+    private File convertToPcmWav(File inputFile) throws Exception {
+        File outputWavFile = File.createTempFile("converted", ".wav");
+        AudioAttributes audio = new AudioAttributes();
+        audio.setCodec("pcm_s16le");
+        audio.setChannels(1);
+        audio.setSamplingRate(16000);
+
+        EncodingAttributes attrs = new EncodingAttributes();
+        attrs.setOutputFormat("wav");
+        attrs.setAudioAttributes(audio);
+
+        Encoder encoder = new Encoder();
+        encoder.encode(new MultimediaObject(inputFile), outputWavFile, attrs);
+        return outputWavFile;
+    }
+
     public static class PronunciationCheckResponse {
         private boolean correct;
         private String feedbackMessage;
-        private String transcribedText; // Include transcribed text for user feedback
+        private String transcribedText;
 
-        // Constructor
         public PronunciationCheckResponse(boolean correct, String feedbackMessage, String transcribedText) {
             this.correct = correct;
             this.feedbackMessage = feedbackMessage;
             this.transcribedText = transcribedText;
         }
 
-        // Getters (needed for Spring to serialize to JSON)
         public boolean isCorrect() {
             return correct;
         }

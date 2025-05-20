@@ -28,8 +28,10 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/users/**").permitAll()
-                        .requestMatchers("/images/**").permitAll() // Allow access to images
-                        .requestMatchers("/audio/**").permitAll()  // Allow access to audio
+                        .requestMatchers("/images/**").permitAll()
+                        .requestMatchers("/audio/**").permitAll()
+                        .requestMatchers("/api/words/**").permitAll()
+                        .requestMatchers("/error").permitAll() // *** ADD THIS LINE ***
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

@@ -4,22 +4,29 @@ import android.content.Context
 import android.media.MediaPlayer
 import android.os.Bundle
 import android.util.Log
-import android.widget.Button
-import android.widget.ImageView
-import android.widget.TextView
+import android.view.View
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.bumptech.glide.Glide
 import com.example.pronounceit.databinding.ActivityWordBinding
 import com.example.pronounceit.network.RetrofitInstance
 import com.example.pronounceit.network.models.WordEntity
+import com.example.pronounceit.network.models.PronunciationCheckResponse
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.IOException
-import okhttp3.Interceptor
-import okhttp3.Response
+import android.speech.tts.TextToSpeech
+import java.util.Locale
+import android.media.MediaRecorder
+import android.os.Environment
+import java.io.File
+import java.util.UUID
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import android.content.pm.PackageManager
 
 class WordActivity : AppCompatActivity() {
 
@@ -28,6 +35,11 @@ class WordActivity : AppCompatActivity() {
     private var currentWordIndex = 0
     private var words: List<WordEntity> = emptyList()
     private var lessonId: Long = -1
+    private lateinit var tts: TextToSpeech
+    private var mediaRecorder: MediaRecorder? = null
+    private var audioFile: File? = null
+
+    private val RECORD_AUDIO_PERMISSION_CODE = 101
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -41,7 +53,47 @@ class WordActivity : AppCompatActivity() {
             return
         }
 
+        tts = TextToSpeech(this) { status ->
+            if (status == TextToSpeech.SUCCESS) {
+                val result = tts.setLanguage(Locale.US)
+                if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
+                    Log.e("WordActivity", "Language not supported")
+                }
+            } else {
+                Log.e("WordActivity", "TTS initialization failed")
+                Toast.makeText(this, "TTS initialization failed", Toast.LENGTH_SHORT).show()
+            }
+        }
+
         fetchWords(lessonId)
+
+        if (checkSelfPermission(android.Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+            requestPermissions(arrayOf(android.Manifest.permission.RECORD_AUDIO), RECORD_AUDIO_PERMISSION_CODE)
+        }
+
+        binding.recordPronunciationButton.setOnClickListener {
+            startRecording()
+            binding.recordPronunciationButton.visibility = View.GONE
+            binding.stopRecordingButton.visibility = View.VISIBLE
+        }
+
+        binding.stopRecordingButton.setOnClickListener {
+            stopRecording()
+            binding.recordPronunciationButton.visibility = View.VISIBLE
+            binding.stopRecordingButton.visibility = View.GONE
+        }
+    }
+
+    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        if (requestCode == RECORD_AUDIO_PERMISSION_CODE) {
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                Toast.makeText(this, "Record Audio permission granted", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(this, "Record Audio permission denied. Cannot record pronunciation.", Toast.LENGTH_LONG).show()
+                binding.recordPronunciationButton.isEnabled = false
+            }
+        }
     }
 
     private fun fetchWords(lessonId: Long) {
@@ -55,7 +107,7 @@ class WordActivity : AppCompatActivity() {
                             updateUI()
                         } else {
                             Toast.makeText(this@WordActivity, "No words found for this lesson", Toast.LENGTH_SHORT).show()
-                            finish() // Consider finishing the activity if no words are found.
+                            finish()
                         }
                     }
                 } else {
@@ -85,7 +137,6 @@ class WordActivity : AppCompatActivity() {
             binding.wordTextView.text = currentWord.word
 
             val baseUrl = "http://10.0.2.2:8080"
-            // Ensure correct URL for image
             val imageUrl = if (currentWord.imageURL?.startsWith("/") == true) {
                 baseUrl + currentWord.imageURL
             } else {
@@ -99,14 +150,13 @@ class WordActivity : AppCompatActivity() {
 
             binding.playAudioButton.setOnClickListener {
                 currentWord.audioURL?.let { url ->
-                    // Ensure correct URL for audio
                     val audioUrl = if (url.startsWith("/")) {
                         baseUrl + url
                     } else {
                         baseUrl + "/" + url
                     }
                     Log.d("WordActivity", "Playing audio: $audioUrl")
-                    playSound(audioUrl)
+                    speakWord(currentWord.word)
                 } ?: run {
                     Toast.makeText(this@WordActivity, "Audio not available", Toast.LENGTH_SHORT).show()
                     Log.e("WordActivity", "audioURL is null")
@@ -138,33 +188,140 @@ class WordActivity : AppCompatActivity() {
         }
     }
 
+    private fun speakWord(text: String) {
+        tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, null)
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         mediaPlayer?.release()
         mediaPlayer = null
+        if (::tts.isInitialized) {
+            tts.stop()
+            tts.shutdown()
+        }
+        mediaRecorder?.release()
+        mediaRecorder = null
     }
 
-    // Function to go to the next word
-    fun nextWord(view: android.view.View) {
+    fun nextWord(view: View) {
         currentWordIndex++
         updateUI()
     }
-}
 
-class AuthInterceptor(private val context: Context) : Interceptor {
-    override fun intercept(chain: Interceptor.Chain): Response {
-        val request = chain.request()
-        val url = request.url.toString()
-        // Don't add Authorization header for static resources
-        if (url.contains("/images/") || url.contains("/audio/")) {
-            return chain.proceed(request)
+    private fun startRecording() {
+        if (checkSelfPermission(android.Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
+            Toast.makeText(this, "Record Audio permission not granted.", Toast.LENGTH_SHORT).show()
+            requestPermissions(arrayOf(android.Manifest.permission.RECORD_AUDIO), RECORD_AUDIO_PERMISSION_CODE)
+            return
         }
-        val sharedPreferences = context.getSharedPreferences("PronounceItPrefs", Context.MODE_PRIVATE)
-        val token = sharedPreferences.getString("token", null)
-        val requestBuilder = request.newBuilder()
-        if (!token.isNullOrEmpty()) {
-            requestBuilder.addHeader("Authorization", "Bearer $token")
+
+        // Create a unique file name for MP4 (AAC)
+        val fileName = UUID.randomUUID().toString() + ".mp4"
+        val recordingDir = getExternalFilesDir(Environment.DIRECTORY_RECORDINGS)
+        if (recordingDir == null) {
+            Log.e("WordActivity", "Cannot get recording directory")
+            Toast.makeText(this, "Cannot access storage for recording.", Toast.LENGTH_SHORT).show()
+            return
         }
-        return chain.proceed(requestBuilder.build())
+        audioFile = File(recordingDir, fileName)
+        Log.d("WordActivity", "Recording to: ${audioFile?.absolutePath}")
+
+        // Set up MediaRecorder for MP4/AAC
+        mediaRecorder = MediaRecorder().apply {
+            setAudioSource(MediaRecorder.AudioSource.MIC)
+            setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
+            setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
+            setAudioChannels(1)
+            setAudioSamplingRate(16000)
+            setOutputFile(audioFile?.absolutePath)
+            try {
+                prepare()
+                start()
+                Toast.makeText(this@WordActivity, "Recording started...", Toast.LENGTH_SHORT).show()
+                Log.d("WordActivity", "MediaRecorder prepared and started.")
+            } catch (e: IOException) {
+                Log.e("WordActivity", "prepare() failed: ${e.message}", e)
+                Toast.makeText(this@WordActivity, "Recording preparation failed", Toast.LENGTH_SHORT).show()
+                binding.recordPronunciationButton.visibility = View.VISIBLE
+                binding.stopRecordingButton.visibility = View.GONE
+            } catch (e: IllegalStateException) {
+                Log.e("WordActivity", "IllegalStateException during recording: ${e.message}", e)
+                Toast.makeText(this@WordActivity, "Recording failed: ${e.message}", Toast.LENGTH_SHORT).show()
+                binding.recordPronunciationButton.visibility = View.VISIBLE
+                binding.stopRecordingButton.visibility = View.GONE
+            }
+        }
+    }
+
+    private fun stopRecording() {
+        mediaRecorder?.apply {
+            try {
+                stop()
+                release()
+                Log.d("WordActivity", "MediaRecorder stopped and released.")
+                Toast.makeText(this@WordActivity, "Recording stopped. Sending for validation...", Toast.LENGTH_SHORT).show()
+            } catch (e: RuntimeException) {
+                Log.e("WordActivity", "Stop/release failed: ${e.message}", e)
+                Toast.makeText(this@WordActivity, "Recording stop failed. Audio might be corrupt.", Toast.LENGTH_SHORT).show()
+                binding.recordPronunciationButton.visibility = View.VISIBLE
+                binding.stopRecordingButton.visibility = View.GONE
+                audioFile?.delete()
+                return
+            }
+        }
+        mediaRecorder = null
+        if (audioFile != null && audioFile!!.exists() && audioFile!!.length() > 1000) { // Ensure file is at least 1KB
+            Log.d("WordActivity", "Audio file size: ${audioFile!!.length()} bytes")
+            CoroutineScope(Dispatchers.IO).launch {
+                sendAudioForValidation(audioFile!!)
+            }
+        } else {
+            Log.e("WordActivity", "Audio file invalid: exists=${audioFile?.exists()}, size=${audioFile?.length()}")
+            Toast.makeText(this@WordActivity, "No audio recorded or file is too small.", Toast.LENGTH_SHORT).show()
+            binding.recordPronunciationButton.visibility = View.VISIBLE
+            binding.stopRecordingButton.visibility = View.GONE
+            audioFile?.delete()
+        }
+    }
+
+    private suspend fun sendAudioForValidation(audioFile: File) {
+        try {
+            val currentWord = words[currentWordIndex]
+            val wordId = currentWord.wordId
+            Log.d("WordActivity", "Sending pronunciation check for wordId: $wordId, word: ${currentWord.word}")
+
+            val requestFile = audioFile.asRequestBody("audio/mp4".toMediaTypeOrNull())
+            val audioPart = MultipartBody.Part.createFormData("audio", audioFile.name, requestFile)
+            Log.d("WordActivity", "Sending audio file: ${audioFile.name}, size: ${audioFile.length()} bytes, type: audio/mp4")
+
+            val response = RetrofitInstance.getApi(this@WordActivity).checkPronunciation(wordId, audioPart)
+
+            withContext(Dispatchers.Main) {
+                if (response.isSuccessful) {
+                    val pronunciationCheckResponse = response.body()
+                    if (pronunciationCheckResponse != null) {
+                        if (pronunciationCheckResponse.correct) {
+                            Toast.makeText(this@WordActivity, "Correct Pronunciation!", Toast.LENGTH_SHORT).show()
+                        } else {
+                            Toast.makeText(this@WordActivity, pronunciationCheckResponse.feedbackMessage, Toast.LENGTH_LONG).show()
+                        }
+                        Log.d("WordActivity", "Transcribed: ${pronunciationCheckResponse.transcribedText}")
+                    }
+                } else {
+                    val errorBody = response.errorBody()?.string()
+                    val errorMessage = "Failed to check pronunciation: ${response.code()}, ${response.message()}, Body: $errorBody"
+                    Log.e("WordActivity", errorMessage)
+                    Toast.makeText(this@WordActivity, "Error: ${errorBody ?: "Unknown error"}", Toast.LENGTH_LONG).show()
+                }
+                audioFile.delete()
+            }
+        } catch (e: Exception) {
+            Log.e("WordActivity", "Error sending audio: ${e.message}", e)
+            withContext(Dispatchers.Main) {
+                Toast.makeText(this@WordActivity, "Error sending audio: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
+            }
+            audioFile.delete()
+        }
     }
 }

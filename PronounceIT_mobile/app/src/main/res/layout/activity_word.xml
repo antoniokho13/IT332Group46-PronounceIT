@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -33,14 +34,16 @@
         android:layout_height="200dp"
         android:scaleType="centerCrop"
         android:layout_marginBottom="24dp"
-        android:src="@android:drawable/ic_menu_gallery" /> <TextView
-    android:id="@+id/scoreTextView"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:textSize="18sp"
-    android:textColor="@android:color/holo_green_dark"
-    android:text="Score: "
-    android:layout_marginBottom="24dp"/>
+        android:src="@android:drawable/ic_menu_gallery" />
+
+    <TextView
+        android:id="@+id/scoreTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textSize="18sp"
+        android:textColor="@android:color/holo_green_dark"
+        android:text="Score: "
+        android:layout_marginBottom="24dp"/>
 
     <Button
         android:id="@+id/playAudioButton"
@@ -51,10 +54,21 @@
         android:layout_marginBottom="16dp"/>
 
     <Button
+        android:id="@+id/recordPronunciationButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Next Word"
-        android:onClick="nextWord"
-        android:padding="12dp"/>
+        android:text="Record" />
+
+    <Button
+        android:id="@+id/stopRecordingButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Stop"
+        android:visibility="gone" /> <Button
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:text="Next Word"
+    android:onClick="nextWord"
+    android:padding="12dp"/>
 
 </LinearLayout>

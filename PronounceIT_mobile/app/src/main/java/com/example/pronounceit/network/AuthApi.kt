@@ -9,17 +9,21 @@ import com.example.pronounceit.network.models.LoginRequest
 import com.example.pronounceit.network.models.LoginResponse
 import com.example.pronounceit.network.models.ProgressTrackerEntity
 import com.example.pronounceit.network.models.PronounciationAttemptEntity
+import com.example.pronounceit.network.models.PronunciationCheckResponse
 import com.example.pronounceit.network.models.RegisterRequest
 import com.example.pronounceit.network.models.ScoreRecordEntity
 import com.example.pronounceit.network.models.WordEntity
+import okhttp3.MultipartBody
 import okhttp3.ResponseBody
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.Header
+import retrofit2.http.Multipart
 import retrofit2.http.POST
 import retrofit2.http.PUT
+import retrofit2.http.Part
 import retrofit2.http.Path
 
 interface AuthApi {
@@ -134,5 +138,12 @@ interface AuthApi {
     //TextToSpeech Controller
     @POST("/api/tts")
     suspend fun synthesizeText(@Body text: String): Response<ResponseBody>
+
+    @Multipart // Marks this as a multipart request
+    @POST("/api/words/{wordId}/check-pronunciation")
+    suspend fun checkPronunciation(
+        @Path("wordId") wordId: Long,
+        @Part audio: MultipartBody.Part // This matches @RequestParam("audio") MultipartFile audioFile in backend
+    ): Response<PronunciationCheckResponse> // Uses the new data class for response
 
 }
