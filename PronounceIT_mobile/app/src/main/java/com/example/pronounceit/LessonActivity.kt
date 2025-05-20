@@ -29,7 +29,8 @@ class LessonActivity : AppCompatActivity() {
         binding = ActivityLessonBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        api = RetrofitInstance.api
+        // Use the context-aware API instance so AuthInterceptor adds the token
+        api = RetrofitInstance.getApi(this)
 
         val categoryId = intent.getLongExtra("categoryId", -1L)
         if (categoryId != -1L) {
@@ -43,8 +44,7 @@ class LessonActivity : AppCompatActivity() {
     private fun fetchLessons(categoryId: Long) {
         CoroutineScope(IO).launch {
             try {
-                // Use the new endpoint to get lessons by category ID
-                val response = api.getLessonsByCategoryId(categoryId)  // Corrected line
+                val response = api.getLessonsByCategoryId(categoryId)
                 if (response.isSuccessful) {
                     val lessons = response.body() ?: emptyList()
                     withContext(Main) {
