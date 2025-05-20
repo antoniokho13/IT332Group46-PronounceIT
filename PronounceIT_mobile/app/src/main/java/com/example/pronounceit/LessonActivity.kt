@@ -88,4 +88,11 @@ class LessonActivity : AppCompatActivity() {
             adapter = lessonAdapter
         }
     }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        if (::lessonAdapter.isInitialized) {
+            lessonAdapter.releaseResources()
+        }
+    }
 }
