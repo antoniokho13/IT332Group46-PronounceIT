@@ -122,9 +122,17 @@ interface AuthApi {
         @Body updatedWord: WordEntity
     ): Response<WordEntity>
 
+    @GET("/api/lesson/{lessonId}")  // New endpoint to get words by lesson ID
+    suspend fun getWordsByLessonId(@Path("lessonId") lessonId: Long): Response<List<WordEntity>>
+
     @DELETE("/api/words/{wordId}")
     suspend fun deleteWord(@Path("wordId") wordId: Long): Response<Void>
 
     @GET("/api/categories/{categoryId}/lessons") // Added this endpoint
     suspend fun getLessonsByCategoryId(@Path("categoryId") categoryId: Long): Response<List<LessonEntity>>
+
+    //TextToSpeech Controller
+    @POST("/api/tts")
+    suspend fun synthesizeText(@Body text: String): Response<ResponseBody>
+
 }

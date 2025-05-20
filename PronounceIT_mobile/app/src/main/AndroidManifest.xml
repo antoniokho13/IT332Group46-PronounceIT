@@ -69,6 +69,11 @@
             android:label="PronounceIT"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
 
+        <activity
+            android:name=".WordActivity"
+            android:exported="true"
+            android:label="PronounceIT"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
 
     </application>
 </manifest>
