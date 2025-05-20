@@ -61,12 +61,18 @@ class HomeActivity : AppCompatActivity() {
             navigateToLogin()
         }
 
-        // Play button with sound
+        // Play button with transition animation
         playButton.setOnClickListener {
+            // Play button sound
             playButtonSound()
-            val intent = Intent(this, CategoryActivity::class.java)
-            startActivity(intent)
-            overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+
+            // Start CategoryActivity after a short delay
+            playButton.postDelayed({
+                val intent = Intent(this, CategoryActivity::class.java)
+                startActivity(intent)
+                // Use bubble pop transition when starting CategoryActivity
+                overridePendingTransition(R.anim.bubble_pop_in, R.anim.bubble_pop_out)
+            }, 100)
         }
 
         // Settings button with sound
@@ -186,6 +192,7 @@ class HomeActivity : AppCompatActivity() {
     }
 
     override fun onBackPressed() {
+        super.onBackPressed()
         Toast.makeText(this, "Please use the logout button to exit", Toast.LENGTH_SHORT).show()
     }
 }

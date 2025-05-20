@@ -3,6 +3,7 @@ package com.example.pronounceit
 import android.content.Context
 import android.os.Bundle
 import android.util.Log
+import android.view.animation.AnimationUtils
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
@@ -28,6 +29,10 @@ class LessonActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityLessonBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        // Apply zoom in/out animation to the lesson title image
+        val zoomAnimation = AnimationUtils.loadAnimation(this, R.anim.lesson_zoom)
+        binding.lessonTitle.startAnimation(zoomAnimation)
 
         // Use the context-aware API instance so AuthInterceptor adds the token
         api = RetrofitInstance.getApi(this)
