@@ -1,60 +1,91 @@
 package com.example.pronounceit
 
+import android.content.Context
 import android.os.Bundle
-import android.widget.Button
-import android.widget.ImageView
-import android.widget.TextView
+import android.util.Log
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import com.google.android.material.floatingactionbutton.FloatingActionButton
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import com.example.pronounceit.adapters.LessonAdapter
+import com.example.pronounceit.databinding.ActivityLessonBinding
+import com.example.pronounceit.network.AuthApi
+import com.example.pronounceit.network.RetrofitInstance
+import com.example.pronounceit.network.models.LessonEntity
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.Dispatchers.Main
 
 class LessonActivity : AppCompatActivity() {
 
-    private lateinit var lessonTextView: TextView
-    private lateinit var wordsTextView: TextView
-    private lateinit var scoreButton: Button
-    private lateinit var wordImageView: ImageView
-    private lateinit var wordTextView: TextView
-    private lateinit var soundButton: ImageView
-    private lateinit var microphoneButton: FloatingActionButton
+    private lateinit var binding: ActivityLessonBinding
+    private lateinit var lessonAdapter: LessonAdapter
+    private lateinit var api: AuthApi
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_lesson)
+        binding = ActivityLessonBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
-        // Initialize views by finding their IDs
-        lessonTextView = findViewById(R.id.lessonTextView)
-        wordsTextView = findViewById(R.id.wordsTextView)
-        scoreButton = findViewById(R.id.scoreButton)
-        wordImageView = findViewById(R.id.wordImageView)
-        wordTextView = findViewById(R.id.wordTextView)
-        soundButton = findViewById(R.id.soundButton)
-        microphoneButton = findViewById(R.id.microphoneButton)
+        api = RetrofitInstance.api
 
-        // You can now work with these views to display data
-        // For example, setting the initial lesson and word count:
-        lessonTextView.text = "Lesson: A" // You might get this from the Intent
-        wordsTextView.text = "Words: 1/5" // You might get this from your data
-
-        // For now, let's set some placeholder data for the first word
-        wordImageView.setImageResource(R.drawable.ic_launcher_background) // Replace with your actual image resource
-        wordTextView.text = "Apple" // Replace with the actual word
-
-        // You can add click listeners to the soundButton and microphoneButton here
-        soundButton.setOnClickListener {
-            // Play the pronunciation of the word
+        val categoryId = intent.getLongExtra("categoryId", -1L)
+        if (categoryId != -1L) {
+            fetchLessons(categoryId)
+        } else {
+            Toast.makeText(this, "Invalid category ID", Toast.LENGTH_SHORT).show()
+            finish()
         }
+    }
 
-        microphoneButton.setOnClickListener {
-            // Start speech recognition
+    private fun fetchLessons(categoryId: Long) {
+        CoroutineScope(IO).launch {
+            try {
+                // Use the new endpoint to get lessons by category ID
+                val response = api.getLessonsByCategoryId(categoryId)  // Corrected line
+                if (response.isSuccessful) {
+                    val lessons = response.body() ?: emptyList()
+                    withContext(Main) {
+                        if (lessons.isNotEmpty()) {
+                            setupRecyclerView(lessons)
+                        } else {
+                            Toast.makeText(
+                                this@LessonActivity,
+                                "No lessons found for this category",
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+                } else {
+                    withContext(Main) {
+                        Toast.makeText(
+                            this@LessonActivity,
+                            "Failed to load lessons: ${response.message()}",
+                            Toast.LENGTH_SHORT
+                        ).show()
+                        Log.e(
+                            "LessonActivity",
+                            "Failed to load lessons. Response Code: ${response.code()}, Body: ${response.errorBody()?.string()}"
+                        )
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("LessonActivity", "Error fetching lessons", e)
+                withContext(Main) {
+                    Toast.makeText(this@LessonActivity, "Error: ${e.message}", Toast.LENGTH_SHORT)
+                        .show()
+                }
+            }
         }
+    }
 
-        // You might also want to retrieve the category from the Intent
-        val category = intent.getStringExtra("category")
-        if (!category.isNullOrEmpty()) {
-            // Use the category to fetch data from your backend (or local data source)
-            // and update the UI accordingly.
-            // For now, let's just log the category.
-            println("Selected Category: $category")
+    private fun setupRecyclerView(lessons: List<LessonEntity>) {
+        lessonAdapter = LessonAdapter(this, lessons)
+        binding.lessonRecyclerView.apply {
+            layoutManager = LinearLayoutManager(this@LessonActivity)
+            adapter = lessonAdapter
         }
     }
 }

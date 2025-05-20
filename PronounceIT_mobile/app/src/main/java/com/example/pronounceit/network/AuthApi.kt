@@ -38,62 +38,8 @@ interface AuthApi {
     @POST("/api/auth/logout")
     suspend fun logout(@Header("Authorization") token: String): Response<ResponseBody>
 
-    // Category Controller Endpoints
-    @GET("/api/categories/{categoryId}")
-    suspend fun getCategoryById(@Path("categoryId") categoryId: Long): Response<CategoryEntity>
-
     @GET("/api/categories")
     suspend fun getAllCategories(): Response<List<CategoryEntity>>
-
-    @POST("/api/categories")
-    suspend fun createCategory(@Body category: CategoryEntity): Response<CategoryEntity>
-
-    @PUT("/api/categories/{categoryId}")
-    suspend fun updateCategory(
-        @Path("categoryId") categoryId: Long,
-        @Body updatedCategory: CategoryEntity
-    ): Response<CategoryEntity>
-
-    @DELETE("/api/categories/{categoryId}")
-    suspend fun deleteCategory(@Path("categoryId") categoryId: Long): Response<Void>
-
-    // Class Controller Endpoints
-    @GET("/api/classes/{classId}")
-    suspend fun getClassById(@Path("classId") classId: Long): Response<ClassEntity>
-
-    @GET("/api/classes")
-    suspend fun getAllClasses(): Response<List<ClassEntity>>
-
-    @POST("/api/classes")
-    suspend fun createClass(@Body classEntity: ClassEntity): Response<ClassEntity>
-
-    @PUT("/api/classes/{classId}")
-    suspend fun updateClass(
-        @Path("classId") classId: Long,
-        @Body updatedClass: ClassEntity
-    ): Response<ClassEntity>
-
-    @DELETE("/api/classes/{classId}")
-    suspend fun deleteClass(@Path("classId") classId: Long): Response<Void>
-
-    // Class Member Controller Endpoints
-    @GET("/api/class-members/{memberId}")
-    suspend fun getClassMemberById(@Path("memberId") memberId: Long): Response<ClassMemberEntity>
-
-    @GET("/api/class-members")
-    suspend fun getAllClassMembers(): Response<List<ClassMemberEntity>>
-
-    @POST("/api/class-members")
-    suspend fun createClassMember(@Body classMemberEntity: ClassMemberEntity): Response<ClassMemberEntity>
-
-    @PUT("/api/class-members/{memberId}")
-    suspend fun updateClassMember(
-        @Path("memberId") memberId: Long,
-        @Body updatedClassMember: ClassMemberEntity
-    ): Response<ClassMemberEntity>
-
-    @DELETE("/api/class-members/{memberId}")
-    suspend fun deleteClassMember(@Path("memberId") memberId: Long): Response<Void>
 
     // Lesson Controller Endpoints
     @GET("/api/lessons/{lessonId}")
@@ -102,17 +48,8 @@ interface AuthApi {
     @GET("/api/lessons")
     suspend fun getAllLessons(): Response<List<LessonEntity>>
 
-    @POST("/api/lessons")
-    suspend fun createLesson(@Body lesson: LessonEntity): Response<LessonEntity>
-
-    @PUT("/api/lessons/{lessonId}")
-    suspend fun updateLesson(
-        @Path("lessonId") lessonId: Long,
-        @Body updatedLesson: LessonEntity
-    ): Response<LessonEntity>
-
-    @DELETE("/api/lessons/{lessonId}")
-    suspend fun deleteLesson(@Path("lessonId") lessonId: Long): Response<Void>
+    @GET("/api/categories/{categoryId}/lessons")  // Added this endpoint
+    suspend fun getLessonsByCategoryId(@Path("categoryId") categoryId: Long): Response<List<LessonEntity>>
 
     // Progress Tracker Controller Endpoints
     @GET("/api/progress-trackers/{progressId}")
