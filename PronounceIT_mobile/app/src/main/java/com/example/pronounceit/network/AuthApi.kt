@@ -139,11 +139,11 @@ interface AuthApi {
     @POST("/api/tts")
     suspend fun synthesizeText(@Body text: String): Response<ResponseBody>
 
-    @Multipart // Marks this as a multipart request
+    @Multipart
     @POST("/api/words/{wordId}/check-pronunciation")
     suspend fun checkPronunciation(
         @Path("wordId") wordId: Long,
-        @Part audio: MultipartBody.Part // This matches @RequestParam("audio") MultipartFile audioFile in backend
-    ): Response<PronunciationCheckResponse> // Uses the new data class for response
+        @Part audio: MultipartBody.Part
+    ): Response<PronunciationCheckResponse>
 
 }
