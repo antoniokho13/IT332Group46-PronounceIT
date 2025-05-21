@@ -210,14 +210,23 @@ public class WordController {
         }
 
         try {
-            // 3. Convert audio to PCM WAV
-            File inputFile = File.createTempFile("audio", ".mp4");
-            audioFile.transferTo(inputFile);
-            File outputWavFile = convertToPcmWav(inputFile);
-            byte[] audioBytes = Files.readAllBytes(outputWavFile.toPath());
-            logger.debug("Converted audio to PCM WAV, size: {} bytes", audioBytes.length);
+            // 1. Save uploaded file to disk
+            String originalFilename = audioFile.getOriginalFilename();
+            String ext = originalFilename != null && originalFilename.contains(".")
+                ? originalFilename.substring(originalFilename.lastIndexOf('.'))
+                : ".mp4";
+            File tempAudio = File.createTempFile("upload", ext);
+            audioFile.transferTo(tempAudio);
 
-            // 4. Send audio to Speech-to-Text Service
+            // 2. Convert to PCM WAV
+            File wavFile = convertToPcmWav(tempAudio);
+            logger.info("WAV file created: {}, size: {}", wavFile.getAbsolutePath(), wavFile.length());
+
+            // 3. Read bytes from WAV file
+            byte[] audioBytes = Files.readAllBytes(wavFile.toPath());
+            logger.info("First 20 bytes of WAV: {}", java.util.Arrays.toString(java.util.Arrays.copyOf(audioBytes, 20)));
+
+            // 4. Send to Google Speech-to-Text
             RecognitionConfig.AudioEncoding encoding = RecognitionConfig.AudioEncoding.LINEAR16;
             int sampleRateHertz = 16000;
             String languageCode = "en-US";
@@ -238,10 +247,6 @@ public class WordController {
             } else {
                 feedbackMessage = "Could not understand. Please try again.";
             }
-
-            // Clean up temporary files
-            inputFile.delete();
-            outputWavFile.delete();
 
             // 6. Return result to frontend
             return new ResponseEntity<>(new PronunciationCheckResponse(isCorrect, feedbackMessage, transcribedText), HttpStatus.OK);

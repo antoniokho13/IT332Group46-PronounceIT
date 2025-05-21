@@ -218,7 +218,7 @@ class WordActivity : AppCompatActivity() {
 
         // Create a unique file name for MP4 (AAC)
         val fileName = UUID.randomUUID().toString() + ".mp4"
-        val recordingDir = getExternalFilesDir(Environment.DIRECTORY_RECORDINGS)
+        val recordingDir = getExternalFilesDir(Environment.DIRECTORY_MUSIC)
         if (recordingDir == null) {
             Log.e("WordActivity", "Cannot get recording directory")
             Toast.makeText(this, "Cannot access storage for recording.", Toast.LENGTH_SHORT).show()
@@ -293,7 +293,7 @@ class WordActivity : AppCompatActivity() {
 
             val requestFile = audioFile.asRequestBody("audio/mp4".toMediaTypeOrNull())
             val audioPart = MultipartBody.Part.createFormData("audio", audioFile.name, requestFile)
-            Log.d("WordActivity", "Sending audio file: ${audioFile.name}, size: ${audioFile.length()} bytes, type: audio/mp4")
+            Log.d("WordActivity", "Sending audio file: ${audioFile.name}, size: ${audioFile.length()} bytes, type: audio/mpeg")
 
             val response = RetrofitInstance.getApi(this@WordActivity).checkPronunciation(wordId, audioPart)
 
