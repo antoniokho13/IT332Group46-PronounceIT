@@ -41,4 +41,8 @@ public class ScoreRecordService {
     public void deleteScoreRecord(Long scoreId) {
         scoreRecordRepository.deleteById(scoreId);
     }
+
+    public Optional<ScoreRecordEntity> findByUserLessonSession(Long userId, Long lessonId, String sessionId) {
+        return scoreRecordRepository.findByUser_IdAndLesson_LessonIdAndSessionId(userId, lessonId, sessionId);
+    }
 }

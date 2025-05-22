@@ -11,5 +11,6 @@ data class ScoreRecordEntity(
     val completionDate: LocalDateTime,
     val attemptsDuration: Long,
     val correctWords: Int,
-    val incorrectWords: Int
+    val incorrectWords: Int,
+    val sessionId: String // <-- Add this line
 )

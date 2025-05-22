@@ -28,6 +28,9 @@ import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import android.content.pm.PackageManager
 import com.example.pronounceit.network.models.PronounciationAttemptPostDTO
+import com.example.pronounceit.network.models.ScoreRecordDTO
+import com.example.pronounceit.network.models.ScoreRecordEntity
+import java.time.LocalDateTime
 
 class WordActivity : AppCompatActivity() {
 
@@ -46,6 +49,12 @@ class WordActivity : AppCompatActivity() {
     private val maxAttempts = 5
 
     private var sessionId: String = ""
+
+    private var score = 0
+    private var totalWords = 0
+    private var scoreRecordId: Long? = null // For updating the same score record
+
+    private var wordScored = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -88,6 +97,9 @@ class WordActivity : AppCompatActivity() {
             binding.recordPronunciationButton.visibility = View.VISIBLE
             binding.stopRecordingButton.visibility = View.GONE
         }
+
+        // Generate sessionId ONCE per session
+        sessionId = UUID.randomUUID().toString()
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
@@ -108,6 +120,9 @@ class WordActivity : AppCompatActivity() {
                 val response = RetrofitInstance.getApi(this@WordActivity).getWordsByLessonId(lessonId)
                 if (response.isSuccessful) {
                     words = response.body() ?: emptyList()
+                    totalWords = words.size
+                    score = 0
+                    updateScoreTracker()
                     withContext(Dispatchers.Main) {
                         if (words.isNotEmpty()) {
                             updateUI()
@@ -171,16 +186,21 @@ class WordActivity : AppCompatActivity() {
 
             // Reset attempts for new word
             attemptCount = 0
-            sessionId = java.util.UUID.randomUUID().toString() // <-- Add this line
+            wordScored = false
             binding.nextWordButton.isEnabled = false
             binding.recordPronunciationButton.isEnabled = true
             binding.stopRecordingButton.isEnabled = true
 
             // Show attempts left
             binding.attemptCounterTextView.text = "Attempts left: ${maxAttempts - attemptCount}"
+
+            // Save or update score at the start of the session
+            if (currentWordIndex == 0) {
+                sendScoreToBackend()
+            }
         } else {
-            Toast.makeText(this, "End of words", Toast.LENGTH_SHORT).show()
-            finish()
+            // sendScoreToBackend() // <-- Remove this line
+            showSessionEndDialog()
         }
     }
 
@@ -320,6 +340,12 @@ class WordActivity : AppCompatActivity() {
                         attemptCount++ // Increment on every attempt
 
                         if (pronunciationCheckResponse.correct) {
+                            if (!wordScored) {
+                                score++
+                                wordScored = true
+                                updateScoreTracker()
+                                sendScoreToBackend()
+                            }
                             Toast.makeText(this@WordActivity, "Correct Pronunciation!", Toast.LENGTH_SHORT).show()
                             binding.nextWordButton.isEnabled = true
                             binding.recordPronunciationButton.isEnabled = false
@@ -394,5 +420,53 @@ class WordActivity : AppCompatActivity() {
                 Log.e("WordActivity", "Error saving attempt: ${e.message}", e)
             }
         }
+    }
+
+    private fun sendScoreToBackend() {
+        val scoreDTO = ScoreRecordDTO(
+            lessonId = lessonId,
+            score = score.toDouble(),
+            attemptsDuration = 0L, // Replace with actual duration if you track it
+            correctWords = score,
+            incorrectWords = totalWords - score,
+            sessionId = sessionId
+        )
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val response = RetrofitInstance.getApi(this@WordActivity).createScoreRecord(scoreDTO)
+                // Optionally handle response
+            } catch (e: Exception) {
+                Log.e("WordActivity", "Error saving score: ${e.message}", e)
+            }
+        }
+    }
+
+    private fun updateScoreTracker() {
+        binding.scoreTrackerTextView.text = "$score/$totalWords"
+    }
+
+    private fun showSessionEndDialog() {
+        val builder = android.app.AlertDialog.Builder(this)
+        if (score >= 6) {
+            builder.setTitle("Congratulations!")
+                .setMessage("You scored $score/$totalWords. Proceed to next level?")
+                .setPositiveButton("Proceed to Next Level") { _, _ -> /* TODO: Go to next level */ }
+                .setNegativeButton("Try Again") { _, _ -> restartSession() }
+                .setNeutralButton("Go Back to Lesson Menu") { _, _ -> finish() }
+        } else {
+            builder.setTitle("Try Again")
+                .setMessage("You scored $score/$totalWords. You need at least 6 points to proceed.")
+                .setPositiveButton("Try Again") { _, _ -> restartSession() }
+        }
+        builder.show()
+    }
+
+    private fun restartSession() {
+        currentWordIndex = 0
+        score = 0
+        // Generate a new sessionId for a new session
+        sessionId = UUID.randomUUID().toString()
+        updateScoreTracker()
+        updateUI()
     }
 }
