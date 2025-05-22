@@ -39,4 +39,20 @@ public class PronounciationAttemptService {
     public void deletePronounciationAttempt(Long attemptId) {
         pronounciationAttemptRepository.deleteById(attemptId);
     }
+
+    public int countAttemptsForUserWordLesson(Long userId, Long wordId, Long lessonId) {
+        return pronounciationAttemptRepository.countByUser_IdAndWord_WordIdAndLesson_LessonId(userId, wordId, lessonId);
+    }
+
+    public Optional<PronounciationAttemptEntity> findByUserAndWordAndLesson(Long userId, Long wordId, Long lessonId) {
+        return pronounciationAttemptRepository.findByUser_IdAndWord_WordIdAndLesson_LessonId(userId, wordId, lessonId);
+    }
+
+    public Optional<PronounciationAttemptEntity> findByUserWordLessonSession(
+        Long userId, Long wordId, Long lessonId, String sessionId
+    ) {
+        return pronounciationAttemptRepository.findByUser_IdAndWord_WordIdAndLesson_LessonIdAndSessionId(
+            userId, wordId, lessonId, sessionId
+        );
+    }
 }

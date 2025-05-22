@@ -45,6 +45,15 @@
         android:text="Score: "
         android:layout_marginBottom="24dp"/>
 
+    <TextView
+        android:id="@+id/attemptCounterTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Attempts left: 5"
+        android:textSize="18sp"
+        android:textColor="@android:color/holo_red_dark"
+        android:layout_marginBottom="16dp"/>
+
     <Button
         android:id="@+id/playAudioButton"
         android:layout_width="wrap_content"
@@ -64,11 +73,14 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Stop"
-        android:visibility="gone" /> <Button
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:text="Next Word"
-    android:onClick="nextWord"
-    android:padding="12dp"/>
+        android:visibility="gone" /> 
+        
+    <Button
+        android:id="@+id/nextWordButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Next Word"
+        android:onClick="nextWord"
+        android:padding="12dp"/>
 
 </LinearLayout>

@@ -66,4 +66,9 @@ public class UserService {
     public boolean validatePassword(String raw, String encoded) {
         return passwordEncoder.matches(raw, encoded);
     }
+
+    public UserEntity findByEmail(String email) {
+        return userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+    }
 }

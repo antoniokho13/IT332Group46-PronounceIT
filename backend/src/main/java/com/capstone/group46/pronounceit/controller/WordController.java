@@ -1,7 +1,11 @@
 package com.capstone.group46.pronounceit.controller;
 
+import com.capstone.group46.pronounceit.entity.PronounciationAttemptEntity;
+import com.capstone.group46.pronounceit.entity.UserEntity;
 import com.capstone.group46.pronounceit.entity.WordEntity;
+import com.capstone.group46.pronounceit.service.PronounciationAttemptService;
 import com.capstone.group46.pronounceit.service.SpeechToTextService;
+import com.capstone.group46.pronounceit.service.UserService;
 import com.capstone.group46.pronounceit.service.WordService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.cloud.speech.v1.RecognitionConfig;
@@ -12,6 +16,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 import ws.schild.jave.Encoder;
@@ -33,10 +39,19 @@ public class WordController {
     private static final Logger logger = LoggerFactory.getLogger(WordController.class);
     private final WordService wordService;
     private final SpeechToTextService speechToTextService;
+    private final PronounciationAttemptService pronounciationAttemptService;
+    private final UserService userService; // If you have a UserService
 
-    public WordController(WordService wordService, SpeechToTextService speechToTextService) {
+    public WordController(
+        WordService wordService,
+        SpeechToTextService speechToTextService,
+        PronounciationAttemptService pronounciationAttemptService,
+        UserService userService // Add this
+    ) {
         this.wordService = wordService;
         this.speechToTextService = speechToTextService;
+        this.pronounciationAttemptService = pronounciationAttemptService;
+        this.userService = userService;
     }
 
     @GetMapping("/{wordId}")

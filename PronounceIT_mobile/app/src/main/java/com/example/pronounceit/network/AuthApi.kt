@@ -9,6 +9,7 @@ import com.example.pronounceit.network.models.LoginRequest
 import com.example.pronounceit.network.models.LoginResponse
 import com.example.pronounceit.network.models.ProgressTrackerEntity
 import com.example.pronounceit.network.models.PronounciationAttemptEntity
+import com.example.pronounceit.network.models.PronounciationAttemptPostDTO
 import com.example.pronounceit.network.models.PronunciationCheckResponse
 import com.example.pronounceit.network.models.RegisterRequest
 import com.example.pronounceit.network.models.ScoreRecordEntity
@@ -80,7 +81,9 @@ interface AuthApi {
     suspend fun getAllPronounciationAttempts(): Response<List<PronounciationAttemptEntity>>
 
     @POST("/api/pronounciation-attempts")
-    suspend fun createPronounciationAttempt(@Body pronounciationAttempt: PronounciationAttemptEntity): Response<PronounciationAttemptEntity>
+    suspend fun createPronounciationAttempt(
+        @Body attempt: PronounciationAttemptPostDTO
+    ): Response<PronounciationAttemptEntity>
 
     @PUT("/api/pronounciation-attempts/{attemptId}")
     suspend fun updatePronounciationAttempt(
