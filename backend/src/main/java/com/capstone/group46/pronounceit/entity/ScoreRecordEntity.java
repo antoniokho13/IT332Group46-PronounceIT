@@ -4,7 +4,10 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "score_records")
+@Table(
+    name = "score_records",
+    uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "lesson_id", "session_id"})
+)
 public class ScoreRecordEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -36,6 +39,9 @@ public class ScoreRecordEntity {
 
     @Column(nullable = false)
     private int incorrectWords;
+
+    @Column(nullable = false)
+    private String sessionId;
 
     // Getters and Setters
     public Long getScoreId() {
@@ -91,5 +97,11 @@ public class ScoreRecordEntity {
     }
     public void setIncorrectWords(int incorrectWords) {
         this.incorrectWords = incorrectWords;
+    }
+    public String getSessionId() {
+        return sessionId;
+    }
+    public void setSessionId(String sessionId) {
+        this.sessionId = sessionId;
     }
 }

@@ -12,6 +12,7 @@ import com.example.pronounceit.network.models.PronounciationAttemptEntity
 import com.example.pronounceit.network.models.PronounciationAttemptPostDTO
 import com.example.pronounceit.network.models.PronunciationCheckResponse
 import com.example.pronounceit.network.models.RegisterRequest
+import com.example.pronounceit.network.models.ScoreRecordDTO
 import com.example.pronounceit.network.models.ScoreRecordEntity
 import com.example.pronounceit.network.models.WordEntity
 import okhttp3.MultipartBody
@@ -101,8 +102,8 @@ interface AuthApi {
     @GET("/api/score-records")
     suspend fun getAllScoreRecords(): Response<List<ScoreRecordEntity>>
 
-    @POST("/api/score-records")
-    suspend fun createScoreRecord(@Body scoreRecord: ScoreRecordEntity): Response<ScoreRecordEntity>
+    @POST("api/score-records/save-session-score")
+    suspend fun createScoreRecord(@Body scoreRecordDTO: ScoreRecordDTO): Response<ScoreRecordEntity>
 
     @PUT("/api/score-records/{scoreId}")
     suspend fun updateScoreRecord(
