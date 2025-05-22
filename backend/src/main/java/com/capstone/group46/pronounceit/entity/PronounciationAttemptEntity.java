@@ -4,7 +4,10 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "pronounciation_attempts")
+@Table(
+    name = "pronounciation_attempts",
+    uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "word_id", "lesson_id", "sessionId"})
+)
 public class PronounciationAttemptEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -33,6 +36,9 @@ public class PronounciationAttemptEntity {
 
     @Column(nullable = false)
     private int attemptNumber;
+
+    @Column(nullable = false)
+    private String sessionId;
 
     // Getters and Setters
     public Long getAttemptId() {
@@ -82,5 +88,18 @@ public class PronounciationAttemptEntity {
     }
     public void setAttemptNumber(int attemptNumber) {
         this.attemptNumber = attemptNumber;
+    }
+    public String getSessionId() {
+        return sessionId;
+    }
+    public void setSessionId(String sessionId) {
+        this.sessionId = sessionId;
+    }
+
+    @PrePersist
+    protected void onCreate() {
+        if (timestamp == null) {
+            timestamp = LocalDateTime.now();
+        }
     }
 }
