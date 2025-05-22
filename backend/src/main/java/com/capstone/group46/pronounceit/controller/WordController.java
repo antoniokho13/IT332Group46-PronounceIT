@@ -259,10 +259,6 @@ public class WordController {
                 feedbackMessage = "Could not understand. Please try again.";
             }
 
-            // Clean up temporary files
-            inputFile.delete();
-            outputWavFile.delete();
-
             // 6. Return result to frontend
             return new ResponseEntity<>(new PronunciationCheckResponse(isCorrect, feedbackMessage, transcribedText), HttpStatus.OK);
 
