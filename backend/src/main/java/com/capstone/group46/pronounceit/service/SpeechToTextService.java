@@ -32,9 +32,11 @@ public class SpeechToTextService {
 
             // Configure the recognition request
             RecognitionConfig config = RecognitionConfig.newBuilder()
-                    .setLanguageCode(languageCode) // e.g., "en-US", "fil-PH"
-                    .setEncoding(encoding) // e.g., RecognitionConfig.AudioEncoding.LINEAR16
-                    .setSampleRateHertz(sampleRateHertz) // e.g., 16000
+                    .setEncoding(RecognitionConfig.AudioEncoding.LINEAR16)
+                    .setSampleRateHertz(16000)
+                    .setLanguageCode("en-US")
+                    .setUseEnhanced(true)
+                    .setModel("phone_call") // or "video", "default"
                     .build();
 
             // Set the audio data

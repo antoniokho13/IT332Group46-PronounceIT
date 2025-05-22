@@ -27,6 +27,11 @@ import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import android.content.pm.PackageManager
+import android.media.AudioFormat
+import android.media.AudioRecord
+import com.example.pronounceit.utils.WavUtil
+import java.io.FileOutputStream
+import java.io.RandomAccessFile
 
 class WordActivity : AppCompatActivity() {
 
@@ -38,8 +43,13 @@ class WordActivity : AppCompatActivity() {
     private lateinit var tts: TextToSpeech
     private var mediaRecorder: MediaRecorder? = null
     private var audioFile: File? = null
+    private var audioRecord: AudioRecord? = null
+    private var isRecording = false
+    private var wavFile: File? = null
 
     private val RECORD_AUDIO_PERMISSION_CODE = 101
+
+    private var recordingStartTime: Long = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -216,72 +226,79 @@ class WordActivity : AppCompatActivity() {
             return
         }
 
-        // Create a unique file name for MP4 (AAC)
-        val fileName = UUID.randomUUID().toString() + ".mp4"
+        val sampleRate = 16000
+        val channelConfig = AudioFormat.CHANNEL_IN_MONO
+        val audioFormat = AudioFormat.ENCODING_PCM_16BIT
+        val bufferSize = AudioRecord.getMinBufferSize(sampleRate, channelConfig, audioFormat)
+
+        audioRecord = AudioRecord(
+            MediaRecorder.AudioSource.MIC,
+            sampleRate,
+            channelConfig,
+            audioFormat,
+            bufferSize
+        )
+
         val recordingDir = getExternalFilesDir(Environment.DIRECTORY_RECORDINGS)
         if (recordingDir == null) {
             Log.e("WordActivity", "Cannot get recording directory")
             Toast.makeText(this, "Cannot access storage for recording.", Toast.LENGTH_SHORT).show()
             return
         }
-        audioFile = File(recordingDir, fileName)
-        Log.d("WordActivity", "Recording to: ${audioFile?.absolutePath}")
+        wavFile = File(recordingDir, "recorded_${System.currentTimeMillis()}.wav")
+        val outputStream = FileOutputStream(wavFile)
+        // Write placeholder header
+        WavUtil.writeWavHeader(outputStream, 0)
 
-        // Set up MediaRecorder for MP4/AAC
-        mediaRecorder = MediaRecorder().apply {
-            setAudioSource(MediaRecorder.AudioSource.MIC)
-            setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
-            setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
-            setAudioChannels(1)
-            setAudioSamplingRate(16000)
-            setOutputFile(audioFile?.absolutePath)
-            try {
-                prepare()
-                start()
-                Toast.makeText(this@WordActivity, "Recording started...", Toast.LENGTH_SHORT).show()
-                Log.d("WordActivity", "MediaRecorder prepared and started.")
-            } catch (e: IOException) {
-                Log.e("WordActivity", "prepare() failed: ${e.message}", e)
-                Toast.makeText(this@WordActivity, "Recording preparation failed", Toast.LENGTH_SHORT).show()
-                binding.recordPronunciationButton.visibility = View.VISIBLE
-                binding.stopRecordingButton.visibility = View.GONE
-            } catch (e: IllegalStateException) {
-                Log.e("WordActivity", "IllegalStateException during recording: ${e.message}", e)
-                Toast.makeText(this@WordActivity, "Recording failed: ${e.message}", Toast.LENGTH_SHORT).show()
-                binding.recordPronunciationButton.visibility = View.VISIBLE
-                binding.stopRecordingButton.visibility = View.GONE
+        isRecording = true
+        audioRecord?.startRecording()
+        Toast.makeText(this, "Recording started...", Toast.LENGTH_SHORT).show()
+        recordingStartTime = System.currentTimeMillis()
+
+        Thread {
+            val data = ByteArray(bufferSize)
+            var totalAudioLen = 0L
+            while (isRecording) {
+                val read = audioRecord?.read(data, 0, data.size) ?: 0
+                if (read > 0) {
+                    outputStream.write(data, 0, read)
+                    totalAudioLen += read
+                }
             }
-        }
+            outputStream.close()
+            // Re-write header with correct length
+            val raf = RandomAccessFile(wavFile, "rw")
+            WavUtil.writeWavHeader(raf, totalAudioLen)
+            raf.close()
+        }.start()
     }
 
     private fun stopRecording() {
-        mediaRecorder?.apply {
-            try {
-                stop()
-                release()
-                Log.d("WordActivity", "MediaRecorder stopped and released.")
-                Toast.makeText(this@WordActivity, "Recording stopped. Sending for validation...", Toast.LENGTH_SHORT).show()
-            } catch (e: RuntimeException) {
-                Log.e("WordActivity", "Stop/release failed: ${e.message}", e)
-                Toast.makeText(this@WordActivity, "Recording stop failed. Audio might be corrupt.", Toast.LENGTH_SHORT).show()
-                binding.recordPronunciationButton.visibility = View.VISIBLE
-                binding.stopRecordingButton.visibility = View.GONE
-                audioFile?.delete()
-                return
-            }
-        }
-        mediaRecorder = null
-        if (audioFile != null && audioFile!!.exists() && audioFile!!.length() > 1000) { // Ensure file is at least 1KB
-            Log.d("WordActivity", "Audio file size: ${audioFile!!.length()} bytes")
-            CoroutineScope(Dispatchers.IO).launch {
-                sendAudioForValidation(audioFile!!)
-            }
-        } else {
-            Log.e("WordActivity", "Audio file invalid: exists=${audioFile?.exists()}, size=${audioFile?.length()}")
-            Toast.makeText(this@WordActivity, "No audio recorded or file is too small.", Toast.LENGTH_SHORT).show()
+        val duration = System.currentTimeMillis() - recordingStartTime
+        isRecording = false
+        audioRecord?.stop()
+        audioRecord?.release()
+        audioRecord = null
+
+        if (duration < 1000) {
+            Toast.makeText(this, "Please record at least 1 second.", Toast.LENGTH_SHORT).show()
+            wavFile?.delete()
             binding.recordPronunciationButton.visibility = View.VISIBLE
             binding.stopRecordingButton.visibility = View.GONE
-            audioFile?.delete()
+            return
+        }
+
+        if (wavFile != null && wavFile!!.exists() && wavFile!!.length() > 1000) {
+            Log.d("WordActivity", "WAV file size: ${wavFile!!.length()} bytes")
+            CoroutineScope(Dispatchers.IO).launch {
+                sendAudioForValidation(wavFile!!)
+            }
+        } else {
+            Log.e("WordActivity", "WAV file invalid: exists=${wavFile?.exists()}, size=${wavFile?.length()}")
+            Toast.makeText(this, "No audio recorded or file is too small.", Toast.LENGTH_SHORT).show()
+            binding.recordPronunciationButton.visibility = View.VISIBLE
+            binding.stopRecordingButton.visibility = View.GONE
+            wavFile?.delete()
         }
     }
 
@@ -291,9 +308,9 @@ class WordActivity : AppCompatActivity() {
             val wordId = currentWord.wordId
             Log.d("WordActivity", "Sending pronunciation check for wordId: $wordId, word: ${currentWord.word}")
 
-            val requestFile = audioFile.asRequestBody("audio/mp4".toMediaTypeOrNull())
+            val requestFile = audioFile.asRequestBody("audio/wav".toMediaTypeOrNull())
             val audioPart = MultipartBody.Part.createFormData("audio", audioFile.name, requestFile)
-            Log.d("WordActivity", "Sending audio file: ${audioFile.name}, size: ${audioFile.length()} bytes, type: audio/mp4")
+            Log.d("WordActivity", "Sending audio file: ${audioFile.name}, size: ${audioFile.length()} bytes, type: audio/wav")
 
             val response = RetrofitInstance.getApi(this@WordActivity).checkPronunciation(wordId, audioPart)
 

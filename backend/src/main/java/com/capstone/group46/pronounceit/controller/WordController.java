@@ -217,6 +217,11 @@ public class WordController {
             byte[] audioBytes = Files.readAllBytes(outputWavFile.toPath());
             logger.debug("Converted audio to PCM WAV, size: {} bytes", audioBytes.length);
 
+            if (audioBytes.length < 2000) { // ~0.1s at 16kHz mono PCM
+                logger.warn("Audio file too short for wordId: {}", wordId);
+                return new ResponseEntity<>("Audio too short. Please record longer.", HttpStatus.BAD_REQUEST);
+            }
+
             // 4. Send audio to Speech-to-Text Service
             RecognitionConfig.AudioEncoding encoding = RecognitionConfig.AudioEncoding.LINEAR16;
             int sampleRateHertz = 16000;
