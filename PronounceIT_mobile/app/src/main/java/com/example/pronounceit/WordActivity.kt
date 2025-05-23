@@ -159,7 +159,7 @@ class WordActivity : AppCompatActivity() {
         if (currentWordIndex < words.size) {
             val currentWord = words[currentWordIndex]
             binding.lessonNameTextView.text = "Lesson: ${currentWord.lesson.name}"
-            binding.wordTextView.text = currentWord.word
+            binding.wordTextView.text = currentWord.word.uppercase()
 
             // Add this line to update the word counter
             binding.wordCounterTextView.text = "Word: ${currentWordIndex + 1}/$totalWords"
@@ -194,7 +194,11 @@ class WordActivity : AppCompatActivity() {
             // Reset attempts for new word
             attemptCount = 0
             wordScored = false
-            binding.nextWordButton.isEnabled = false
+
+            // Reset button visibility - show play audio, hide next word
+            binding.playAudioButton.visibility = View.VISIBLE
+            binding.nextWordButton.visibility = View.GONE
+
             binding.recordPronunciationButton.isEnabled = true
             binding.stopRecordingButton.isEnabled = true
 
@@ -248,6 +252,9 @@ class WordActivity : AppCompatActivity() {
 
     fun nextWord(view: View) {
         currentWordIndex++
+        // Reset button visibility when moving to next word
+        binding.playAudioButton.visibility = View.VISIBLE
+        binding.nextWordButton.visibility = View.GONE
         updateUI()
     }
 
@@ -360,7 +367,11 @@ class WordActivity : AppCompatActivity() {
                                 sendScoreToBackend()
                             }
                             Toast.makeText(this@WordActivity, "Correct Pronunciation!", Toast.LENGTH_SHORT).show()
-                            binding.nextWordButton.isEnabled = true
+
+                            // Switch from play button to next button
+                            binding.playAudioButton.visibility = View.GONE
+                            binding.nextWordButton.visibility = View.VISIBLE
+
                             binding.recordPronunciationButton.isEnabled = false
                             binding.stopRecordingButton.isEnabled = false
                         } else {
@@ -370,14 +381,19 @@ class WordActivity : AppCompatActivity() {
                                     "Incorrect. Attempt $attemptCount of $maxAttempts. Try again.",
                                     Toast.LENGTH_LONG
                                 ).show()
-                                binding.nextWordButton.isEnabled = false
+                                binding.playAudioButton.visibility = View.VISIBLE
+                                binding.nextWordButton.visibility = View.GONE
                             } else {
                                 Toast.makeText(
                                     this@WordActivity,
                                     "Sorry, you pronounced the word $maxAttempts times. Moving to next word.",
                                     Toast.LENGTH_LONG
                                 ).show()
-                                binding.nextWordButton.isEnabled = true
+
+                                // Show next button after max attempts
+                                binding.playAudioButton.visibility = View.GONE
+                                binding.nextWordButton.visibility = View.VISIBLE
+
                                 binding.recordPronunciationButton.isEnabled = false
                                 binding.stopRecordingButton.isEnabled = false
                             }
@@ -455,7 +471,7 @@ class WordActivity : AppCompatActivity() {
     }
 
     private fun updateScoreTracker() {
-        binding.scoreTrackerTextView.text = "$score/$totalWords"
+        binding.scoreTrackerTextView.text = "Score: $score/$totalWords"
     }
 
     private fun showSessionEndDialog() {
