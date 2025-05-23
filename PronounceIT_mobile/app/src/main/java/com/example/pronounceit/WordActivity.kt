@@ -1,6 +1,7 @@
 package com.example.pronounceit
 
 import android.content.Context
+import android.content.Intent
 import android.media.MediaPlayer
 import android.os.Bundle
 import android.util.Log
@@ -12,6 +13,7 @@ import com.example.pronounceit.databinding.ActivityWordBinding
 import com.example.pronounceit.network.RetrofitInstance
 import com.example.pronounceit.network.models.WordEntity
 import com.example.pronounceit.network.models.PronunciationCheckResponse
+import com.example.pronounceit.network.models.WordResult
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -55,6 +57,8 @@ class WordActivity : AppCompatActivity() {
     private var scoreRecordId: Long? = null // For updating the same score record
 
     private var wordScored = false
+
+    private val wordResults = mutableListOf<WordResult>()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -122,8 +126,8 @@ class WordActivity : AppCompatActivity() {
                     words = response.body() ?: emptyList()
                     totalWords = words.size
                     score = 0
-                    updateScoreTracker()
                     withContext(Dispatchers.Main) {
+                        updateScoreTracker() // <-- Move here!
                         if (words.isNotEmpty()) {
                             updateUI()
                         } else {
@@ -156,6 +160,9 @@ class WordActivity : AppCompatActivity() {
             val currentWord = words[currentWordIndex]
             binding.lessonNameTextView.text = "Lesson: ${currentWord.lesson.name}"
             binding.wordTextView.text = currentWord.word
+
+            // Add this line to update the word counter
+            binding.wordCounterTextView.text = "Word: ${currentWordIndex + 1}/$totalWords"
 
             val baseUrl = "http://10.0.2.2:8080"
             val imageUrl = if (currentWord.imageURL?.startsWith("/") == true) {
@@ -199,7 +206,6 @@ class WordActivity : AppCompatActivity() {
                 sendScoreToBackend()
             }
         } else {
-            // sendScoreToBackend() // <-- Remove this line
             showSessionEndDialog()
         }
     }
@@ -375,6 +381,14 @@ class WordActivity : AppCompatActivity() {
 
                         Log.d("WordActivity", "Transcribed: ${pronunciationCheckResponse.transcribedText}")
                         sendPronunciationAttemptToBackend(pronunciationCheckResponse.correct)
+
+                        // New code block start
+                        if (pronunciationCheckResponse.correct && !wordScored) {
+                            wordResults.add(WordResult(currentWord.word, true, attemptCount))
+                        } else if (attemptCount == maxAttempts && !wordScored) {
+                            wordResults.add(WordResult(currentWord.word, false, attemptCount))
+                        }
+                        // New code block end
                     }
                 } else {
                     val errorBody = response.errorBody()?.string()
@@ -452,11 +466,26 @@ class WordActivity : AppCompatActivity() {
                 .setMessage("You scored $score/$totalWords. Proceed to next level?")
                 .setPositiveButton("Proceed to Next Level") { _, _ -> /* TODO: Go to next level */ }
                 .setNegativeButton("Try Again") { _, _ -> restartSession() }
-                .setNeutralButton("Go Back to Lesson Menu") { _, _ -> finish() }
+                .setNeutralButton("View Score Details") { _, _ ->
+                    val intent = Intent(this, ViewScoreActivity::class.java)
+                    intent.putExtra("lessonId", lessonId)
+                    intent.putExtra("sessionId", sessionId)
+                    intent.putParcelableArrayListExtra("wordResults", ArrayList(wordResults))
+                    startActivity(intent)
+                    finish()
+                }
         } else {
             builder.setTitle("Try Again")
                 .setMessage("You scored $score/$totalWords. You need at least 6 points to proceed.")
                 .setPositiveButton("Try Again") { _, _ -> restartSession() }
+                .setNeutralButton("View Score Details") { _, _ -> // <-- Add this block
+                    val intent = Intent(this, ViewScoreActivity::class.java)
+                    intent.putExtra("lessonId", lessonId)
+                    intent.putExtra("sessionId", sessionId)
+                    intent.putParcelableArrayListExtra("wordResults", ArrayList(wordResults))
+                    startActivity(intent)
+                    finish()
+                }
         }
         builder.show()
     }

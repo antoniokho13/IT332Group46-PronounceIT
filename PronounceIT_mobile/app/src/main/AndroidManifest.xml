@@ -79,5 +79,11 @@
             android:label="PronounceIT"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
 
+        <activity
+            android:name=".ViewScoreActivity"
+            android:exported="false"
+            android:label="Score Details"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+
     </application>
 </manifest>

@@ -93,4 +93,15 @@ public class PronounciationAttemptController {
         pronounciationAttemptService.deletePronounciationAttempt(attemptId);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/session")
+    public ResponseEntity<List<PronounciationAttemptEntity>> getAttemptsBySession(
+            @RequestParam Long lessonId,
+            @RequestParam String sessionId,
+            @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        UserEntity user = userService.findByEmail(userDetails.getUsername());
+        List<PronounciationAttemptEntity> attempts = pronounciationAttemptService.findAllByUserLessonSession(user.getId(), lessonId, sessionId);
+        return ResponseEntity.ok(attempts);
+    }
 }
