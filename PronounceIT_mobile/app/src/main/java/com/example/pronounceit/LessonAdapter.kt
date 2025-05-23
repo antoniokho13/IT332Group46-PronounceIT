@@ -6,6 +6,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
+import android.widget.Toast
 import androidx.recyclerview.widget.RecyclerView
 import com.example.pronounceit.R
 import com.example.pronounceit.network.models.LessonEntity
@@ -30,9 +31,20 @@ class LessonAdapter(private val context: Context, private val lessons: List<Less
         val lesson = lessons[position]
         holder.bind(lesson)
 
-        holder.itemView.setOnClickListener {
-            playButtonSound()
-            onItemClick?.invoke(lesson) // Use the onItemClick listener
+        if (lesson.locked) {
+            holder.itemView.alpha = 0.5f
+            holder.itemView.isClickable = false
+            holder.itemView.setOnClickListener {
+                // Optionally show a toast
+                Toast.makeText(context, "Complete previous lessons to unlock.", Toast.LENGTH_SHORT).show()
+            }
+        } else {
+            holder.itemView.alpha = 1.0f
+            holder.itemView.isClickable = true
+            holder.itemView.setOnClickListener {
+                playButtonSound()
+                onItemClick?.invoke(lesson)
+            }
         }
     }
 

@@ -460,7 +460,15 @@ class WordActivity : AppCompatActivity() {
 
     private fun showSessionEndDialog() {
         val builder = android.app.AlertDialog.Builder(this)
-        if (score >= 6) {
+        if (score >= 1) {
+            // Mark lesson as completed for this user
+            val prefs = getSharedPreferences("PronounceItPrefs", Context.MODE_PRIVATE)
+            val userId = prefs.getLong("userId", -1L)
+            val lessonPrefs = getSharedPreferences("lesson_prefs", Context.MODE_PRIVATE)
+            val key = "completed_lessons_user_$userId"
+            val set = lessonPrefs.getStringSet(key, emptySet())!!.toMutableSet()
+            set.add(lessonId.toString())
+            lessonPrefs.edit().putStringSet(key, set).apply()
             builder.setTitle("Congratulations!")
                 .setMessage("You scored $score/$totalWords. Proceed to next level?")
                 .setPositiveButton("Proceed to Next Level") { _, _ -> /* TODO: Go to next level */ }
