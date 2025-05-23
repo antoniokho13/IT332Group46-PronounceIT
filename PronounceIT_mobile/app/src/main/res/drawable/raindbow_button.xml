@@ -1,17 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
-
     <!-- Pressed state -->
     <item android:state_pressed="true">
         <layer-list>
-            <!-- Base layer -->
             <item>
                 <shape android:shape="rectangle">
                     <corners android:radius="8dp" />
                     <solid android:color="#333333" />
                 </shape>
             </item>
-            <!-- Bottom gradient layer -->
             <item android:bottom="2dp">
                 <shape android:shape="rectangle">
                     <corners android:radius="8dp" />
@@ -23,7 +20,6 @@
                         android:angle="0" />
                 </shape>
             </item>
-            <!-- Top gradient layer with stroke -->
             <item android:top="3dp" android:left="3dp" android:right="3dp">
                 <shape android:shape="rectangle">
                     <corners android:radius="6dp" />
@@ -38,18 +34,15 @@
             </item>
         </layer-list>
     </item>
-
-    <!-- Default (unpressed) state -->
+    <!-- Default state -->
     <item>
         <layer-list>
-            <!-- Base layer -->
             <item>
                 <shape android:shape="rectangle">
                     <corners android:radius="8dp" />
                     <solid android:color="#333333" />
                 </shape>
             </item>
-            <!-- Bottom gradient layer -->
             <item android:bottom="6dp">
                 <shape android:shape="rectangle">
                     <corners android:radius="8dp" />
@@ -61,7 +54,6 @@
                         android:angle="0" />
                 </shape>
             </item>
-            <!-- Top gradient layer with stroke -->
             <item android:top="3dp" android:left="3dp" android:right="3dp" android:bottom="6dp">
                 <shape android:shape="rectangle">
                     <corners android:radius="6dp" />
