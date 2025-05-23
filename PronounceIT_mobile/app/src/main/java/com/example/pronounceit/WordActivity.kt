@@ -1,11 +1,16 @@
 package com.example.pronounceit
 
+import android.animation.ObjectAnimator
+import android.animation.ValueAnimator
 import android.content.Context
 import android.content.Intent
+import android.graphics.drawable.AnimationDrawable
 import android.media.MediaPlayer
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.view.animation.AlphaAnimation
+import android.view.animation.Animation
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.bumptech.glide.Glide
@@ -22,17 +27,18 @@ import java.io.IOException
 import android.speech.tts.TextToSpeech
 import java.util.Locale
 import android.media.MediaRecorder
-import android.os.Environment
 import java.io.File
 import java.util.UUID
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import android.content.pm.PackageManager
+import android.graphics.Color
 import com.example.pronounceit.network.models.PronounciationAttemptPostDTO
 import com.example.pronounceit.network.models.ScoreRecordDTO
-import com.example.pronounceit.network.models.ScoreRecordEntity
-import java.time.LocalDateTime
+import nl.dionsegijn.konfetti.KonfettiView
+import nl.dionsegijn.konfetti.models.Shape
+import nl.dionsegijn.konfetti.models.Size
 
 class WordActivity : AppCompatActivity() {
 
@@ -44,6 +50,15 @@ class WordActivity : AppCompatActivity() {
     private lateinit var tts: TextToSpeech
     private var mediaRecorder: MediaRecorder? = null
     private var audioFile: File? = null
+
+    // Animation properties
+    private var micAnimation: AnimationDrawable? = null
+    private var textBlinkAnimation: Animation? = null
+    private lateinit var konfettiView: KonfettiView
+
+    // Sound effects
+    private var correctSoundEffect: MediaPlayer? = null
+    private var errorSoundEffect: MediaPlayer? = null
 
     private val RECORD_AUDIO_PERMISSION_CODE = 101
 
@@ -65,11 +80,21 @@ class WordActivity : AppCompatActivity() {
         binding = ActivityWordBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        // Initialize konfetti view
+        konfettiView = binding.konfettiView
+
         lessonId = intent.getLongExtra("lessonId", -1L)
         if (lessonId == -1L) {
             Toast.makeText(this, "Invalid lesson ID", Toast.LENGTH_SHORT).show()
             finish()
             return
+        }
+
+        // Set up text blinking animation
+        textBlinkAnimation = AlphaAnimation(1.0f, 0.0f).apply {
+            duration = 500
+            repeatMode = Animation.REVERSE
+            repeatCount = Animation.INFINITE
         }
 
         tts = TextToSpeech(this) { status ->
@@ -92,18 +117,50 @@ class WordActivity : AppCompatActivity() {
 
         binding.recordPronunciationButton.setOnClickListener {
             startRecording()
-            binding.recordPronunciationButton.visibility = View.GONE
-            binding.stopRecordingButton.visibility = View.VISIBLE
+            startRecordingAnimation()
         }
 
         binding.stopRecordingButton.setOnClickListener {
             stopRecording()
-            binding.recordPronunciationButton.visibility = View.VISIBLE
-            binding.stopRecordingButton.visibility = View.GONE
+            stopRecordingAnimation()
         }
 
         // Generate sessionId ONCE per session
         sessionId = UUID.randomUUID().toString()
+    }
+
+    private fun startRecordingAnimation() {
+        // Set the animated drawable to the stop recording button
+        binding.stopRecordingButton.setImageResource(R.drawable.mic_recording_animation)
+        binding.recordPronunciationButton.visibility = View.GONE
+        binding.stopRecordingButton.visibility = View.VISIBLE
+
+        // Start the animation
+        micAnimation = binding.stopRecordingButton.drawable as AnimationDrawable
+        micAnimation?.start()
+
+        // Show and animate recording indicator text
+        binding.recordingIndicatorText.visibility = View.VISIBLE
+        binding.recordingIndicatorText.startAnimation(textBlinkAnimation)
+
+        // Add pulse animation to the stop button
+        val scaleX = ObjectAnimator.ofFloat(binding.stopRecordingButton, "scaleX", 1f, 1.1f, 1f)
+        val scaleY = ObjectAnimator.ofFloat(binding.stopRecordingButton, "scaleY", 1f, 1.1f, 1f)
+        scaleX.repeatCount = ValueAnimator.INFINITE
+        scaleY.repeatCount = ValueAnimator.INFINITE
+        scaleX.duration = 1000
+        scaleY.duration = 1000
+        scaleX.start()
+        scaleY.start()
+    }
+
+    private fun stopRecordingAnimation() {
+        micAnimation?.stop()
+        binding.recordingIndicatorText.clearAnimation()
+        binding.recordingIndicatorText.visibility = View.GONE
+        binding.recordPronunciationButton.visibility = View.VISIBLE
+        binding.stopRecordingButton.visibility = View.GONE
+        binding.stopRecordingButton.animate().cancel()
     }
 
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
@@ -123,24 +180,16 @@ class WordActivity : AppCompatActivity() {
             try {
                 val response = RetrofitInstance.getApi(this@WordActivity).getWordsByLessonId(lessonId)
                 if (response.isSuccessful) {
-                    words = response.body() ?: emptyList()
+                    val wordsList = response.body() ?: emptyList()
+                    words = wordsList
                     totalWords = words.size
-                    score = 0
                     withContext(Dispatchers.Main) {
-                        updateScoreTracker() // <-- Move here!
-                        if (words.isNotEmpty()) {
-                            updateUI()
-                        } else {
-                            Toast.makeText(this@WordActivity, "No words found for this lesson", Toast.LENGTH_SHORT).show()
-                            finish()
-                        }
+                        updateUI()
+                        updateScoreTracker()
                     }
                 } else {
-                    val errorMessage =
-                        "Failed to load words: ${response.code()}, Message: ${response.message()}, Body: ${response.errorBody()?.string()}"
-                    Log.e("WordActivity", errorMessage)
                     withContext(Dispatchers.Main) {
-                        Toast.makeText(this@WordActivity, "Failed to load words", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@WordActivity, "Failed to fetch words: ${response.code()}", Toast.LENGTH_SHORT).show()
                         finish()
                     }
                 }
@@ -183,11 +232,10 @@ class WordActivity : AppCompatActivity() {
                     } else {
                         baseUrl + "/" + url
                     }
-                    Log.d("WordActivity", "Playing audio: $audioUrl")
-                    speakWord(currentWord.word)
+                    playSound(audioUrl)
                 } ?: run {
-                    Toast.makeText(this@WordActivity, "Audio not available", Toast.LENGTH_SHORT).show()
-                    Log.e("WordActivity", "audioURL is null")
+                    // Use TTS if no audio file
+                    speakWord(currentWord.word)
                 }
             }
 
@@ -234,6 +282,56 @@ class WordActivity : AppCompatActivity() {
         }
     }
 
+    // Method to play the correct sound effect and show confetti
+    private fun playCorrectSound() {
+        try {
+            // Release any previous instance
+            correctSoundEffect?.release()
+
+            // Create and play the sound effect
+            correctSoundEffect = MediaPlayer.create(this, R.raw.correct)
+            correctSoundEffect?.setOnCompletionListener { it.release() }
+            correctSoundEffect?.start()
+
+            // Show confetti animation
+            showConfettiAnimation()
+        } catch (e: Exception) {
+            Log.e("WordActivity", "Error playing correct sound: ${e.message}", e)
+        }
+    }
+
+    // Show confetti animation for correct pronunciation
+    private fun showConfettiAnimation() {
+        konfettiView.build()
+            .addColors(Color.YELLOW, Color.GREEN, Color.MAGENTA, Color.CYAN, Color.RED)
+            .setDirection(0.0, 359.0)
+            .setSpeed(1f, 5f)
+            .setFadeOutEnabled(true)
+            .setTimeToLive(2000L)
+            .addShapes(Shape.Square, Shape.Circle)
+            .addSizes(Size(8), Size(12), Size(16))
+            .setPosition(
+                konfettiView.width / 2f,
+                konfettiView.height / 2f
+            )
+            .burst(300)
+    }
+
+    // Method to play the error sound effect
+    private fun playErrorSound() {
+        try {
+            // Release any previous instance
+            errorSoundEffect?.release()
+
+            // Create and play the sound effect
+            errorSoundEffect = MediaPlayer.create(this, R.raw.error)
+            errorSoundEffect?.setOnCompletionListener { it.release() }
+            errorSoundEffect?.start()
+        } catch (e: Exception) {
+            Log.e("WordActivity", "Error playing error sound: ${e.message}", e)
+        }
+    }
+
     private fun speakWord(text: String) {
         tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, null)
     }
@@ -242,12 +340,17 @@ class WordActivity : AppCompatActivity() {
         super.onDestroy()
         mediaPlayer?.release()
         mediaPlayer = null
+        correctSoundEffect?.release()
+        correctSoundEffect = null
+        errorSoundEffect?.release()
+        errorSoundEffect = null
         if (::tts.isInitialized) {
             tts.stop()
             tts.shutdown()
         }
         mediaRecorder?.release()
         mediaRecorder = null
+        micAnimation?.stop()
     }
 
     fun nextWord(view: View) {
@@ -267,7 +370,7 @@ class WordActivity : AppCompatActivity() {
 
         // Create a unique file name for MP4 (AAC)
         val fileName = UUID.randomUUID().toString() + ".mp4"
-        val recordingDir = getExternalFilesDir(Environment.DIRECTORY_RECORDINGS)
+        val recordingDir = getExternalFilesDir("recordings") // Using custom directory name
         if (recordingDir == null) {
             Log.e("WordActivity", "Cannot get recording directory")
             Toast.makeText(this, "Cannot access storage for recording.", Toast.LENGTH_SHORT).show()
@@ -287,18 +390,17 @@ class WordActivity : AppCompatActivity() {
             try {
                 prepare()
                 start()
-                Toast.makeText(this@WordActivity, "Recording started...", Toast.LENGTH_SHORT).show()
+                // Toast now shows recording is in progress
+                Toast.makeText(this@WordActivity, "Recording in progress...", Toast.LENGTH_SHORT).show()
                 Log.d("WordActivity", "MediaRecorder prepared and started.")
             } catch (e: IOException) {
                 Log.e("WordActivity", "prepare() failed: ${e.message}", e)
                 Toast.makeText(this@WordActivity, "Recording preparation failed", Toast.LENGTH_SHORT).show()
-                binding.recordPronunciationButton.visibility = View.VISIBLE
-                binding.stopRecordingButton.visibility = View.GONE
+                stopRecordingAnimation()
             } catch (e: IllegalStateException) {
                 Log.e("WordActivity", "IllegalStateException during recording: ${e.message}", e)
                 Toast.makeText(this@WordActivity, "Recording failed: ${e.message}", Toast.LENGTH_SHORT).show()
-                binding.recordPronunciationButton.visibility = View.VISIBLE
-                binding.stopRecordingButton.visibility = View.GONE
+                stopRecordingAnimation()
             }
         }
     }
@@ -313,8 +415,6 @@ class WordActivity : AppCompatActivity() {
             } catch (e: RuntimeException) {
                 Log.e("WordActivity", "Stop/release failed: ${e.message}", e)
                 Toast.makeText(this@WordActivity, "Recording stop failed. Audio might be corrupt.", Toast.LENGTH_SHORT).show()
-                binding.recordPronunciationButton.visibility = View.VISIBLE
-                binding.stopRecordingButton.visibility = View.GONE
                 audioFile?.delete()
                 return
             }
@@ -328,8 +428,6 @@ class WordActivity : AppCompatActivity() {
         } else {
             Log.e("WordActivity", "Audio file invalid: exists=${audioFile?.exists()}, size=${audioFile?.length()}")
             Toast.makeText(this@WordActivity, "No audio recorded or file is too small.", Toast.LENGTH_SHORT).show()
-            binding.recordPronunciationButton.visibility = View.VISIBLE
-            binding.stopRecordingButton.visibility = View.GONE
             audioFile?.delete()
         }
     }
@@ -364,8 +462,11 @@ class WordActivity : AppCompatActivity() {
                                 score++
                                 wordScored = true
                                 updateScoreTracker()
-                                sendScoreToBackend()
                             }
+
+                            // Play the correct sound effect
+                            playCorrectSound()
+
                             Toast.makeText(this@WordActivity, "Correct Pronunciation!", Toast.LENGTH_SHORT).show()
 
                             // Switch from play button to next button
@@ -375,22 +476,17 @@ class WordActivity : AppCompatActivity() {
                             binding.recordPronunciationButton.isEnabled = false
                             binding.stopRecordingButton.isEnabled = false
                         } else {
-                            if (attemptCount < maxAttempts) {
-                                Toast.makeText(
-                                    this@WordActivity,
-                                    "Incorrect. Attempt $attemptCount of $maxAttempts. Try again.",
-                                    Toast.LENGTH_LONG
-                                ).show()
-                                binding.playAudioButton.visibility = View.VISIBLE
-                                binding.nextWordButton.visibility = View.GONE
-                            } else {
-                                Toast.makeText(
-                                    this@WordActivity,
-                                    "Sorry, you pronounced the word $maxAttempts times. Moving to next word.",
-                                    Toast.LENGTH_LONG
-                                ).show()
+                            // Play the error sound effect for incorrect pronunciation
+                            playErrorSound()
 
-                                // Show next button after max attempts
+                            if (attemptCount < maxAttempts) {
+                                // Fixed: Remove direct feedback reference
+                                Toast.makeText(this@WordActivity, "Try again. Attempts left: ${maxAttempts - attemptCount}", Toast.LENGTH_SHORT).show()
+                            } else {
+                                if (!wordScored) {
+                                    wordScored = true // Mark as scored to prevent duplicate entries even if not correct
+                                }
+                                Toast.makeText(this@WordActivity, "Maximum attempts reached. Moving to next word.", Toast.LENGTH_SHORT).show()
                                 binding.playAudioButton.visibility = View.GONE
                                 binding.nextWordButton.visibility = View.VISIBLE
 
