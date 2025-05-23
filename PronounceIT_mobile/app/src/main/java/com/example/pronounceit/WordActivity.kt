@@ -345,6 +345,13 @@ class WordActivity : AppCompatActivity() {
                     if (pronunciationCheckResponse != null) {
                         attemptCount++ // Increment on every attempt
 
+                        // Always add the result when the word is finished (correct or max attempts)
+                        if (pronunciationCheckResponse.correct && !wordScored) {
+                            wordResults.add(WordResult(currentWord.word, true, attemptCount))
+                        } else if (attemptCount == maxAttempts && !wordScored) {
+                            wordResults.add(WordResult(currentWord.word, false, attemptCount))
+                        }
+
                         if (pronunciationCheckResponse.correct) {
                             if (!wordScored) {
                                 score++
@@ -381,14 +388,6 @@ class WordActivity : AppCompatActivity() {
 
                         Log.d("WordActivity", "Transcribed: ${pronunciationCheckResponse.transcribedText}")
                         sendPronunciationAttemptToBackend(pronunciationCheckResponse.correct)
-
-                        // New code block start
-                        if (pronunciationCheckResponse.correct && !wordScored) {
-                            wordResults.add(WordResult(currentWord.word, true, attemptCount))
-                        } else if (attemptCount == maxAttempts && !wordScored) {
-                            wordResults.add(WordResult(currentWord.word, false, attemptCount))
-                        }
-                        // New code block end
                     }
                 } else {
                     val errorBody = response.errorBody()?.string()
@@ -421,7 +420,7 @@ class WordActivity : AppCompatActivity() {
             accuracy = accuracy.toDouble(),
             isCorrect = isCorrect,
             attemptNumber = attemptCount,
-            sessionId = sessionId // <-- Add this
+            sessionId = sessionId
         )
 
         CoroutineScope(Dispatchers.IO).launch {
