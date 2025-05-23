@@ -55,4 +55,8 @@ public class PronounciationAttemptService {
             userId, wordId, lessonId, sessionId
         );
     }
+
+    public List<PronounciationAttemptEntity> findAllByUserLessonSession(Long userId, Long lessonId, String sessionId) {
+        return pronounciationAttemptRepository.findAllByUser_IdAndLesson_LessonIdAndSessionId(userId, lessonId, sessionId);
+    }
 }

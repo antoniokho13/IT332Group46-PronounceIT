@@ -27,6 +27,7 @@ import retrofit2.http.POST
 import retrofit2.http.PUT
 import retrofit2.http.Part
 import retrofit2.http.Path
+import retrofit2.http.Query
 
 interface AuthApi {
     @POST("/api/auth/login")
@@ -95,6 +96,12 @@ interface AuthApi {
     @DELETE("/api/pronounciation-attempts/{attemptId}")
     suspend fun deletePronounciationAttempt(@Path("attemptId") attemptId: Long): Response<Void>
 
+    @GET("/api/pronounciation-attempts/session")
+    suspend fun getAttemptsBySession(
+        @Query("lessonId") lessonId: Long,
+        @Query("sessionId") sessionId: String
+    ): Response<List<PronounciationAttemptEntity>>
+
     // Score Record Controller Endpoints
     @GET("/api/score-records/{scoreId}")
     suspend fun getScoreRecordById(@Path("scoreId") scoreId: Long): Response<ScoreRecordEntity>
@@ -113,6 +120,12 @@ interface AuthApi {
 
     @DELETE("/api/score-records/{scoreId}")
     suspend fun deleteScoreRecord(@Path("scoreId") scoreId: Long): Response<Void>
+
+    @GET("/api/score-records/by-session")
+    suspend fun getScoreRecordBySession(
+        @Query("lessonId") lessonId: Long,
+        @Query("sessionId") sessionId: String
+    ): Response<ScoreRecordEntity>
 
     // Word Controller Endpoints
     @GET("/api/words/{wordId}")

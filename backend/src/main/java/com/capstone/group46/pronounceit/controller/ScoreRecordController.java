@@ -86,5 +86,17 @@ public class ScoreRecordController {
 
         return scoreRecordService.createScoreRecord(scoreRecord);
     }
+
+    @GetMapping("/by-session")
+    public ResponseEntity<ScoreRecordEntity> getScoreRecordBySession(
+        @RequestParam Long lessonId,
+        @RequestParam String sessionId,
+        @AuthenticationPrincipal UserDetails userDetails
+    ) {
+        UserEntity user = userService.findByEmail(userDetails.getUsername());
+        return scoreRecordService.findByUserLessonSession(user.getId(), lessonId, sessionId)
+            .map(ResponseEntity::ok)
+            .orElse(ResponseEntity.notFound().build());
+    }
 }
 

@@ -91,4 +91,12 @@
         android:textSize="18sp"
         android:layout_marginTop="8dp"/>
 
+    <TextView
+        android:id="@+id/wordCounterTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Word: 1/10"
+        android:textSize="18sp"
+        android:layout_marginBottom="8dp"/>
+
 </LinearLayout>
