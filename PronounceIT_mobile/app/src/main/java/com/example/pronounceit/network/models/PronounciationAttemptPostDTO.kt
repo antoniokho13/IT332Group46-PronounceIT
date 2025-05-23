@@ -6,5 +6,5 @@ data class PronounciationAttemptPostDTO(
     val accuracy: Double,
     val isCorrect: Boolean,
     val attemptNumber: Int,
-    val sessionId: String // <-- Add this
+    val sessionId: String
 )

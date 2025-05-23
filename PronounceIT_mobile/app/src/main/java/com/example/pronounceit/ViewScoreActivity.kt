@@ -9,6 +9,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.pronounceit.network.RetrofitInstance
 import com.example.pronounceit.network.models.PronounciationAttemptEntity
+import com.example.pronounceit.network.models.WordResult
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -31,46 +32,77 @@ class ViewScoreActivity : AppCompatActivity() {
         val rootLayout = findViewById<android.widget.LinearLayout>(R.id.rootLayout)
         val listView = findViewById<ListView>(R.id.scoreListView)
 
-        CoroutineScope(Dispatchers.IO).launch {
-            val api = RetrofitInstance.getApi(this@ViewScoreActivity)
-            val attemptsResponse = api.getAttemptsBySession(lessonId, sessionId)
-            val scoreResponse = api.getScoreRecordBySession(lessonId, sessionId)
-            withContext(Dispatchers.Main) {
-                if (attemptsResponse.isSuccessful && scoreResponse.isSuccessful) {
-                    val attempts = attemptsResponse.body() ?: emptyList()
-                    val scoreRecord = scoreResponse.body()
+        // Try to get wordResults from intent
+        val wordResults = intent.getParcelableArrayListExtra<WordResult>("wordResults")
 
-                    val totalScoreTextView = TextView(this@ViewScoreActivity)
-                    if (scoreRecord != null) {
-                        totalScoreTextView.text = "Score: ${scoreRecord.correctWords}/${scoreRecord.correctWords + scoreRecord.incorrectWords}"
-                    } else {
-                        totalScoreTextView.text = "Score: N/A"
-                    }
-                    totalScoreTextView.textSize = 20f
-                    totalScoreTextView.setPadding(32, 32, 32, 32)
-                    rootLayout.addView(totalScoreTextView, 1)
+        if (wordResults != null && wordResults.isNotEmpty()) {
+            // Use local results for display
+            val totalScoreTextView = TextView(this)
+            val correct = wordResults.count { it.correct }
+            val total = wordResults.size
+            totalScoreTextView.text = "Score: $correct/$total"
+            totalScoreTextView.textSize = 20f
+            totalScoreTextView.setPadding(32, 32, 32, 32)
+            rootLayout.addView(totalScoreTextView, 1)
 
-                    val data = attempts.map {
-                        mapOf(
-                            "word" to it.word.word,
-                            "result" to if (it.isCorrect) "Correct" else "Incorrect",
-                            "attempts" to "Attempts: ${it.attemptNumber}"
+            val data = wordResults.map {
+                mapOf(
+                    "word" to it.word,
+                    "result" to if (it.correct) "Correct" else "Incorrect",
+                    "attempts" to "Attempts: ${it.attempts}"
+                )
+            }
+            val adapter = SimpleAdapter(
+                this,
+                data,
+                android.R.layout.simple_list_item_2,
+                arrayOf("word", "result"),
+                intArrayOf(android.R.id.text1, android.R.id.text2)
+            )
+            listView.adapter = adapter
+        } else {
+            // Fallback to backend if wordResults is not available
+            CoroutineScope(Dispatchers.IO).launch {
+                val api = RetrofitInstance.getApi(this@ViewScoreActivity)
+                val attemptsResponse = api.getAttemptsBySession(lessonId, sessionId)
+                val scoreResponse = api.getScoreRecordBySession(lessonId, sessionId)
+                withContext(Dispatchers.Main) {
+                    if (attemptsResponse.isSuccessful && scoreResponse.isSuccessful) {
+                        val attempts = attemptsResponse.body() ?: emptyList()
+                        val scoreRecord = scoreResponse.body()
+
+                        val totalScoreTextView = TextView(this@ViewScoreActivity)
+                        if (scoreRecord != null) {
+                            totalScoreTextView.text = "Score: ${scoreRecord.correctWords}/${scoreRecord.correctWords + scoreRecord.incorrectWords}"
+                        } else {
+                            totalScoreTextView.text = "Score: N/A"
+                        }
+                        totalScoreTextView.textSize = 20f
+                        totalScoreTextView.setPadding(32, 32, 32, 32)
+                        rootLayout.addView(totalScoreTextView, 1)
+
+                        val data = attempts.map {
+                            mapOf(
+                                "word" to it.word.word,
+                                "result" to if (it.isCorrect) "Correct" else "Incorrect",
+                                "attempts" to "Attempts: ${it.attemptNumber}"
+                            )
+                        }
+                        val adapter = SimpleAdapter(
+                            this@ViewScoreActivity,
+                            data,
+                            android.R.layout.simple_list_item_2,
+                            arrayOf("word", "result"),
+                            intArrayOf(android.R.id.text1, android.R.id.text2)
                         )
+                        listView.adapter = adapter
+                    } else {
+                        val errorMsg = "Failed to load score details: " +
+                                "Attempts code=${attemptsResponse.code()}, Score code=${scoreResponse.code()}"
+                        val errorBody = try { attemptsResponse.errorBody()?.string() } catch (e: Exception) { null }
+                        Log.e("ViewScoreActivity", "Error body: $errorBody")
+                        Toast.makeText(this@ViewScoreActivity, errorMsg, Toast.LENGTH_LONG).show()
                     }
-                    val adapter = SimpleAdapter(
-                        this@ViewScoreActivity,
-                        data,
-                        android.R.layout.simple_list_item_2,
-                        arrayOf("word", "result"),
-                        intArrayOf(android.R.id.text1, android.R.id.text2)
-                    )
-                    listView.adapter = adapter
-                } else {
-                    val errorMsg = "Failed to load score details: " +
-                            "Attempts code=${attemptsResponse.code()}, Score code=${scoreResponse.code()}"
-                    val errorBody = try { attemptsResponse.errorBody()?.string() } catch (e: Exception) { null }
-                    Log.e("ViewScoreActivity", "Error body: $errorBody")
-                    Toast.makeText(this@ViewScoreActivity, errorMsg, Toast.LENGTH_LONG).show()
                 }
             }
         }
