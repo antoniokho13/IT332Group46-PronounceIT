@@ -38,14 +38,23 @@ class LessonActivity : AppCompatActivity() {
         // Use the context-aware API instance so AuthInterceptor adds the token
         api = RetrofitInstance.getApi(this)
 
+        // Always get userId from SharedPreferences for the current logged-in user
+        val prefs = getSharedPreferences("PronounceItPrefs", Context.MODE_PRIVATE)
+        userId = prefs.getLong("userId", -1L)
+
         val categoryId = intent.getLongExtra("categoryId", -1L)
-        userId = intent.getLongExtra("userId", -1L)
 
         if (categoryId != -1L) {
             fetchLessons(categoryId)
         } else {
             Toast.makeText(this, "Invalid category ID", Toast.LENGTH_SHORT).show()
             finish()
+        }
+
+        binding.resetProgressButton.setOnClickListener {
+            clearAllProgressForUser(this@LessonActivity, userId)
+            fetchLessons(categoryId)
+            Toast.makeText(this@LessonActivity, "All progress cleared!", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -55,9 +64,26 @@ class LessonActivity : AppCompatActivity() {
                 val response = api.getLessonsByCategoryId(categoryId)
                 if (response.isSuccessful) {
                     val lessons = response.body() ?: emptyList()
+                    val completedLessons = getCompletedLessons(this@LessonActivity, userId)
+                    val sortedLessons = lessons.sortedBy { it.sequence } // <-- changed here
+                    var foundFirstLocked = false
+                    for (lesson in sortedLessons) {
+                        if (lesson.lessonId in completedLessons) {
+                            lesson.locked = false
+                        } else if (!foundFirstLocked) {
+                            lesson.locked = false
+                            foundFirstLocked = true
+                        } else {
+                            lesson.locked = true
+                        }
+                    }
+                    Log.d("LessonActivity", "Completed lessons: $completedLessons")
+                    for (lesson in sortedLessons) {
+                        Log.d("LessonActivity", "Lesson: ${lesson.lessonId}, sequence: ${lesson.sequence}, locked: ${lesson.locked}")
+                    }
                     withContext(Main) {
                         if (lessons.isNotEmpty()) {
-                            setupRecyclerView(lessons)
+                            setupRecyclerView(sortedLessons)
                         } else {
                             Toast.makeText(
                                 this@LessonActivity,
@@ -103,6 +129,63 @@ class LessonActivity : AppCompatActivity() {
             }
             startActivity(intent)
         }
+    }
+
+    private fun getCompletedLessons(context: Context, userId: Long): Set<Long> {
+        val prefs = context.getSharedPreferences("lesson_prefs", Context.MODE_PRIVATE)
+        val key = "completed_lessons_user_$userId"
+        return prefs.getStringSet(key, emptySet())!!.map { it.toLong() }.toSet()
+    }
+
+    private fun markLessonCompleted(context: Context, lessonId: Long, userId: Long) {
+        val prefs = context.getSharedPreferences("lesson_prefs", Context.MODE_PRIVATE)
+        val key = "completed_lessons_user_$userId"
+        val set = prefs.getStringSet(key, emptySet())!!.toMutableSet()
+        set.add(lessonId.toString())
+        prefs.edit().putStringSet(key, set).apply()
+    }
+
+    private suspend fun resetProgressForUser(context: Context, userId: Long): Boolean {
+        val prefs = context.getSharedPreferences("lesson_prefs", Context.MODE_PRIVATE)
+        val key = "completed_lessons_user_$userId"
+        val categoryId = intent.getLongExtra("categoryId", -1L)
+        val response = api.getLessonsByCategoryId(categoryId)
+        return if (response.isSuccessful) {
+            val lessons = response.body() ?: emptyList()
+            val sorted = lessons.sortedBy { it.sequence }
+            val firstLessonId = sorted.firstOrNull()?.lessonId
+            val set = mutableSetOf<String>()
+            if (firstLessonId != null) set.add(firstLessonId.toString())
+            prefs.edit().putStringSet(key, set).apply()
+            Log.d("LessonActivity", "After reset: " + prefs.getStringSet(key, emptySet()))
+            true
+        } else {
+            false
+        }
+    }
+
+    private suspend fun resetAllLessonsForUser(context: Context, userId: Long): Boolean {
+        val prefs = context.getSharedPreferences("lesson_prefs", Context.MODE_PRIVATE)
+        val key = "completed_lessons_user_$userId"
+        // Unlock only the lesson with the lowest sequence across ALL categories
+        val response = api.getAllLessons() // You need to implement this endpoint if not present
+        return if (response.isSuccessful) {
+            val lessons = response.body() ?: emptyList()
+            val sorted = lessons.sortedBy { it.sequence }
+            val firstLessonId = sorted.firstOrNull()?.lessonId
+            val set = mutableSetOf<String>()
+            if (firstLessonId != null) set.add(firstLessonId.toString())
+            prefs.edit().putStringSet(key, set).apply()
+            true
+        } else {
+            false
+        }
+    }
+
+    private fun clearAllProgressForUser(context: Context, userId: Long) {
+        val prefs = context.getSharedPreferences("lesson_prefs", Context.MODE_PRIVATE)
+        val key = "completed_lessons_user_$userId"
+        prefs.edit().remove(key).apply()
     }
 
     override fun onDestroy() {

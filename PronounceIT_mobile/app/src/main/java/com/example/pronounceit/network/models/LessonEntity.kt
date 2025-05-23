@@ -11,5 +11,6 @@ data class LessonEntity(
     val createdBy: UserEntity,
     val createdDate: LocalDateTime,
     val active: Boolean,
-    val words: List<WordEntity>?
+    val words: List<WordEntity>?,
+    var locked: Boolean = false
 )
