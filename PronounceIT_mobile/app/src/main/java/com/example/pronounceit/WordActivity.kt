@@ -226,17 +226,7 @@ class WordActivity : AppCompatActivity() {
                 .into(binding.wordImageView)
 
             binding.playAudioButton.setOnClickListener {
-                currentWord.audioURL?.let { url ->
-                    val audioUrl = if (url.startsWith("/")) {
-                        baseUrl + url
-                    } else {
-                        baseUrl + "/" + url
-                    }
-                    playSound(audioUrl)
-                } ?: run {
-                    // Use TTS if no audio file
-                    speakWord(currentWord.word)
-                }
+                speakWord(currentWord.word)
             }
 
             // Reset attempts for new word
