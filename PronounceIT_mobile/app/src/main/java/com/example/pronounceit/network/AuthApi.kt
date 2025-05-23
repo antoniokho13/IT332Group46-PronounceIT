@@ -14,6 +14,7 @@ import com.example.pronounceit.network.models.PronunciationCheckResponse
 import com.example.pronounceit.network.models.RegisterRequest
 import com.example.pronounceit.network.models.ScoreRecordDTO
 import com.example.pronounceit.network.models.ScoreRecordEntity
+import com.example.pronounceit.network.models.UpdateUserRequest
 import com.example.pronounceit.network.models.WordEntity
 import okhttp3.MultipartBody
 import okhttp3.ResponseBody
@@ -44,6 +45,13 @@ interface AuthApi {
 
     @POST("/api/auth/logout")
     suspend fun logout(@Header("Authorization") token: String): Response<ResponseBody>
+
+    // Add this method to your AuthApi interface
+    @PUT("/api/users/{id}")
+    suspend fun updateUser(
+        @Path("id") userId: Long,
+        @Body request: UpdateUserRequest
+    ): Response<UserResponse>
 
     @GET("/api/categories")
     suspend fun getAllCategories(): Response<List<CategoryEntity>>
