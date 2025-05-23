@@ -25,6 +25,7 @@ class LessonActivity : AppCompatActivity() {
     private lateinit var lessonAdapter: LessonAdapter
     private lateinit var api: AuthApi
     private var userId: Long = -1
+    private var categoryId: Long = -1L
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -42,7 +43,7 @@ class LessonActivity : AppCompatActivity() {
         val prefs = getSharedPreferences("PronounceItPrefs", Context.MODE_PRIVATE)
         userId = prefs.getLong("userId", -1L)
 
-        val categoryId = intent.getLongExtra("categoryId", -1L)
+        categoryId = intent.getLongExtra("categoryId", -1L)
 
         if (categoryId != -1L) {
             fetchLessons(categoryId)
@@ -125,7 +126,7 @@ class LessonActivity : AppCompatActivity() {
         lessonAdapter.onItemClick = { lesson: LessonEntity ->
             val intent = Intent(this@LessonActivity, WordActivity::class.java).apply {
                 putExtra("lessonId", lesson.lessonId)
-                putExtra("userId", userId)
+                putExtra("categoryId", categoryId)
             }
             startActivity(intent)
         }
@@ -192,6 +193,14 @@ class LessonActivity : AppCompatActivity() {
         super.onDestroy()
         if (::lessonAdapter.isInitialized) {
             lessonAdapter.releaseResources()
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        val categoryId = intent.getLongExtra("categoryId", -1L)
+        if (categoryId != -1L) {
+            fetchLessons(categoryId)
         }
     }
 }

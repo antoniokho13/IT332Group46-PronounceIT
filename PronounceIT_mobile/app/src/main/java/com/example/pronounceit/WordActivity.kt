@@ -486,8 +486,15 @@ class WordActivity : AppCompatActivity() {
             set.add(lessonId.toString())
             lessonPrefs.edit().putStringSet(key, set).apply()
             builder.setTitle("Congratulations!")
-                .setMessage("You scored $score/$totalWords. Proceed to next level?")
-                .setPositiveButton("Proceed to Next Level") { _, _ -> /* TODO: Go to next level */ }
+                .setMessage("You scored $score/$totalWords. Return to lessons?")
+                .setPositiveButton("Return to Lessons") { _, _ ->
+                    // Return to LessonActivity and refresh
+                    val intent = Intent(this, LessonActivity::class.java)
+                    intent.putExtra("categoryId", getIntent().getLongExtra("categoryId", -1L))
+                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                    startActivity(intent)
+                    finish()
+                }
                 .setNegativeButton("Try Again") { _, _ -> restartSession() }
                 .setNeutralButton("View Score Details") { _, _ ->
                     val intent = Intent(this, ViewScoreActivity::class.java)
@@ -501,7 +508,7 @@ class WordActivity : AppCompatActivity() {
             builder.setTitle("Try Again")
                 .setMessage("You scored $score/$totalWords. You need at least 6 points to proceed.")
                 .setPositiveButton("Try Again") { _, _ -> restartSession() }
-                .setNeutralButton("View Score Details") { _, _ -> // <-- Add this block
+                .setNeutralButton("View Score Details") { _, _ ->
                     val intent = Intent(this, ViewScoreActivity::class.java)
                     intent.putExtra("lessonId", lessonId)
                     intent.putExtra("sessionId", sessionId)
