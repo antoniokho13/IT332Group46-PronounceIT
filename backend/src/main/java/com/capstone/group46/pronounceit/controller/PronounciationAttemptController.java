@@ -15,6 +15,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -103,5 +104,11 @@ public class PronounciationAttemptController {
         UserEntity user = userService.findByEmail(userDetails.getUsername());
         List<PronounciationAttemptEntity> attempts = pronounciationAttemptService.findAllByUserLessonSession(user.getId(), lessonId, sessionId);
         return ResponseEntity.ok(attempts);
+    }
+
+    @GetMapping("/statistics")
+    public ResponseEntity<List<Map<String, Object>>> getWordStatisticsByLessonId(@RequestParam Long lessonId) {
+        List<Map<String, Object>> wordStats = pronounciationAttemptService.getWordStatisticsByLessonId(lessonId);
+        return ResponseEntity.ok(wordStats);
     }
 }

@@ -8,6 +8,7 @@ import TeacherDashboard from './components/TeacherDashboard';
 import UserDashboard from './components/UserDashboard';
 import UserInformation from './components/UserInformation';
 import Words from './components/Words'; // Import the Words component
+import Analytics from './components/Analytics';
 
 function App() {
   return (
@@ -28,6 +29,7 @@ function App() {
           path="/words/:lessonId" 
           element={<ProtectedRoute component={Words} requiredRole="ADMIN" />} 
         /> {/* Add the Words route */}
+        <Route path="/analytics/:lessonId" element={<Analytics />} />
       </Routes>
     </Router>
   );

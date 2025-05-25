@@ -1656,3 +1656,42 @@ button.dropdown-item {
     transform: translateY(0);
   }
 }
+
+/* Style for the analytics table */
+.analytics-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 20px 0;
+  font-size: 16px;
+  text-align: left;
+}
+
+.analytics-table th, .analytics-table td {
+  padding: 12px 15px;
+  border: 1px solid #ddd;
+}
+
+.analytics-table th {
+  background-color: #f4f4f4;
+  font-weight: bold;
+}
+
+.analytics-table tr:nth-child(even) {
+  background-color: #f9f9f9;
+}
+
+.analytics-table tr:hover {
+  background-color: #f1f1f1;
+}
+
+.analytics-table th:nth-child(1) {
+  width: 40%; /* Adjust Lesson Name column width */
+}
+
+.analytics-table th:nth-child(2) {
+  width: 30%; /* Adjust Category column width */
+}
+
+.analytics-table th:nth-child(3) {
+  width: 20%; /* Adjust Attempts column width */
+}

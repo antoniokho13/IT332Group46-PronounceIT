@@ -18,8 +18,10 @@ import "../assets/css/Dashboard.css";
 import logo from "../assets/images/logo.png";
 import { getAllCategories, createCategory, updateCategory, deleteCategory } from "../services/categoryService"; // Import the service functions
 import { getUserById } from "../services/userService"; // Import the service to fetch user data
-import { getAllLessons, updateLesson, createLesson, deleteLesson } from "../services/lessonService"; // Import the service to fetch lessons
-// Create static version without actual backend connections
+import { getAllLessons, updateLesson, createLesson, deleteLesson } from "../services/lessonService";
+import { getAllScoreRecords } from "../services/scoreService";
+import axios from "axios"; // If not already imported
+
 const TeacherDashboard = () => {
   const [user, setUser] = useState({ firstName: "", lastName: "", id: null }); // Include `id` in the user state
   const [showDropdown, setShowDropdown] = useState(false);
@@ -30,6 +32,8 @@ const TeacherDashboard = () => {
   const [categories, setCategories] = useState([]); // State to store categories
   const [loading, setLoading] = useState(true); // State to handle loading
   const [lessons, setLessons] = useState([]); // Ensure lessons is initialized as an empty array
+  const [analyticsLessons, setAnalyticsLessons] = useState([]);
+  const [analyticsCategory, setAnalyticsCategory] = useState(""); // For filtering
   const dropdownRef = useRef(null);
   const userCardRef = useRef(null);
   const modalRef = useRef(null);
@@ -781,50 +785,7 @@ const TeacherDashboard = () => {
           </>
         );
       case 'analytics':
-        return (
-          <>
-            <h2 className="dashboard-title">Student Analytics</h2>
-            <div className="analytics-overview">
-              <div className="analytics-card">
-                <h3>Student Engagement</h3>
-                <p>Weekly active users: <strong>52</strong></p>
-                <p>Monthly active users: <strong>148</strong></p>
-                <p>Average session time: <strong>18 minutes</strong></p>
-              </div>
-              <div className="analytics-card">
-                <h3>Completion Rates</h3>
-                <p>Beginner lessons: <strong>78%</strong></p>
-                <p>Intermediate lessons: <strong>52%</strong></p>
-                <p>Advanced lessons: <strong>34%</strong></p>
-              </div>
-              <div className="analytics-card">
-                <h3>Top Performing Content</h3>
-                <ol>
-                  <li>Basic Vowel Sounds (92% completion)</li>
-                  <li>Consonant Pairs (87% completion)</li>
-                  <li>Word Stress Basics (81% completion)</li>
-                </ol>
-              </div>
-            </div>
-            <div className="report-progress">
-              <h3>Student Progress Overview</h3>
-              <div className="graph-container animate-bars">
-                <div className="chart-bar beginner">
-                  <div className="chart-bar-percentage">65%</div>
-                  <div className="chart-bar-label">Beginner</div>
-                </div>
-                <div className="chart-bar intermediate">
-                  <div className="chart-bar-percentage">45%</div>
-                  <div className="chart-bar-label">Intermediate</div>
-                </div>
-                <div className="chart-bar advanced">
-                  <div className="chart-bar-percentage">20%</div>
-                  <div className="chart-bar-label">Advanced</div>
-                </div>
-              </div>
-            </div>
-          </>
-        );
+        return renderAnalyticsTable();
       default: // dashboard
         return (
           <>
@@ -1162,10 +1123,91 @@ const TeacherDashboard = () => {
     }
   };
 
+  const fetchAnalyticsData = async () => {
+    try {
+      const lessons = await getAllLessons();
+      const scoreRecords = await getAllScoreRecords();
+
+      // Count attempts per lesson
+      const lessonsWithAttempts = lessons.map((lesson) => {
+        const attempts = scoreRecords.filter(
+          (score) => score.lesson.lessonId === lesson.lessonId
+        ).length;
+        return {
+          ...lesson,
+          attempts,
+        };
+      });
+
+      setAnalyticsLessons(lessonsWithAttempts);
+    } catch (error) {
+      console.error("Failed to fetch analytics data:", error);
+    }
+  };
+
   localStorage.setItem("userId", user.id); // Replace `user.id` with the actual user ID from the login response
 
   const userId = localStorage.getItem("userId");
   console.log("Retrieved userId:", userId);
+
+  const renderAnalyticsTable = () => {
+    const filteredLessons = analyticsCategory
+      ? analyticsLessons.filter(l => l.category.categoryId === parseInt(analyticsCategory))
+      : analyticsLessons;
+
+    return (
+      <div>
+        <h2>Lesson Analytics</h2>
+        <div style={{ marginBottom: "1rem" }}>
+          <label>Filter by Category: </label>
+          <select
+            value={analyticsCategory}
+            onChange={e => setAnalyticsCategory(e.target.value)}
+          >
+            <option value="">All</option>
+            {categories.map(cat => (
+              <option key={cat.categoryId} value={cat.categoryId}>{cat.name}</option>
+            ))}
+          </select>
+        </div>
+        <table className="analytics-table">
+          <thead>
+            <tr>
+              <th>Lesson Name</th>
+              <th>Category</th>
+              <th>Attempts</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredLessons.length === 0 ? (
+              <tr>
+                <td colSpan="3">No lessons found.</td>
+              </tr>
+            ) : (
+              filteredLessons.map((lesson) => (
+                <tr key={lesson.lessonId}>
+                  <td
+                    style={{ color: "blue", cursor: "pointer", textDecoration: "underline" }}
+                    onClick={() => navigate(`/analytics/${lesson.lessonId}`, { state: { lessonName: lesson.name } })}
+                  >
+                    {lesson.name}
+                  </td>
+                  <td>{lesson.category.name}</td>
+                  <td>{lesson.attempts}</td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+    )
+  };
+
+  useEffect(() => {
+    if (activeSection === "analytics") {
+      fetchAnalyticsData();
+    }
+  }, [activeSection]);
 
   return (
     <div className="dashboard-container">
