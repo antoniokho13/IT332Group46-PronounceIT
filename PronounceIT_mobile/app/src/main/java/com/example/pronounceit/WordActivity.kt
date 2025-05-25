@@ -561,6 +561,9 @@ class WordActivity : AppCompatActivity() {
     }
 
     private fun showSessionEndDialog() {
+        // Save or update score at the end of the session
+        sendScoreToBackend()
+
         val builder = android.app.AlertDialog.Builder(this)
         if (score >= 1) {
             // Mark lesson as completed for this user

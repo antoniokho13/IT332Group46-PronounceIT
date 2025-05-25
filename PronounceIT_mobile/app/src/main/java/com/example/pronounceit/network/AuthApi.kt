@@ -135,6 +135,12 @@ interface AuthApi {
         @Query("sessionId") sessionId: String
     ): Response<ScoreRecordEntity>
 
+    @GET("/api/score-records/latest")
+    suspend fun getLatestScoreRecord(
+        @Query("userId") userId: Long,
+        @Query("lessonId") lessonId: Long
+    ): Response<ScoreRecordEntity>
+
     // Word Controller Endpoints
     @GET("/api/words/{wordId}")
     suspend fun getWordById(@Path("wordId") wordId: Long): Response<WordEntity>

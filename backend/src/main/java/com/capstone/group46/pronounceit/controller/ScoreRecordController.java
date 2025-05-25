@@ -98,5 +98,15 @@ public class ScoreRecordController {
             .map(ResponseEntity::ok)
             .orElse(ResponseEntity.notFound().build());
     }
+
+    @GetMapping("/latest")
+    public ResponseEntity<ScoreRecordEntity> getLatestScoreRecord(
+        @RequestParam Long userId,
+        @RequestParam Long lessonId
+    ) {
+        return scoreRecordService.findLatestByUserAndLesson(userId, lessonId)
+            .map(ResponseEntity::ok)
+            .orElse(ResponseEntity.notFound().build());
+    }
 }
 

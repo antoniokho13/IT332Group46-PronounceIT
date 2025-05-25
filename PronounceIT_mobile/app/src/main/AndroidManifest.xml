@@ -84,5 +84,11 @@
             android:label="Score Details"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
 
+        <activity
+            android:name=".MyProgressActivity"
+            android:exported="true"
+            android:label="My Progress"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+
     </application>
 </manifest>
