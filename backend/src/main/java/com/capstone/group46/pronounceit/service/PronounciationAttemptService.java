@@ -5,6 +5,7 @@ import com.capstone.group46.pronounceit.repository.PronounciationAttemptReposito
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -58,5 +59,9 @@ public class PronounciationAttemptService {
 
     public List<PronounciationAttemptEntity> findAllByUserLessonSession(Long userId, Long lessonId, String sessionId) {
         return pronounciationAttemptRepository.findAllByUser_IdAndLesson_LessonIdAndSessionId(userId, lessonId, sessionId);
+    }
+
+    public List<Map<String, Object>> getWordStatisticsByLessonId(Long lessonId) {
+        return pronounciationAttemptRepository.getWordStatisticsByLessonId(lessonId);
     }
 }
