@@ -45,4 +45,9 @@ public class ScoreRecordService {
     public Optional<ScoreRecordEntity> findByUserLessonSession(Long userId, Long lessonId, String sessionId) {
         return scoreRecordRepository.findByUser_IdAndLesson_LessonIdAndSessionId(userId, lessonId, sessionId);
     }
+
+    public Optional<ScoreRecordEntity> findLatestByUserAndLesson(Long userId, Long lessonId) {
+        List<ScoreRecordEntity> records = scoreRecordRepository.findTop1ByUser_IdAndLesson_LessonIdOrderByCompletionDateDesc(userId, lessonId);
+        return records.isEmpty() ? Optional.empty() : Optional.of(records.get(0));
+    }
 }
