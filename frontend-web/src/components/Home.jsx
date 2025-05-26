@@ -1,6 +1,6 @@
 import { faFacebookF, faInstagram, faTwitter, faYoutube } from '@fortawesome/free-brands-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import '../assets/css/Home.css';
 
@@ -121,7 +121,7 @@ function Home() {
           </nav>
           <div className="cta-button">
              <Link to="/login" className="btn btn-secondary" style={{ marginRight: '15px' }}>Log In</Link>
-             <Link to="/login?mode=signup" className="btn btn-secondary">Sign Up</Link>
+             <Link to="/login?signup=true" className="btn btn-secondary">Sign Up</Link>
           </div>
         </div>
       </header>
@@ -131,7 +131,7 @@ function Home() {
     <div className="hero-content">
       <h1>"Fun, easy, and clear PronounceIT helps every kid speak without fear!"</h1>
       <p>An interactive way for kids to learn through games and rewards!</p>
-      <Link to="/signup" className="btn btn-primary">Get Started for Free</Link>
+      <Link to="/login?signup=true" className="btn btn-primary">Get Started for Free</Link>
     </div>
     <div className="hero-image">
       <img 
@@ -331,7 +331,7 @@ function Home() {
         <div className="container">
           <h2>Start Your Child's Fun Learning Journey Today!</h2>
           <p>Join thousands of families who are making education exciting with PronounceIT.</p>
-          <Link to="/signup" className="btn btn-primary btn-large">Get Started for Free</Link>
+          <Link to="/login?signup=true" className="btn btn-primary btn-large">Get Started for Free</Link>
         </div>
       </section>
 

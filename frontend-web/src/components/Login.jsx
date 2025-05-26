@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+// filepath: c:\Users\User\Documents\GitHub\IT332Group46-PronounceIT\frontend-web\src\components\Login.jsx
+import { useEffect, useState } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import '../assets/css/Login.css';
 import { login, register } from '../services/authService';
 
 const Login = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [isLogin, setIsLogin] = useState(true);
   const [showRoleSelection, setShowRoleSelection] = useState(false);
   const [selectedRole, setSelectedRole] = useState(null);
@@ -24,6 +26,15 @@ const Login = () => {
     type: 'success',
     redirect: null
   });
+
+  // Check URL parameters on component mount to determine if we should show signup
+  useEffect(() => {
+    const queryParams = new URLSearchParams(location.search);
+    if (queryParams.get('signup') === 'true') {
+      setIsLogin(false);
+      setShowRoleSelection(true);
+    }
+  }, [location]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
