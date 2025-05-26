@@ -4,21 +4,34 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="16dp">
+    android:padding="16dp"
+    android:background="@drawable/scorebg">
 
     <TextView
         android:id="@+id/scoreDetailsTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Score Details"
-        android:textSize="22sp"
+        android:textSize="28sp"
+        android:textStyle="bold"
+        android:textColor="#F3AD00"
         android:layout_gravity="center_horizontal"
-        android:layout_marginBottom="8dp"/>
+        android:layout_marginTop="16dp"
+        android:layout_marginBottom="16dp"
+        android:background="#33FFFFFF"
+        android:padding="8dp"
+        android:fontFamily="@font/nunito"/>
 
     <!-- The total score TextView will be added programmatically -->
 
     <ListView
         android:id="@+id/scoreListView"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:divider="@android:color/transparent"
+        android:dividerHeight="8dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp"
+        android:clipToPadding="false"/>
 </LinearLayout>

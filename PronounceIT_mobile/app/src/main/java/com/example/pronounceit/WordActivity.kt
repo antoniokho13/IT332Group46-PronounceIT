@@ -83,6 +83,9 @@ class WordActivity : AppCompatActivity() {
         // Initialize konfetti view
         konfettiView = binding.konfettiView
 
+        val animatedBorder = binding.imageFrameLayout.background as? AnimationDrawable
+        animatedBorder?.start()
+
         lessonId = intent.getLongExtra("lessonId", -1L)
         if (lessonId == -1L) {
             Toast.makeText(this, "Invalid lesson ID", Toast.LENGTH_SHORT).show()
@@ -130,20 +133,17 @@ class WordActivity : AppCompatActivity() {
     }
 
     private fun startRecordingAnimation() {
-        // Set the animated drawable to the stop recording button
+        // Hide the recording indicator text and its space
+        binding.recordingIndicatorText.clearAnimation()
+        binding.recordingIndicatorText.visibility = View.GONE
+
         binding.stopRecordingButton.setImageResource(R.drawable.mic_recording_animation)
         binding.recordPronunciationButton.visibility = View.GONE
         binding.stopRecordingButton.visibility = View.VISIBLE
 
-        // Start the animation
         micAnimation = binding.stopRecordingButton.drawable as AnimationDrawable
         micAnimation?.start()
 
-        // Show and animate recording indicator text
-        binding.recordingIndicatorText.visibility = View.VISIBLE
-        binding.recordingIndicatorText.startAnimation(textBlinkAnimation)
-
-        // Add pulse animation to the stop button
         val scaleX = ObjectAnimator.ofFloat(binding.stopRecordingButton, "scaleX", 1f, 1.1f, 1f)
         val scaleY = ObjectAnimator.ofFloat(binding.stopRecordingButton, "scaleY", 1f, 1.1f, 1f)
         scaleX.repeatCount = ValueAnimator.INFINITE
@@ -213,7 +213,7 @@ class WordActivity : AppCompatActivity() {
             // Add this line to update the word counter
             binding.wordCounterTextView.text = "Word: ${currentWordIndex + 1}/$totalWords"
 
-            val baseUrl = "http://10.0.2.2:8080"
+            val baseUrl = "http://192.168.113.197:8080"
             val imageUrl = if (currentWord.imageURL?.startsWith("/") == true) {
                 baseUrl + currentWord.imageURL
             } else {
@@ -564,8 +564,23 @@ class WordActivity : AppCompatActivity() {
         // Save or update score at the end of the session
         sendScoreToBackend()
 
-        val builder = android.app.AlertDialog.Builder(this)
-        if (score >= 1) {
+        // Create a custom view for the dialog with an ImageView
+        val dialogView = layoutInflater.inflate(R.layout.dialog_session_end, null)
+        val congratsImage = dialogView.findViewById<android.widget.ImageView>(R.id.congratsImageView)
+        val scoreMessage = dialogView.findViewById<android.widget.TextView>(R.id.scoreMessageTextView)
+        val returnToLessonsButton = dialogView.findViewById<android.widget.ImageButton>(R.id.returnToLessonsButton)
+        val tryAgainButton = dialogView.findViewById<android.widget.ImageButton>(R.id.tryAgainButton)
+        val viewScoreDetailsButton = dialogView.findViewById<android.widget.ImageButton>(R.id.viewScoreDetailsButton)
+
+        // Find the return button layout by ID to properly hide/show both button and text
+        val returnButtonLayout = dialogView.findViewById<android.view.View>(R.id.returnButtonLayout)
+
+        // Set image based on score (half or more = congratulations, less than half = game over)
+        if (score >= totalWords / 2) {
+            congratsImage.setImageResource(R.drawable.congratulations)
+            congratsImage.visibility = View.VISIBLE
+            scoreMessage.text = "You scored $score/$totalWords. Return to lessons?"
+
             // Mark lesson as completed for this user
             val prefs = getSharedPreferences("PronounceItPrefs", Context.MODE_PRIVATE)
             val userId = prefs.getLong("userId", -1L)
@@ -574,39 +589,55 @@ class WordActivity : AppCompatActivity() {
             val set = lessonPrefs.getStringSet(key, emptySet())!!.toMutableSet()
             set.add(lessonId.toString())
             lessonPrefs.edit().putStringSet(key, set).apply()
-            builder.setTitle("Congratulations!")
-                .setMessage("You scored $score/$totalWords. Return to lessons?")
-                .setPositiveButton("Return to Lessons") { _, _ ->
-                    // Return to LessonActivity and refresh
-                    val intent = Intent(this, LessonActivity::class.java)
-                    intent.putExtra("categoryId", getIntent().getLongExtra("categoryId", -1L))
-                    intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
-                    startActivity(intent)
-                    finish()
-                }
-                .setNegativeButton("Try Again") { _, _ -> restartSession() }
-                .setNeutralButton("View Score Details") { _, _ ->
-                    val intent = Intent(this, ViewScoreActivity::class.java)
-                    intent.putExtra("lessonId", lessonId)
-                    intent.putExtra("sessionId", sessionId)
-                    intent.putParcelableArrayListExtra("wordResults", ArrayList(wordResults))
-                    startActivity(intent)
-                    finish()
-                }
+
+            // Show return button and its text
+            returnButtonLayout.visibility = View.VISIBLE
         } else {
-            builder.setTitle("Try Again")
-                .setMessage("You scored $score/$totalWords. You need at least 6 points to proceed.")
-                .setPositiveButton("Try Again") { _, _ -> restartSession() }
-                .setNeutralButton("View Score Details") { _, _ ->
-                    val intent = Intent(this, ViewScoreActivity::class.java)
-                    intent.putExtra("lessonId", lessonId)
-                    intent.putExtra("sessionId", sessionId)
-                    intent.putParcelableArrayListExtra("wordResults", ArrayList(wordResults))
-                    startActivity(intent)
-                    finish()
-                }
+            congratsImage.setImageResource(R.drawable.gameover)
+            congratsImage.visibility = View.VISIBLE
+            scoreMessage.text = "You scored $score/$totalWords. You need at least ${totalWords/2} points to proceed."
+
+            // Hide the entire return button layout (both button and text)
+            returnButtonLayout.visibility = View.GONE
         }
-        builder.show()
+
+        // Create and configure the dialog
+        val dialog = android.app.AlertDialog.Builder(this)
+            .setView(dialogView)
+            .setCancelable(false)
+            .create()
+
+        // Set button click listeners
+        returnToLessonsButton.setOnClickListener {
+            // Return to LessonActivity and refresh
+            val intent = Intent(this, LessonActivity::class.java)
+            intent.putExtra("categoryId", getIntent().getLongExtra("categoryId", -1L))
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+            startActivity(intent)
+            finish()
+            dialog.dismiss()
+        }
+
+        tryAgainButton.setOnClickListener {
+            restartSession()
+            dialog.dismiss()
+        }
+
+        viewScoreDetailsButton.setOnClickListener {
+            val intent = Intent(this, ViewScoreActivity::class.java)
+            intent.putExtra("lessonId", lessonId)
+            intent.putExtra("sessionId", sessionId)
+            intent.putParcelableArrayListExtra("wordResults", ArrayList(wordResults))
+            startActivity(intent)
+            finish()
+            dialog.dismiss()
+        }
+
+        // Update the button content descriptions for accessibility
+        tryAgainButton.contentDescription = "Try Again"
+        viewScoreDetailsButton.contentDescription = "View Score"
+
+        dialog.show()
     }
 
     private fun restartSession() {
