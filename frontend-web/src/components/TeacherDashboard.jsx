@@ -1,10 +1,14 @@
 import {
   faBookOpen,
   faChartLine,
+  faCheckCircle,
   faEdit,
+  faExclamationCircle,
   faFolder,
+  faInfoCircle,
   faPlus,
   faSignOutAlt,
+  faTimes,
   faTrash,
   faUser
 } from "@fortawesome/free-solid-svg-icons";
@@ -20,27 +24,28 @@ import { getAllScoreRecords } from "../services/scoreService";
 import { getUserById } from "../services/userService"; // Import the service to fetch user data
 
 const TeacherDashboard = () => {
-  const [user, setUser] = useState({ firstName: "", lastName: "", id: null }); // Include `id` in the user state
+  const [user, setUser] = useState({ firstName: "", lastName: "", id: null });
   const [showDropdown, setShowDropdown] = useState(false);
-  const [activeSection, setActiveSection] = useState("lessons"); // Default to lessons instead of dashboard
+  const [activeSection, setActiveSection] = useState("lessons");
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState("");
   const [editingItem, setEditingItem] = useState(null);
-  const [categories, setCategories] = useState([]); // State to store categories
-  const [loading, setLoading] = useState(true); // State to handle loading
-  const [lessons, setLessons] = useState([]); // Ensure lessons is initialized as an empty array
+  const [categories, setCategories] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [lessons, setLessons] = useState([]);
   const [analyticsLessons, setAnalyticsLessons] = useState([]);
-  const [analyticsCategory, setAnalyticsCategory] = useState(""); // For filtering
-  // Notification state
-  const [notification, setNotification] = useState({
-    show: false,
-    message: '',
-    type: 'success'
-  });
+  const [analyticsCategory, setAnalyticsCategory] = useState("");
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
+  const [deleteType, setDeleteType] = useState(""); 
+  
+  // Add notification state
+  const [notification, setNotification] = useState({ show: false, message: "", type: "" });
   
   const dropdownRef = useRef(null);
   const userCardRef = useRef(null);
   const modalRef = useRef(null);
+  const deleteModalRef = useRef(null);
   const navigate = useNavigate();
 
   const handleLogout = () => {
@@ -86,17 +91,24 @@ const TeacherDashboard = () => {
     };
   }, [modalRef, showModal]);
 
-  const showNotification = (message, type = 'success') => {
-    setNotification({
-      show: true,
-      message,
-      type
-    });
-    // Auto-hide notification after 3 seconds
-    setTimeout(() => {
-      setNotification(prev => ({ ...prev, show: false }));
-    }, 3000);
-  };
+  // Close delete modal when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        deleteModalRef.current &&
+        !deleteModalRef.current.contains(event.target) &&
+        showDeleteModal
+      ) {
+        setShowDeleteModal(false);
+        setItemToDelete(null);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [deleteModalRef, showDeleteModal]);
 
   const toggleDropdown = (e) => {
     e.stopPropagation();
@@ -121,34 +133,59 @@ const TeacherDashboard = () => {
   
   // Function to delete an item (just a placeholder for now)
   const handleDelete = async (category) => {
-    if (window.confirm(`Are you sure you want to delete the category "${category.name}"?`)) {
-      try {
-        await deleteCategory(category.categoryId); // Call the deleteCategory service
-        showNotification("Category deleted successfully!");
-  
-        // Refresh the categories list
-        const updatedCategories = await getAllCategories();
-        setCategories(updatedCategories);
-      } catch (error) {
-        console.error("Error deleting category:", error);
-        showNotification("Failed to delete category. Please try again.", "error");
-      }
-    }
+    setItemToDelete(category);
+    setDeleteType("category");
+    setShowDeleteModal(true);
   };
 
+  // Updated handleDeleteLesson function
   const handleDeleteLesson = async (lesson) => {
-    if (window.confirm(`Are you sure you want to delete the lesson "${lesson.name}"?`)) {
-      try {
-        await deleteLesson(lesson.lessonId); // Call the deleteLesson service
-        showNotification("Lesson deleted successfully!");
-  
-        // Refresh the lessons list
+    setItemToDelete(lesson);
+    setDeleteType("lesson");
+    setShowDeleteModal(true);
+  };
+
+  // New function to process deletion after confirmation
+  const confirmDelete = async () => {
+    try {
+      if (deleteType === "lesson" && itemToDelete) {
+        await deleteLesson(itemToDelete.lessonId);
         const updatedLessons = await getAllLessons();
         setLessons(updatedLessons);
-      } catch (error) {
-        console.error("Error deleting lesson:", error);
-        showNotification("Failed to delete lesson. Please try again.", "error");
+        setNotification({
+          show: true,
+          message: `Lesson "${itemToDelete.name}" has been successfully deleted.`,
+          type: "success"
+        });
+      } else if (deleteType === "category" && itemToDelete) {
+        await deleteCategory(itemToDelete.categoryId);
+        const updatedCategories = await getAllCategories();
+        setCategories(updatedCategories);
+        setNotification({
+          show: true,
+          message: `Category "${itemToDelete.name}" has been successfully deleted.`,
+          type: "success"
+        });
       }
+      setShowDeleteModal(false);
+      setItemToDelete(null);
+      
+      // Auto-hide notification after 5 seconds
+      setTimeout(() => {
+        setNotification({ show: false, message: "", type: "" });
+      }, 5000);
+    } catch (error) {
+      console.error(`Error deleting ${deleteType}:`, error);
+      setNotification({
+        show: true,
+        message: `Failed to delete ${deleteType}. Please try again.`,
+        type: "error"
+      });
+      
+      // Auto-hide notification after 5 seconds
+      setTimeout(() => {
+        setNotification({ show: false, message: "", type: "" });
+      }, 5000);
     }
   };
 
@@ -188,32 +225,6 @@ const TeacherDashboard = () => {
         </button>
       </div>,
       document.body
-    );
-  };
-
-  // Render notification
-  const renderNotification = () => {
-    if (!notification.show) return null;
-
-    return (
-      <div className="notification-overlay">
-        <div className={`notification-modal ${notification.type}`}>
-          <div className="notification-icon">
-            {notification.type === 'success' && '✓'}
-            {notification.type === 'error' && '✗'}
-            {notification.type === 'info' && 'ℹ'}
-          </div>
-          <div className="notification-content">
-            <p>{notification.message}</p>
-            <button 
-              onClick={() => setNotification(prev => ({ ...prev, show: false }))} 
-              className="notification-button"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      </div>
     );
   };
 
@@ -348,6 +359,53 @@ const TeacherDashboard = () => {
     );
   };
 
+  // Add this new function to render delete confirmation modal
+  const renderDeleteModal = () => {
+    if (!showDeleteModal || !itemToDelete) return null;
+    
+    const itemName = deleteType === "lesson" ? itemToDelete.name : itemToDelete.name;
+    const itemType = deleteType === "lesson" ? "lesson" : "category";
+    
+    return ReactDOM.createPortal(
+      <div className="modal-overlay">
+        <div className="modal-container" ref={deleteModalRef}>
+          <h3>Confirm Deletion</h3>
+          <p>Are you sure you want to delete the {itemType} "{itemName}"?</p>
+          <p>This action cannot be undone.</p>
+          <div className="modal-actions">
+            <button
+              type="button"
+              className="cancel-btn"
+              onClick={() => {
+                setShowDeleteModal(false);
+                setItemToDelete(null);
+              }}
+            >
+              Cancel
+            </button>
+            <button 
+              type="button" 
+              className="delete-btn"
+              style={{
+                backgroundColor: "rgba(229, 62, 62, 0.1)",
+                color: "#e53e3e",
+                border: "none",
+                borderRadius: "5px",
+                padding: "10px 20px", 
+                cursor: "pointer",
+                fontWeight: "500"
+              }}
+              onClick={confirmDelete}
+            >
+              Delete
+            </button>
+          </div>
+        </div>
+      </div>,
+      document.body
+    );
+  };
+
   // Content sections based on activeSection state
   const renderContent = () => {
     switch(activeSection) {
@@ -448,7 +506,6 @@ const TeacherDashboard = () => {
         setCategories(data);
       } catch (error) {
         console.error("Error fetching categories:", error);
-        showNotification("Error loading categories. Please try refreshing the page.", "error");
       } finally {
         setLoading(false);
       }
@@ -467,12 +524,10 @@ const TeacherDashboard = () => {
         } else {
           console.error("Invalid data format for lessons:", data);
           setLessons([]); // Fallback to an empty array
-          showNotification("Received invalid lesson data format.", "error");
         }
       } catch (error) {
         console.error("Error fetching lessons:", error);
         setLessons([]); // Fallback to an empty array in case of an error
-        showNotification("Error loading lessons. Please try refreshing the page.", "error");
       } finally {
         setLoading(false);
       }
@@ -498,34 +553,36 @@ const TeacherDashboard = () => {
       );
     }
 
-   return categories.map((category) => (
-  <tr key={category.categoryId}>
-    <td>{category.name}</td>
-    <td>{category.description}</td>
-    <td>{`${category.createdBy.firstName} ${category.createdBy.lastName}`}</td>
-    <td>{new Date(category.createdDate).toLocaleDateString()}</td>
-    <td className="action-buttons-cell">
-      <button
-        className="action-btn blue-btn"
-        onClick={(e) => {
-          e.stopPropagation();
-          openModal("categories", category); // Open modal for editing
-        }}
-      >
-        <FontAwesomeIcon icon={faEdit} /> Edit
-      </button>
-      <button
-        className="action-btn blue-btn"
-        onClick={(e) => {
-          e.stopPropagation();
-          handleDelete(category); // Call handleDelete when the trash icon is clicked
-        }}
-      >
-        <FontAwesomeIcon icon={faTrash} /> Delete
-      </button>
-    </td>
-  </tr>
-));
+    return categories.map((category) => (
+      <tr key={category.categoryId}>
+        <td>{category.name}</td>
+        <td>{category.description}</td>
+        <td>{`${category.createdBy.firstName} ${category.createdBy.lastName}`}</td>
+        <td>{new Date(category.createdDate).toLocaleDateString()}</td>
+        <td className="action-buttons-cell">
+          <button
+            className="action-btn blue-btn"
+            style={{ backgroundColor: "#4f46e5" }}
+            onClick={(e) => {
+              e.stopPropagation();
+              openModal("categories", category);
+            }}
+          >
+            <FontAwesomeIcon icon={faEdit} /> Edit
+          </button>
+          <button
+            className="action-btn blue-btn"
+            style={{ backgroundColor: "rgba(229, 62, 62, 0.8)", color: "white" }}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDelete(category);
+            }}
+          >
+            <FontAwesomeIcon icon={faTrash} /> Delete
+          </button>
+        </td>
+      </tr>
+    ));
   };
 
   const renderLessonsTable = () => {
@@ -545,42 +602,44 @@ const TeacherDashboard = () => {
     );
   }
 
- return lessons.map((lesson) => (
-  <tr key={lesson.lessonId}>
-    <td>{lesson.name}</td>
-    <td>{lesson.focus}</td>
-    <td>{lesson.sequence}</td>
-    <td>{lesson.category.name}</td>
-    <td>{`${lesson.createdBy.firstName} ${lesson.createdBy.lastName}`}</td>
-    <td>{new Date(lesson.createdDate).toLocaleDateString()}</td>
-    <td className="action-buttons-cell">
-      <button
-        className="action-btn blue-btn"
-        onClick={(e) => {
-          e.stopPropagation();
-          openModal("lessons", lesson); // Open modal for editing
-        }}
-      >
-        <FontAwesomeIcon icon={faEdit} /> Edit
-      </button>
-      {/* Add Words Button - now in the middle */}
-      <button
-        className="words-btn action-btn blue-btn"
-        onClick={() => navigate(`/words/${lesson.lessonId}`, { state: { lessonName: lesson.name } })}
-      >
-        Manage Words
-      </button>
-      <button
-        className="action-btn blue-btn"
-        onClick={(e) => {
-          e.stopPropagation();
-          handleDeleteLesson(lesson); // Call handleDeleteLesson when the trash icon is clicked
-        }}
-      >
-        <FontAwesomeIcon icon={faTrash} /> Delete
-      </button>
-    </td>
-  </tr>
+  return lessons.map((lesson) => (
+    <tr key={lesson.lessonId}>
+      <td>{lesson.name}</td>
+      <td>{lesson.focus}</td>
+      <td>{lesson.sequence}</td>
+      <td>{lesson.category.name}</td>
+      <td>{`${lesson.createdBy.firstName} ${lesson.createdBy.lastName}`}</td>
+      <td>{new Date(lesson.createdDate).toLocaleDateString()}</td>
+      <td className="lesson-actions-cell">
+        <button
+          className="lesson-action-btn"
+          style={{ backgroundColor: "#4f46e5" }}
+          onClick={(e) => {
+            e.stopPropagation();
+            openModal("lessons", lesson);
+          }}
+        >
+          <FontAwesomeIcon icon={faEdit} /> Edit
+        </button>
+        <button
+          className="lesson-action-btn manage-words-btn"
+          style={{ backgroundColor: "#3b82f6" }}
+          onClick={() => navigate(`/words/${lesson.lessonId}`, { state: { lessonName: lesson.name } })}
+        >
+          <FontAwesomeIcon icon={faFolder} /> Manage Words
+        </button>
+        <button
+          className="lesson-action-btn delete-action-btn"
+          style={{ backgroundColor: "rgba(229, 62, 62, 0.8)", color: "white" }}
+          onClick={(e) => {
+            e.stopPropagation();
+            handleDeleteLesson(lesson);
+          }}
+        >
+          <FontAwesomeIcon icon={faTrash} /> Delete
+        </button>
+      </td>
+    </tr>
 ));
 };
 
@@ -603,7 +662,6 @@ const TeacherDashboard = () => {
       localStorage.removeItem("user");
       localStorage.removeItem("token");
       navigate("/login");
-      showNotification("Session expired. Please login again.", "error");
     }
   };
 
@@ -631,11 +689,19 @@ const TeacherDashboard = () => {
       if (editingItem) {
         // Call the updateCategory function if editing
         await updateCategory(editingItem.categoryId, newCategory);
-        showNotification("Category updated successfully!");
+        setNotification({
+          show: true,
+          message: "Category updated successfully!",
+          type: "success"
+        });
       } else {
         // Call the createCategory function if adding a new category
         await createCategory(newCategory, user.id);
-        showNotification("Category added successfully!");
+        setNotification({
+          show: true,
+          message: "Category added successfully!",
+          type: "success"
+        });
       }
 
       // Refresh the categories list
@@ -644,9 +710,23 @@ const TeacherDashboard = () => {
 
       // Close the modal
       setShowModal(false);
+      
+      // Auto-hide notification after 5 seconds
+      setTimeout(() => {
+        setNotification({ show: false, message: "", type: "" });
+      }, 5000);
     } catch (error) {
       console.error("Error saving category:", error);
-      showNotification("Failed to save category. Please try again.", "error");
+      setNotification({
+        show: true,
+        message: "Failed to save category. Please try again.",
+        type: "error"
+      });
+      
+      // Auto-hide notification after 5 seconds
+      setTimeout(() => {
+        setNotification({ show: false, message: "", type: "" });
+      }, 5000);
     }
   };
 
@@ -680,11 +760,19 @@ const TeacherDashboard = () => {
       if (isEditing) {
         // Call the updateLesson function if editing
         await updateLesson(editingItem.lessonId, newLesson);
-        showNotification("Lesson updated successfully!");
+        setNotification({
+          show: true,
+          message: "Lesson updated successfully!",
+          type: "success"
+        });
       } else {
         // Call the createLesson function if adding a new lesson
         await createLesson(newLesson, user.id);
-        showNotification("Lesson added successfully!");
+        setNotification({
+          show: true,
+          message: "Lesson added successfully!",
+          type: "success"
+        });
       }
 
       // Refresh the lessons list
@@ -693,9 +781,23 @@ const TeacherDashboard = () => {
 
       // Close the modal
       setShowModal(false);
+      
+      // Auto-hide notification after 5 seconds
+      setTimeout(() => {
+        setNotification({ show: false, message: "", type: "" });
+      }, 5000);
     } catch (error) {
       console.error("Error saving lesson:", error);
-      showNotification("Failed to save lesson. Please try again.", "error");
+      setNotification({
+        show: true,
+        message: "Failed to save lesson. Please try again.",
+        type: "error"
+      });
+      
+      // Auto-hide notification after 5 seconds
+      setTimeout(() => {
+        setNotification({ show: false, message: "", type: "" });
+      }, 5000);
     }
   };
 
@@ -718,7 +820,6 @@ const TeacherDashboard = () => {
       setAnalyticsLessons(lessonsWithAttempts);
     } catch (error) {
       console.error("Failed to fetch analytics data:", error);
-      showNotification("Failed to load analytics data.", "error");
     }
   };
 
@@ -761,7 +862,7 @@ const TeacherDashboard = () => {
                 <td colSpan="3">No lessons found.</td>
               </tr>
             ) : (
-              filteredLessons.map((lesson) => (
+                            filteredLessons.map((lesson) => (
                 <tr key={lesson.lessonId}>
                   <td
                     style={{ color: "blue", cursor: "pointer", textDecoration: "underline" }}
@@ -786,25 +887,55 @@ const TeacherDashboard = () => {
     }
   }, [activeSection]);
 
+  // Add a new function to render notifications
+  const renderNotification = () => {
+    if (!notification.show) return null;
+    
+    return ReactDOM.createPortal(
+      <div className={`notification-overlay`}>
+        <div className={`notification-modal ${notification.type}`}>
+          <div className="notification-icon">
+            {notification.type === 'success' && <FontAwesomeIcon icon={faCheckCircle} />}
+            {notification.type === 'error' && <FontAwesomeIcon icon={faExclamationCircle} />}
+            {notification.type === 'info' && <FontAwesomeIcon icon={faInfoCircle} />}
+          </div>
+          <div className="notification-content">
+            <p>{notification.message}</p>
+          </div>
+          <button 
+            className="notification-button" 
+            onClick={() => setNotification({ show: false, message: "", type: "" })}
+          >
+            <FontAwesomeIcon icon={faTimes} />
+          </button>
+        </div>
+      </div>,
+      document.body
+    );
+  };
+
   return (
     <div className="dashboard-container">
       <header className="dashboard-header">
-        <div className="container">
-          <div className="logo">
-            <Link to="/">
-              <img src={logo} alt="Pronounceit Logo" />
-            </Link>
-          </div>
-          <div className="user-card" ref={userCardRef} onClick={toggleDropdown}>
-            <div className="default-avatar">
-              <span>{user.firstName.charAt(0)}</span>
-            </div>
-            <div className="user-info">
-              <p>{`${user.firstName} ${user.lastName}`}</p>
-            </div>
-          </div>
-        </div>
-      </header>
+  <div className="container">
+    <div className="logo">
+      <Link to="/">
+        <img src={logo} alt="Pronounceit Logo" />
+      </Link>
+    </div>
+    <div className="dashboard-title-header">
+      <h1>TEACHER DASHBOARD</h1>
+    </div>
+    <div className="user-card" ref={userCardRef} onClick={toggleDropdown}>
+      <div className="default-avatar">
+        <span>{user.firstName.charAt(0)}</span>
+      </div>
+      <div className="user-info">
+        <p>{`${user.firstName} ${user.lastName}`}</p>
+      </div>
+    </div>
+  </div>
+</header>
 
       <div className="dashboard single">
         <aside className="sidebar">
@@ -815,14 +946,14 @@ const TeacherDashboard = () => {
                 onClick={() => handleNavClick("lessons")}
               >
                 <FontAwesomeIcon icon={faBookOpen} className="sidebar-icon" />
-                Add Lessons
+                Lessons
               </li>
               <li 
                 className={activeSection === "categories" ? "active" : ""}
                 onClick={() => handleNavClick("categories")}
               >
                 <FontAwesomeIcon icon={faFolder} className="sidebar-icon" />
-                Add Categories
+                Categories
               </li>
               <li 
                 className={activeSection === "analytics" ? "active" : ""}
@@ -842,6 +973,7 @@ const TeacherDashboard = () => {
 
       {renderDropdown()}
       {renderModal()}
+      {renderDeleteModal()}
       {renderNotification()}
     </div>
   );

@@ -36,6 +36,32 @@ body {
   overflow: hidden;
   height: 70px;
 }
+/* Dashboard title header */
+.dashboard-title-header {
+  display: flex;
+  justify-content: flex-start; /* Changed from center to flex-start */
+  align-items: center;
+  flex-grow: 1;
+  margin-left: 360px; /* Added margin-left instead of padding-right */
+}
+
+.dashboard-title-header h1 {
+  font-weight: bold;
+  font-size: 1.5rem;
+  color: #333;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin: 0;
+  text-align: center;
+}
+
+/* Update container to use flexbox */
+.dashboard-header .container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 20px;
+}
 
 .dashboard-header::before {
   content: '';
@@ -474,10 +500,19 @@ button.dropdown-item:hover,
 }
 
 /* Action Buttons Styling */
+s-cell {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Action Buttons Styling */
 .action-buttons-cell {
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
+  justify-content: flex-start;
+  min-width: 280px; /* Ensures minimum width for buttons */
 }
 
 .action-btn.blue-btn {
@@ -493,27 +528,141 @@ button.dropdown-item:hover,
   align-items: center;
   justify-content: center;
   min-width: 80px;
-}
-
-.action-btn.blue-btn .fa-trash {
-  margin-right: 5px;
-}
-
-.action-btn.blue-btn .fa-edit {
-  margin-right: 5px;
+  flex: 1; /* Makes buttons take equal space */
 }
 
 .words-btn.action-btn.blue-btn {
   background-color: #3b82f6;
   color: white;
   min-width: 120px;
+  flex: 1.5; /* Gives the middle button slightly more space */
 }
 
-/* Hover effects */
-.action-btn.blue-btn:hover {
-  background-color: #2563eb;
-  box-shadow: 0 2px 5px rgba(37, 99, 235, 0.3);
-  transform: translateY(-2px);
+/* Updated responsive media query for action buttons */
+@media (max-width: 1024px) {
+  .items-table {
+    table-layout: fixed;
+    width: 100%;
+  }
+  
+  .action-buttons-cell {
+    min-width: 220px;
+  }
+}
+
+@media (max-width: 768px) {
+  .action-buttons-cell {
+    flex-direction: column;
+    gap: 6px;
+    min-width: 120px;
+  }
+  
+  .action-btn.blue-btn {
+    width: 100%;
+    padding: 6px 8px;
+    font-size: 12px;
+  }
+  
+  .words-btn.action-btn.blue-btn {
+    order: -1; /* Makes the Manage Words button appear first on mobile */
+  }
+  
+  .items-table th:nth-last-child(2),
+  .items-table td:nth-last-child(2),
+  .items-table th:nth-last-child(3),
+  .items-table td:nth-last-child(3) {
+    display: none; /* Hide less important columns on mobile */
+  }
+}
+
+/* Lesson table specific styles for action buttons - updated for vertical layout */
+.lesson-actions-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  justify-content: center;
+  white-space: nowrap;
+  min-width: 130px;
+  max-width: 150px;
+  padding: 5px;
+}
+
+.lesson-action-btn {
+  padding: 6px 10px;
+  font-size: 13px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  background-color: #3b82f6;
+  color: white;
+  transition: all 0.2s ease;
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+}
+
+.lesson-action-btn svg {
+  margin-right: 6px;
+  font-size: 12px;
+}
+
+/* Adjust table column widths to accommodate vertical buttons */
+.items-table th:last-child,
+.items-table td:last-child {
+  width: 140px;
+  max-width: 150px;
+}
+
+/* Responsive adjustments for lesson tables */
+@media (max-width: 1024px) {
+  .lesson-actions-cell {
+    min-width: 220px;
+  }
+  
+  .lesson-action-btn {
+    font-size: 11px;
+    padding: 4px 6px;
+  }
+}
+
+@media (max-width: 768px) {
+  .lesson-actions-cell {
+    flex-direction: column;
+    gap: 3px;
+    min-width: 80px;
+  }
+  
+  .lesson-action-btn {
+    width: 100%;
+    max-width: 100%;
+    padding: 3px 5px;
+    font-size: 10px;
+  }
+  
+  .items-table th:nth-child(5),
+  .items-table td:nth-child(5),
+  .items-table th:nth-child(6),
+  .items-table td:nth-child(6) {
+    display: none; /* Hide created by and date columns on smaller screens */
+  }
+}
+
+@media (max-width: 576px) {
+  .items-table {
+    font-size: 12px;
+  }
+  
+  .items-table th,
+  .items-table td {
+    padding: 8px 6px;
+  }
+  
+  .items-table th:nth-last-child(4),
+  .items-table td:nth-last-child(4) {
+    display: none; /* Hide additional column on very small screens */
+  }
 }
 
 /* Delete Button */
