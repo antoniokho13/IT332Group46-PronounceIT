@@ -19,19 +19,19 @@
         <!-- Add spacing at top to push content down -->
         <Space
             android:layout_width="match_parent"
-            android:layout_height="20dp" />
+            android:layout_height="15dp" />
 
         <TextView
             android:id="@+id/lessonNameTextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="30sp"
+            android:textSize="22sp"
             android:textStyle="bold"
             android:textColor="#F3AD00"
             android:text="Lesson: "
-            android:layout_marginBottom="12dp"
+            android:layout_marginBottom="8dp"
             android:background="#33FFFFFF"
-            android:padding="8dp"
+            android:padding="6dp"
             android:elevation="4dp"
             android:shadowColor="#000000"
             android:shadowDx="2"
@@ -44,15 +44,15 @@
             android:id="@+id/wordTextView"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:textSize="45sp"
+            android:textSize="36sp"
             android:textStyle="bold"
             android:textColor="#F3AD00"
             android:text="Word"
-            android:layout_marginBottom="12dp"
+            android:layout_marginBottom="8dp"
             android:background="#33FFFFFF"
-            android:padding="16dp"
-            android:paddingStart="32dp"
-            android:paddingEnd="32dp"
+            android:padding="10dp"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
             android:elevation="6dp"
             android:shadowColor="#000000"
             android:shadowDx="1"
@@ -68,18 +68,18 @@
             android:layout_height="wrap_content"
             android:orientation="horizontal"
             android:gravity="center"
-            android:layout_marginBottom="12dp">
+            android:layout_marginBottom="8dp">
 
             <TextView
                 android:id="@+id/scoreTrackerTextView"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Score: 0/0"
-                android:textSize="28sp"
+                android:textSize="20sp"
                 android:textStyle="bold"
                 android:textColor="#F3AD00"
                 android:background="#33FFFFFF"
-                android:padding="8dp"
+                android:padding="6dp"
                 android:layout_marginEnd="16dp"
                 android:fontFamily="@font/nunito"/>
 
@@ -88,11 +88,11 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Word: 1/10"
-                android:textSize="28sp"
+                android:textSize="20sp"
                 android:textStyle="bold"
                 android:textColor="#F3AD00"
                 android:background="#33FFFFFF"
-                android:padding="8dp"
+                android:padding="6dp"
                 android:fontFamily="@font/nunito"/>
         </LinearLayout>
 
@@ -101,34 +101,54 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Attempts left: 5"
-            android:textSize="32sp"
+            android:textSize="24sp"
             android:textStyle="bold"
             android:textColor="#F3AD00"
-            android:layout_marginBottom="16dp"
+            android:layout_marginBottom="12dp"
             android:background="#33FFFFFF"
-            android:padding="8dp"
+            android:padding="6dp"
             android:elevation="4dp"
             android:fontFamily="@font/nunito"/>
 
         <Space
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1"/>
+            android:layout_weight="0.5"/>
 
-        <ImageView
-            android:id="@+id/wordImageView"
-            android:layout_width="220dp"
-            android:layout_height="180dp"
-            android:scaleType="centerCrop"
-            android:layout_marginBottom="16dp"
-            android:src="@android:drawable/ic_menu_gallery"
-            android:background="@drawable/kid_friendly_image_border"
-            android:padding="12dp" />
+        <!-- Container for the square image with animated border -->
+        <FrameLayout
+            android:id="@+id/imageFrameLayout"
+            android:layout_width="300dp"
+            android:layout_height="300dp"
+            android:background="@drawable/animated_image_border"
+            android:padding="12dp"
+            android:layout_marginBottom="12dp">
+
+            <!-- The inner container maintains the 1:1 aspect ratio -->
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@android:color/white">
+
+                <ImageView
+                    android:id="@+id/wordImageView"
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:scaleType="centerCrop"
+                    android:src="@android:drawable/ic_menu_gallery"
+                    android:contentDescription="Word image"
+                    app:layout_constraintDimensionRatio="1:1"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"/>
+            </androidx.constraintlayout.widget.ConstraintLayout>
+        </FrameLayout>
 
         <FrameLayout
-            android:layout_width="140dp"
-            android:layout_height="140dp"
-            android:layout_marginBottom="30dp">  <!-- Increased bottom margin for more space -->
+            android:layout_width="90dp"
+            android:layout_height="90dp"
+            android:layout_marginBottom="16dp">
 
             <ImageButton
                 android:id="@+id/playAudioButton"
@@ -180,7 +200,7 @@
         <ImageButton
             android:id="@+id/recordPronunciationButton"
             android:layout_width="match_parent"
-            android:layout_height="100dp"
+            android:layout_height="90dp"
             android:layout_gravity="bottom|center_horizontal"
             android:background="@android:color/transparent"
             android:contentDescription="Record pronunciation"
@@ -191,7 +211,7 @@
         <ImageButton
             android:id="@+id/stopRecordingButton"
             android:layout_width="match_parent"
-            android:layout_height="100dp"
+            android:layout_height="90dp"
             android:layout_gravity="bottom|center_horizontal"
             android:background="@android:color/transparent"
             android:contentDescription="Stop recording"

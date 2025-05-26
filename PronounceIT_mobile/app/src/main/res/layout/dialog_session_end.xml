@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:gravity="center"
+    android:padding="16dp"
+    android:background="@drawable/rainbow_gradient_background">
+
+    <ImageView
+        android:id="@+id/congratsImageView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:adjustViewBounds="true"
+        android:src="@drawable/congratulations"
+        android:contentDescription="Congratulations"
+        android:layout_marginBottom="16dp" />
+
+    <TextView
+        android:id="@+id/scoreMessageTextView"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="20sp"
+        android:textAlignment="center"
+        android:textColor="#FFFFFF"
+        android:textStyle="bold"
+        android:shadowColor="#000000"
+        android:shadowDx="1"
+        android:shadowDy="1"
+        android:shadowRadius="2"
+        android:layout_marginBottom="16dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center">
+
+        <!-- Return to Lessons Button with text -->
+        <LinearLayout
+            android:id="@+id/returnButtonLayout"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:layout_marginEnd="8dp">
+
+            <ImageButton
+                android:id="@+id/returnToLessonsButton"
+                android:layout_width="match_parent"
+                android:layout_height="70dp"
+                android:src="@android:drawable/ic_menu_revert"
+                android:background="@drawable/raindbow_button"
+                android:padding="16dp"
+                android:contentDescription="Return to Lessons" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Return"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:gravity="center"
+                android:textStyle="bold"
+                android:paddingTop="4dp"
+                android:shadowColor="#000000"
+                android:shadowDx="1"
+                android:shadowDy="1"
+                android:shadowRadius="2" />
+        </LinearLayout>
+
+        <!-- Try Again Button with text -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center"
+            android:layout_marginEnd="8dp">
+
+            <ImageButton
+                android:id="@+id/tryAgainButton"
+                android:layout_width="match_parent"
+                android:layout_height="70dp"
+                android:src="@android:drawable/ic_menu_rotate"
+                android:background="@drawable/raindbow_button"
+                android:padding="16dp"
+                android:contentDescription="Try Again" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Try Again"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:gravity="center"
+                android:textStyle="bold"
+                android:paddingTop="4dp"
+                android:shadowColor="#000000"
+                android:shadowDx="1"
+                android:shadowDy="1"
+                android:shadowRadius="2" />
+        </LinearLayout>
+
+        <!-- View Score Button with text -->
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:gravity="center">
+
+            <ImageButton
+                android:id="@+id/viewScoreDetailsButton"
+                android:layout_width="match_parent"
+                android:layout_height="70dp"
+                android:src="@android:drawable/ic_menu_info_details"
+                android:background="@drawable/raindbow_button"
+                android:padding="16dp"
+                android:contentDescription="View Score Details" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="View Score"
+                android:textColor="#FFFFFF"
+                android:textSize="14sp"
+                android:gravity="center"
+                android:textStyle="bold"
+                android:paddingTop="4dp"
+                android:shadowColor="#000000"
+                android:shadowDx="1"
+                android:shadowDy="1"
+                android:shadowRadius="2" />
+        </LinearLayout>
+    </LinearLayout>
+</LinearLayout>
