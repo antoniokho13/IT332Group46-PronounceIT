@@ -154,8 +154,8 @@ function Home() {
       </div>
       <div className="feature-card">
         <div className="feature-icon trophy">🏆</div>
-        <h3>Achievements & Rewards</h3>
-        <p>Earn badges, points, and prizes as you make progress on your learning journey.</p>
+        <h3>Improve Pronunciation</h3>
+        <p>Master challenging sounds through guided practice sessions and develop clear, confident speech patterns.</p>
       </div>
       <div className="feature-card">
         <div className="feature-icon school">🏫</div>
@@ -183,18 +183,18 @@ function Home() {
             </div>
             <div className="step">
               <div className="step-number">2</div>
-              <h3>Choose Activities</h3>
-              <p>Select from hundreds of fun learning games and activities.</p>
+              <h3>Choose Lessons</h3>
+              <p>Select from a variety of interactive pronunciation lessons designed specifically for children's learning.</p>
             </div>
             <div className="step">
               <div className="step-number">3</div>
-              <h3>Earn Rewards</h3>
-              <p>Complete challenges to earn points, badges, and unlock new content.</p>
+              <h3>Improvement of Pronunciation</h3>
+              <p>Practice key sounds, receive instant feedback, and watch your child's speaking confidence grow with each session.</p>
             </div>
             <div className="step">
               <div className="step-number">4</div>
               <h3>Track Progress</h3>
-              <p>Parents and teachers can monitor learning achievements.</p>
+              <p>Teachers can monitor learning achievements.</p>
             </div>
           </div>
         </div>
@@ -222,7 +222,7 @@ function Home() {
           <img src={require('../assets/images/mel.png')} alt="Rommel John Pobadora" />
         </div>
         <h3>Rommel John Pobadora</h3>
-        <p className="team-role">Frontend Developer</p>
+        <p className="team-role">Frontend Developer & Graphic Designer</p>
       </div>
       
       <div className="team-member">
@@ -308,7 +308,7 @@ function Home() {
           <div className="faq-grid">
             <div className="faq-item">
               <h3>How does PronounceIT work?</h3>
-              <p>PronounceIT uses gamification techniques to make learning fun for kids. Children complete interactive activities to earn points and rewards while building knowledge in various subjects.</p>
+              <p>PronounceIT uses gamification techniques to make learning fun for kids. Children complete interactive activities to track scores while building knowledge in various subjects.</p>
             </div>
             <div className="faq-item">
               <h3>Is PronounceIT safe for kids?</h3>
@@ -319,8 +319,8 @@ function Home() {
               <p>PronounceIT content tailored to different age groups from preschool to middle school.</p>
             </div>
             <div className="faq-item">
-              <h3>Can I cancel my subscription at any time?</h3>
-              <p>Yes, you can cancel your subscription at any time. There are no long-term commitments.</p>
+             <h3>Can PronounceIT improve my child's pronunciation?</h3>
+<p>Absolutely! PronounceIT is specifically designed to help children master difficult sounds and develop clearer speech patterns. Our interactive exercises and immediate feedback system have been shown to significantly improve pronunciation skills in children of all ages.</p>
             </div>
           </div>
         </div>

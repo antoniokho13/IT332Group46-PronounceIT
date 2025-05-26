@@ -1,15 +1,13 @@
 import {
-  faBookOpen,
-  faChartLine,
-  faHome,
-  faMedal,
+  faDownload,
   faSignOutAlt,
   faUser
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import ReactDOM from "react-dom";
 import { Link, useNavigate } from "react-router-dom";
+import "../assets/css/AppPromo.css"; // New CSS file for the promotional content
 import "../assets/css/Dashboard.css";
 import { logout } from "../services/authService";
 import { getUserById } from "../services/userService";
@@ -120,6 +118,7 @@ const UserDashboard = () => {
 
   return (
     <div className="dashboard-container">
+      {/* Keep the header intact */}
       <header className="dashboard-header">
         <div className="container">
           <div className="logo">
@@ -136,108 +135,67 @@ const UserDashboard = () => {
             </div>
             <div className="user-info">
               <p>{`${user.firstName} ${user.lastName}`}</p>
-              {/* Dropdown icon is hidden via CSS */}
             </div>
           </div>
         </div>
       </header>
 
-      <div className="dashboard single">
-        <aside className="sidebar">
-          <nav>
-            <ul>
-              <li className="active">
-                <FontAwesomeIcon icon={faHome} className="sidebar-icon" />
-                Dashboard
-              </li>
-              <li>
-                <FontAwesomeIcon icon={faChartLine} className="sidebar-icon" />
-                My Progress
-              </li>
-              <li>
-                <FontAwesomeIcon icon={faBookOpen} className="sidebar-icon" />
-                Lessons
-              </li>
-              <li>
-                <FontAwesomeIcon icon={faMedal} className="sidebar-icon" />
-                Achievements
-              </li>
-            </ul>
-          </nav>
-        </aside>
-
-        <main className="content">
-          <h2 className="dashboard-title">Student Dashboard</h2>
-
-          <div className="metrics">
-            <div className="metric lessons">
-              <p>Completed Lessons</p>
-              <h4>24</h4>
-            </div>
-            <div className="metric stars">
-              <p>Stars Earned</p>
-              <h4>152</h4>
-            </div>
-            <div className="metric hours">
-              <p>Practice Hours</p>
-              <h4>18.5</h4>
-            </div>
-          </div>
-
-          <div className="marketplace">
-            <div className="card analytics">
-              <p>Pronunciation Overview</p>
-              <h4>75% Accuracy</h4>
-              <button>START PRACTICE</button>
-            </div>
-            <div className="card flow">
-              <p>Daily Streak</p>
-              <h4>7 Days</h4>
-              <p>Keep it up!</p>
-            </div>
-            <div className="card upgrade">
-              <p>Achievements</p>
-              <h4>3 Badges Earned</h4>
-              <p>View your learning milestones</p>
-            </div>
-          </div>
-
-          <div className="orders">
-            <h3>Recent Activities</h3>
-            <ul>
-              <li>Completed "Vowel Sounds" lesson — 15 stars earned</li>
-              <li>Played "Word Match" game — 8 stars earned</li>
-              <li>Completed daily practice — 5 stars earned</li>
-              <li>Finished "Consonant Blends" quiz — 12 stars earned</li>
-            </ul>
-          </div>
-
-          <div className="report-progress">
-            <h3>Progress Report</h3>
-
-            <div className="graph-container animate-bars">
-              <div className="grid-lines">
-                <div className="grid-line" data-percentage="100%"></div>
-                <div className="grid-line" data-percentage="75%"></div>
-                <div className="grid-line" data-percentage="50%"></div>
-                <div className="grid-line" data-percentage="25%"></div>
-                <div className="grid-line" data-percentage="0%"></div>
+      {/* New content area for app promotion */}
+      <div className="app-promo-container">
+        <div className="app-promo-content">
+          <div className="app-promo-text">
+            <h1>Get PronounceIT App Now!</h1>
+            <p className="app-description">
+              Take your pronunciation practice anywhere with our mobile app. Perfect for kids to learn on the go!
+            </p>
+            
+            <div className="app-features">
+              <div className="feature-item">
+                <div className="feature-icon">🎮</div>
+                <div className="feature-text">
+                  <h3>Fun Games</h3>
+                  <p>Interactive games that make learning pronunciation enjoyable</p>
+                </div>
               </div>
-              <div className="chart-bar beginner">
-                <div className="chart-bar-percentage">75%</div>
-                <div className="chart-bar-label">Beginner</div>
+              
+              <div className="feature-item">
+                <div className="feature-icon">🏆</div>
+                <div className="feature-text">
+                  <h3>Track Progress</h3>
+                  <p>Monitor improvement and celebrate achievements</p>
+                </div>
               </div>
-              <div className="chart-bar intermediate">
-                <div className="chart-bar-percentage">40%</div>
-                <div className="chart-bar-label">Intermediate</div>
-              </div>
-              <div className="chart-bar advanced">
-                <div className="chart-bar-percentage">15%</div>
-                <div className="chart-bar-label">Advanced</div>
+              
+              <div className="feature-item">
+                <div className="feature-icon">🔊</div>
+                <div className="feature-text">
+                  <h3>Voice Recognition</h3>
+                  <p>Advanced technology to help perfect pronunciation</p>
+                </div>
               </div>
             </div>
+            
+            <div className="app-buttons">
+              <a 
+                href="https://drive.google.com/file/d/16rKD6D6HjUkqAm33z03bHZBVezKTKfKX/view?fbclid=IwY2xjawKhtLZleHRuA2FlbQIxMQABHq62w6Xx3MeKfVZb0wCRgClzVuz4uNxs5zaMnTtwSAE6vndD3aC-0HCG0Uwo_aem_u6im9xfivCshzn0oPvEdIQ" 
+                className="google-play-btn"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <FontAwesomeIcon icon={faDownload} />
+                Download for Android
+              </a>
+            </div>
           </div>
-        </main>
+          
+          <div className="app-promo-image">
+            <img src={require("../assets/images/logo.png")} alt="PronounceIT App Preview" />
+            <div className="app-qr-code">
+              <img src={require("../assets/images/PronounceIT.png")} alt="QR Code to download app" />
+              <p>Scan to download</p>
+            </div>
+          </div>
+        </div>
       </div>
 
       {renderDropdown()}
