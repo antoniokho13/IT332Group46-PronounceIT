@@ -44,7 +44,7 @@
   border-radius: 10px;
   overflow: hidden;
   box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-  table-layout: fixed;
+  table-layout: auto; /* Change from fixed to auto to prevent cutoff */
 }
 
 .items-table th, 
@@ -52,6 +52,8 @@
   padding: 12px 15px;
   text-align: left;
   vertical-align: middle;
+  word-break: normal;
+  max-width: 200px; /* Maximum width for any cell */
 }
 
 .items-table th {
@@ -67,27 +69,30 @@
 
 /* Column widths */
 .items-table th:nth-child(1) {
-  width: 15%;
+  width: auto;
+  min-width: 100px;
 }
 
 .items-table th:nth-child(2) {
-  width: 20%;
+  width: auto;
 }
 
 .items-table th:nth-child(3) {
-  width: 15%;
+  width: auto;
+  min-width: 100px;
 }
 
 .items-table th:nth-child(4) {
-  width: 15%;
+  width: auto;
 }
 
 .items-table th:nth-child(5) {
-  width: 15%;
+  width: auto;
 }
 
 .items-table th:nth-child(6) {
-  width: 20%;
+  width: auto;
+  min-width: 200px; /* Give more space to the action buttons column */
 }
 
 /* Image styling */
@@ -107,9 +112,13 @@
 /* Action buttons styling */
 .action-buttons-cell {
   display: flex;
-  justify-content: center; /* Center the buttons horizontally */
-  align-items: center; /* Center vertically */
-  gap: 8px; /* Smaller gap between buttons */
+  flex-direction: row; /* Keep buttons in one row */
+  flex-wrap: wrap; /* Allow wrapping on smaller screens */
+  gap: 8px;
+  justify-content: center;
+  align-items: center;
+  padding: 10px 5px;
+  min-height: 60px; /* Ensure enough height for buttons */
 }
 
 .action-btn.blue-btn {
@@ -125,6 +134,8 @@
   min-width: 80px;
   cursor: pointer;
   transition: all 0.2s ease;
+  margin: 2px;
+  font-size: 13px; /* Match TeacherDashboard font size */
 }
 
 .action-btn.blue-btn:hover {
@@ -289,28 +300,83 @@
 .submit-btn:hover {
   background-color: #1a68c7;
 }
+/* Center the lesson title */
+.dashboard-title.text-center {
+  text-align: center;
+  font-size: 26px;
+  margin-bottom: 30px;
+  color: #333;
+  font-weight: 600;
+}
 
+/* Container to align back button and add button */
+.section-header.buttons-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  width: 100%;
+}
+
+/* Style the back button to match the app theme */
+.blue-back-btn {
+  background-color: #4f46e5;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 10px 20px;
+  cursor: pointer;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: all 0.2s ease;
+}
+
+.blue-back-btn:hover {
+  background-color: #4338ca;
+  transform: translateX(-3px);
+}
+
+/* Ensure both buttons have matching heights */
+.section-header button {
+  height: 42px;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+  .section-header.buttons-container {
+    flex-direction: column;
+    gap: 10px;
+  }
+  
+  .blue-back-btn, .add-button {
+    width: 100%;
+  }
+  
+  .dashboard-title.text-center {
+    font-size: 22px;
+  }
+}
 /* Responsive styling */
 @media (max-width: 768px) {
   .action-buttons-cell {
     flex-direction: column;
     gap: 5px;
+    padding: 10px 0;
   }
   
-  .action-btn.blue-btn,
-  .edit-btn,
-  .delete-btn,
-  .play-audio-btn {
+  .action-btn.blue-btn {
     width: 100%;
+    margin: 3px 0;
   }
   
   .items-table {
     display: block;
     overflow-x: auto;
-    table-layout: auto;
   }
   
   .items-table td {
-    height: auto;
+    min-height: 40px;
   }
 }

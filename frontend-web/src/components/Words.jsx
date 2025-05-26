@@ -167,17 +167,19 @@ const Words = () => {
     );
   };
 
+  // Update the return statement to improve the styling and layout
   return (
     <div className="dashboard-container">
-      {/* Back Button */}
-      <button className="back-button" onClick={() => navigate("/teacher-dashboard")}>
-        Back to Dashboard
-      </button>
+      <h1 className="dashboard-title text-center">Words for Lesson: {lessonName}</h1>
 
-      <h1 className="dashboard-title">Words for Lesson: {lessonName}</h1>
-
-      {/* Add Word Button */}
-      <div className="section-header">
+      {/* Updated header section with both buttons aligned */}
+      <div className="section-header buttons-container">
+        <button 
+          className="back-button blue-back-btn" 
+          onClick={() => navigate("/teacher-dashboard")}
+        >
+          ← Back to Dashboard
+        </button>
         <button
           className="add-button"
           onClick={() => setShowModal(true)}

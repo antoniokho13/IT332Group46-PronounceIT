@@ -204,7 +204,7 @@ const Login = () => {
                   setShowRoleSelection(false);
                   setIsLogin(true);
                 }} className="switch-button">
-                  Sign In
+                  Log In
                 </button>
               </p>
             </div>
@@ -364,7 +364,7 @@ const Login = () => {
                 </div>
               )}
               <button type="submit" className="login-button" disabled={loading}>
-                {loading ? 'Processing...' : isLogin ? 'Sign In' : 'Create Account'}
+                {loading ? 'Processing...' : isLogin ? 'Log In' : 'Create Account'}
               </button>
             </form>
           )}
