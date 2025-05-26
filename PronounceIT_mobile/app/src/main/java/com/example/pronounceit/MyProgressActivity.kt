@@ -4,6 +4,8 @@ import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.view.animation.AnimationUtils
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.ListView
 import android.widget.SimpleAdapter
@@ -22,6 +24,11 @@ class MyProgressActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_myprogress)
+
+        // Apply bounce animation to the progress image
+        val progressImage = findViewById<ImageView>(R.id.progressImage)
+        val bounceAnimation = AnimationUtils.loadAnimation(this, R.anim.logo_bounce)
+        progressImage.startAnimation(bounceAnimation)
 
         // Make sure your layout has these IDs
         val listView = findViewById<ListView>(R.id.progressListView)
