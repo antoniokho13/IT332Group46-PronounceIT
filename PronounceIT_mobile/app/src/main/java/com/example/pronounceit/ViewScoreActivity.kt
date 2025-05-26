@@ -1,14 +1,16 @@
 package com.example.pronounceit
 
+import android.content.Context
+import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
-import android.widget.ListView
-import android.widget.SimpleAdapter
-import android.widget.TextView
-import android.widget.Toast
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.view.animation.AnimationUtils
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import com.example.pronounceit.network.RetrofitInstance
-import com.example.pronounceit.network.models.PronounciationAttemptEntity
 import com.example.pronounceit.network.models.WordResult
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -19,6 +21,11 @@ class ViewScoreActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_viewscore)
+
+        // Apply bounce animation to the score details title image
+        val scoreDetailsTitle = findViewById<ImageView>(R.id.scoreDetailsTitle)
+        val bounceAnimation = AnimationUtils.loadAnimation(this, R.anim.logo_bounce)
+        scoreDetailsTitle.startAnimation(bounceAnimation)
 
         val lessonId = intent.getLongExtra("lessonId", -1L)
         val sessionId = intent.getStringExtra("sessionId") ?: ""
@@ -37,13 +44,12 @@ class ViewScoreActivity : AppCompatActivity() {
 
         if (wordResults != null && wordResults.isNotEmpty()) {
             // Use local results for display
-            val totalScoreTextView = TextView(this)
+            val totalScoreView = layoutInflater.inflate(R.layout.score_header_view, null) as LinearLayout
+            val scoreTextView = totalScoreView.findViewById<TextView>(R.id.scoreText)
             val correct = wordResults.count { it.correct }
             val total = wordResults.size
-            totalScoreTextView.text = "Score: $correct/$total"
-            totalScoreTextView.textSize = 20f
-            totalScoreTextView.setPadding(32, 32, 32, 32)
-            rootLayout.addView(totalScoreTextView, 1)
+            scoreTextView.text = "$correct/$total"
+            rootLayout.addView(totalScoreView, 1)
 
             val data = wordResults.map {
                 mapOf(
@@ -52,13 +58,8 @@ class ViewScoreActivity : AppCompatActivity() {
                     "attempts" to "Attempts: ${it.attempts}"
                 )
             }
-            val adapter = SimpleAdapter(
-                this,
-                data,
-                android.R.layout.simple_list_item_2,
-                arrayOf("word", "result"),
-                intArrayOf(android.R.id.text1, android.R.id.text2)
-            )
+
+            val adapter = ScoreAdapter(this, data)
             listView.adapter = adapter
         } else {
             // Fallback to backend if wordResults is not available
@@ -71,15 +72,15 @@ class ViewScoreActivity : AppCompatActivity() {
                         val attempts = attemptsResponse.body() ?: emptyList()
                         val scoreRecord = scoreResponse.body()
 
-                        val totalScoreTextView = TextView(this@ViewScoreActivity)
+                        val totalScoreView = layoutInflater.inflate(R.layout.score_header_view, null) as LinearLayout
+                        val scoreTextView = totalScoreView.findViewById<TextView>(R.id.scoreText)
+
                         if (scoreRecord != null) {
-                            totalScoreTextView.text = "Score: ${scoreRecord.correctWords}/${scoreRecord.correctWords + scoreRecord.incorrectWords}"
+                            scoreTextView.text = "${scoreRecord.correctWords}/${scoreRecord.correctWords + scoreRecord.incorrectWords}"
                         } else {
-                            totalScoreTextView.text = "Score: N/A"
+                            scoreTextView.text = "N/A"
                         }
-                        totalScoreTextView.textSize = 20f
-                        totalScoreTextView.setPadding(32, 32, 32, 32)
-                        rootLayout.addView(totalScoreTextView, 1)
+                        rootLayout.addView(totalScoreView, 1)
 
                         val data = attempts.map {
                             mapOf(
@@ -88,13 +89,8 @@ class ViewScoreActivity : AppCompatActivity() {
                                 "attempts" to "Attempts: ${it.attemptNumber}"
                             )
                         }
-                        val adapter = SimpleAdapter(
-                            this@ViewScoreActivity,
-                            data,
-                            android.R.layout.simple_list_item_2,
-                            arrayOf("word", "result"),
-                            intArrayOf(android.R.id.text1, android.R.id.text2)
-                        )
+
+                        val adapter = ScoreAdapter(this@ViewScoreActivity, data)
                         listView.adapter = adapter
                     } else {
                         val errorMsg = "Failed to load score details: " +
@@ -105,6 +101,44 @@ class ViewScoreActivity : AppCompatActivity() {
                     }
                 }
             }
+        }
+    }
+
+    class ScoreAdapter(
+        private val context: Context,
+        private val data: List<Map<String, String>>
+    ) : BaseAdapter() {
+
+        override fun getCount(): Int = data.size
+        override fun getItem(position: Int): Any = data[position]
+        override fun getItemId(position: Int): Long = position.toLong()
+
+        override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
+            val view = convertView ?: LayoutInflater.from(context)
+                .inflate(R.layout.score_item_view, parent, false)
+
+            val item = data[position]
+            val wordText = view.findViewById<TextView>(R.id.wordText)
+            val resultText = view.findViewById<TextView>(R.id.resultText)
+            val attemptsText = view.findViewById<TextView>(R.id.attemptsText)
+            val resultIcon = view.findViewById<ImageView>(R.id.resultIcon)
+
+            wordText.text = item["word"]
+            resultText.text = item["result"]
+            attemptsText.text = item["attempts"]
+
+            // Set icon based on result
+            if (item["result"] == "Correct") {
+                resultIcon.setImageResource(android.R.drawable.ic_input_add)
+                resultIcon.setColorFilter(Color.GREEN)
+                view.setBackgroundResource(R.drawable.correct_item_background)
+            } else {
+                resultIcon.setImageResource(android.R.drawable.ic_delete)
+                resultIcon.setColorFilter(Color.RED)
+                view.setBackgroundResource(R.drawable.incorrect_item_background)
+            }
+
+            return view
         }
     }
 }
