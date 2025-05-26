@@ -1,31 +1,28 @@
 import {
   faBookOpen,
   faChartLine,
+  faEdit,
   faFolder,
-  faHome,
-  faLayerGroup,
   faPlus,
   faSignOutAlt,
   faTrash,
-  faUser,
-  faUsers
+  faUser
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import React, { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import ReactDOM from "react-dom";
 import { Link, useNavigate } from "react-router-dom";
 import "../assets/css/Dashboard.css";
 import logo from "../assets/images/logo.png";
-import { getAllCategories, createCategory, updateCategory, deleteCategory } from "../services/categoryService"; // Import the service functions
-import { getUserById } from "../services/userService"; // Import the service to fetch user data
-import { getAllLessons, updateLesson, createLesson, deleteLesson } from "../services/lessonService";
+import { createCategory, deleteCategory, getAllCategories, updateCategory } from "../services/categoryService"; // Import the service functions
+import { createLesson, deleteLesson, getAllLessons, updateLesson } from "../services/lessonService";
 import { getAllScoreRecords } from "../services/scoreService";
-import axios from "axios"; // If not already imported
+import { getUserById } from "../services/userService"; // Import the service to fetch user data
 
 const TeacherDashboard = () => {
   const [user, setUser] = useState({ firstName: "", lastName: "", id: null }); // Include `id` in the user state
   const [showDropdown, setShowDropdown] = useState(false);
-  const [activeSection, setActiveSection] = useState("dashboard");
+  const [activeSection, setActiveSection] = useState("lessons"); // Default to lessons instead of dashboard
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState("");
   const [editingItem, setEditingItem] = useState(null);
@@ -34,6 +31,13 @@ const TeacherDashboard = () => {
   const [lessons, setLessons] = useState([]); // Ensure lessons is initialized as an empty array
   const [analyticsLessons, setAnalyticsLessons] = useState([]);
   const [analyticsCategory, setAnalyticsCategory] = useState(""); // For filtering
+  // Notification state
+  const [notification, setNotification] = useState({
+    show: false,
+    message: '',
+    type: 'success'
+  });
+  
   const dropdownRef = useRef(null);
   const userCardRef = useRef(null);
   const modalRef = useRef(null);
@@ -82,6 +86,18 @@ const TeacherDashboard = () => {
     };
   }, [modalRef, showModal]);
 
+  const showNotification = (message, type = 'success') => {
+    setNotification({
+      show: true,
+      message,
+      type
+    });
+    // Auto-hide notification after 3 seconds
+    setTimeout(() => {
+      setNotification(prev => ({ ...prev, show: false }));
+    }, 3000);
+  };
+
   const toggleDropdown = (e) => {
     e.stopPropagation();
     setShowDropdown(!showDropdown);
@@ -108,14 +124,14 @@ const TeacherDashboard = () => {
     if (window.confirm(`Are you sure you want to delete the category "${category.name}"?`)) {
       try {
         await deleteCategory(category.categoryId); // Call the deleteCategory service
-        alert("Category deleted successfully!");
+        showNotification("Category deleted successfully!");
   
         // Refresh the categories list
         const updatedCategories = await getAllCategories();
         setCategories(updatedCategories);
       } catch (error) {
         console.error("Error deleting category:", error);
-        alert("Failed to delete category. Please try again.");
+        showNotification("Failed to delete category. Please try again.", "error");
       }
     }
   };
@@ -124,14 +140,14 @@ const TeacherDashboard = () => {
     if (window.confirm(`Are you sure you want to delete the lesson "${lesson.name}"?`)) {
       try {
         await deleteLesson(lesson.lessonId); // Call the deleteLesson service
-        alert("Lesson deleted successfully!");
+        showNotification("Lesson deleted successfully!");
   
         // Refresh the lessons list
         const updatedLessons = await getAllLessons();
         setLessons(updatedLessons);
       } catch (error) {
         console.error("Error deleting lesson:", error);
-        alert("Failed to delete lesson. Please try again.");
+        showNotification("Failed to delete lesson. Please try again.", "error");
       }
     }
   };
@@ -172,6 +188,32 @@ const TeacherDashboard = () => {
         </button>
       </div>,
       document.body
+    );
+  };
+
+  // Render notification
+  const renderNotification = () => {
+    if (!notification.show) return null;
+
+    return (
+      <div className="notification-overlay">
+        <div className={`notification-modal ${notification.type}`}>
+          <div className="notification-icon">
+            {notification.type === 'success' && '✓'}
+            {notification.type === 'error' && '✗'}
+            {notification.type === 'info' && 'ℹ'}
+          </div>
+          <div className="notification-content">
+            <p>{notification.message}</p>
+            <button 
+              onClick={() => setNotification(prev => ({ ...prev, show: false }))} 
+              className="notification-button"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
     );
   };
 
@@ -289,240 +331,7 @@ const TeacherDashboard = () => {
       );
     }
 
-    switch (modalType) {
-      case 'difficulty':
-        return (
-          <>
-            <h3>{isEditing ? "Edit Difficulty Level" : "Add New Difficulty Level"}</h3>
-            <form className="modal-form">
-              <div className="form-group">
-                <label htmlFor="difficultyName">Difficulty Name</label>
-                <input 
-                  type="text" 
-                  id="difficultyName" 
-                  placeholder="e.g., Beginner, Intermediate, Advanced" 
-                  defaultValue={isEditing ? editingItem.name : ""}
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="difficultyDescription">Description</label>
-                <textarea 
-                  id="difficultyDescription" 
-                  placeholder="Describe what learners can expect at this difficulty level"
-                  defaultValue={isEditing ? editingItem.description : ""}
-                ></textarea>
-              </div>
-              <div className="form-group">
-                <label htmlFor="difficultyOrder">Display Order</label>
-                <input 
-                  type="number" 
-                  id="difficultyOrder" 
-                  placeholder="e.g., 1, 2, 3" 
-                  defaultValue={isEditing ? editingItem.order : ""}
-                />
-              </div>
-              <div className="form-group">
-                <label>Status</label>
-                <div className="radio-group">
-                  <label>
-                    <input 
-                      type="radio" 
-                      name="status" 
-                      value="active" 
-                      defaultChecked={!isEditing || editingItem.status === "Active"} 
-                    /> Active
-                  </label>
-                  <label>
-                    <input 
-                      type="radio" 
-                      name="status" 
-                      value="inactive" 
-                      defaultChecked={isEditing && editingItem.status === "Inactive"} 
-                    /> Inactive
-                  </label>
-                </div>
-              </div>
-              <div className="modal-actions">
-                <button type="button" className="cancel-btn" onClick={() => setShowModal(false)}>Cancel</button>
-                <button type="submit" className="submit-btn">{isEditing ? "Update" : "Add"}</button>
-              </div>
-            </form>
-          </>
-        );
-      case 'lessons':
-        return (
-          <>
-            <h3>{isEditing ? "Edit Lesson" : "Add New Lesson"}</h3>
-            <form className="modal-form">
-              <div className="form-group">
-                <label htmlFor="lessonTitle">Lesson Title</label>
-                <input 
-                  type="text" 
-                  id="lessonTitle" 
-                  placeholder="Enter lesson title" 
-                  defaultValue={isEditing ? editingItem.title : ""}
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="lessonCategory">Category</label>
-                <select 
-                  id="lessonCategory"
-                  defaultValue={isEditing ? editingItem.category : ""}
-                >
-                  <option value="">Select a category</option>
-                  <option value="Vowel Sounds">Vowel Sounds</option>
-                  <option value="Consonant Sounds">Consonant Sounds</option>
-                  <option value="Word Stress">Word Stress</option>
-                  <option value="Intonation">Intonation</option>
-                </select>
-              </div>
-              <div className="form-group">
-                <label htmlFor="lessonDifficulty">Difficulty Level</label>
-                <select 
-                  id="lessonDifficulty"
-                  defaultValue={isEditing ? editingItem.difficulty : ""}
-                >
-                  <option value="">Select difficulty level</option>
-                  <option value="Beginner">Beginner</option>
-                  <option value="Intermediate">Intermediate</option>
-                  <option value="Advanced">Advanced</option>
-                </select>
-              </div>
-              <div className="form-group">
-                <label htmlFor="lessonDescription">Lesson Description</label>
-                <textarea 
-                  id="lessonDescription" 
-                  placeholder="Describe the lesson content"
-                  defaultValue={isEditing ? editingItem.description : ""}
-                ></textarea>
-              </div>
-              <div className="form-group">
-                <label htmlFor="lessonContent">Lesson Content</label>
-                <textarea 
-                  id="lessonContent" 
-                  className="content-editor" 
-                  placeholder="Enter detailed lesson content here"
-                  defaultValue={isEditing ? editingItem.content : ""}
-                ></textarea>
-              </div>
-              <div className="form-group">
-                <label>Upload Audio Examples</label>
-                <div className="file-upload-container">
-                  <label className="file-upload-label">
-                    <span>Choose audio files</span>
-                    <input 
-                      type="file" 
-                      accept="audio/*" 
-                      multiple 
-                      className="file-upload-input" 
-                      onChange={(e) => {
-                        // Optional: Show selected file names
-                        const fileCount = e.target.files.length;
-                        if (fileCount > 0) {
-                          const fileContainer = e.target.parentNode.parentNode;
-                          let fileInfo = fileContainer.querySelector('.file-selected');
-                          if (!fileInfo) {
-                            fileInfo = document.createElement('div');
-                            fileInfo.className = 'file-selected';
-                            fileContainer.appendChild(fileInfo);
-                          }
-                          fileInfo.textContent = `${fileCount} file${fileCount !== 1 ? 's' : ''} selected`;
-                        }
-                      }}
-                    />
-                  </label>
-                </div>
-              </div>
-              <div className="modal-actions">
-                <button type="button" className="cancel-btn" onClick={() => setShowModal(false)}>Cancel</button>
-                <button type="submit" className="submit-btn">{isEditing ? "Update" : "Add"}</button>
-              </div>
-            </form>
-          </>
-        );
-      case 'classes':
-        return (
-          <>
-            <h3>{isEditing ? "Edit Class" : "Add New Class"}</h3>
-            <form className="modal-form">
-              <div className="form-group">
-                <label htmlFor="className">Class Name</label>
-                <input 
-                  type="text" 
-                  id="className" 
-                  placeholder="e.g., Pronunciation Basics 101" 
-                  defaultValue={isEditing ? editingItem.name : ""}
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="classDescription">Description</label>
-                <textarea 
-                  id="classDescription" 
-                  placeholder="Describe this class and its purpose"
-                  defaultValue={isEditing ? editingItem.description : ""}
-                ></textarea>
-              </div>
-              <div className="form-group">
-                <label htmlFor="classDifficulty">Difficulty Level</label>
-                <select 
-                  id="classDifficulty"
-                  defaultValue={isEditing ? editingItem.difficulty : ""}
-                >
-                  <option value="">Select difficulty level</option>
-                  <option value="Beginner">Beginner</option>
-                  <option value="Intermediate">Intermediate</option>
-                  <option value="Advanced">Advanced</option>
-                </select>
-              </div>
-              <div className="form-group">
-                <label htmlFor="classCapacity">Student Capacity</label>
-                <input 
-                  type="number" 
-                  id="classCapacity" 
-                  placeholder="e.g., 30" 
-                  defaultValue={isEditing ? editingItem.capacity : ""}
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="classSchedule">Schedule</label>
-                <input 
-                  type="text" 
-                  id="classSchedule" 
-                  placeholder="e.g., Mon, Wed 10:00 AM - 11:30 AM" 
-                  defaultValue={isEditing ? editingItem.schedule : ""}
-                />
-              </div>
-              <div className="form-group">
-                <label>Status</label>
-                <div className="radio-group">
-                  <label>
-                    <input 
-                      type="radio" 
-                      name="status" 
-                      value="active" 
-                      defaultChecked={!isEditing || editingItem.status === "Active"} 
-                    /> Active
-                  </label>
-                  <label>
-                    <input 
-                      type="radio" 
-                      name="status" 
-                      value="inactive" 
-                      defaultChecked={isEditing && editingItem.status === "Inactive"} 
-                    /> Inactive
-                  </label>
-                </div>
-              </div>
-              <div className="modal-actions">
-                <button type="button" className="cancel-btn" onClick={() => setShowModal(false)}>Cancel</button>
-                <button type="submit" className="submit-btn">{isEditing ? "Update" : "Add"}</button>
-              </div>
-            </form>
-          </>
-        );
-      default:
-        return null;
-    }
+    return null;
   };
 
   // Modal component
@@ -542,99 +351,6 @@ const TeacherDashboard = () => {
   // Content sections based on activeSection state
   const renderContent = () => {
     switch(activeSection) {
-      case 'difficulty':
-        return (
-          <>
-            <h2 className="dashboard-title">Difficulty Levels Management</h2>
-            <div className="section-header">
-              <button className="add-button" onClick={() => openModal('difficulty')}>
-                <FontAwesomeIcon icon={faPlus} /> Add New Difficulty
-              </button>
-            </div>
-            <div className="existing-items">
-              <h3>Existing Difficulty Levels</h3>
-              <table className="items-table">
-                <thead>
-                  <tr>
-                    <th>Name</th>
-                    <th>Description</th>
-                    <th>Order</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr onClick={() => handleRowClick({ 
-                      name: "Beginner", 
-                      description: "Basic pronunciation for absolute beginners", 
-                      order: 1, 
-                      status: "Active" 
-                    }, 'difficulty')}>
-                    <td>Beginner</td>
-                    <td>Basic pronunciation for absolute beginners</td>
-                    <td>1</td>
-                    <td>Active</td>
-                    <td>
-                      <button 
-                        className="delete-btn" 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDelete({ name: "Beginner" }, 'difficulty');
-                        }}
-                      >
-                        <FontAwesomeIcon icon={faTrash} />
-                      </button>
-                    </td>
-                  </tr>
-                  <tr onClick={() => handleRowClick({
-                      name: "Intermediate", 
-                      description: "More advanced pronunciation patterns", 
-                      order: 2, 
-                      status: "Active"
-                    }, 'difficulty')}>
-                    <td>Intermediate</td>
-                    <td>More advanced pronunciation patterns</td>
-                    <td>2</td>
-                    <td>Active</td>
-                    <td>
-                      <button 
-                        className="delete-btn" 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDelete({ name: "Intermediate" }, 'difficulty');
-                        }}
-                      >
-                        <FontAwesomeIcon icon={faTrash} />
-                      </button>
-                    </td>
-                  </tr>
-                  <tr onClick={() => handleRowClick({
-                      name: "Advanced", 
-                      description: "Complex pronunciation rules and exceptions", 
-                      order: 3, 
-                      status: "Active"
-                    }, 'difficulty')}>
-                    <td>Advanced</td>
-                    <td>Complex pronunciation rules and exceptions</td>
-                    <td>3</td>
-                    <td>Active</td>
-                    <td>
-                      <button 
-                        className="delete-btn" 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDelete({ name: "Advanced" }, 'difficulty');
-                        }}
-                      >
-                        <FontAwesomeIcon icon={faTrash} />
-                      </button>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </>
-        );
       case 'lessons':
         return (
           <>
@@ -691,168 +407,33 @@ const TeacherDashboard = () => {
             </div>
           </>
         );
-      case 'classes':
+      case 'analytics':
+        return renderAnalyticsTable();
+      default:
         return (
           <>
-            <h2 className="dashboard-title">Classes Management</h2>
+            <h2 className="dashboard-title">Lessons Management</h2>
             <div className="section-header">
-              <button className="add-button" onClick={() => openModal('classes')}>
-                <FontAwesomeIcon icon={faPlus} /> Add New Class
+              <button className="add-button" onClick={() => openModal('lessons')}>
+                <FontAwesomeIcon icon={faPlus} /> Add New Lesson
               </button>
             </div>
             <div className="existing-items">
-              <h3>Existing Classes</h3>
+              <h3>Existing Lessons</h3>
               <table className="items-table">
                 <thead>
                   <tr>
-                    <th>Class Name</th>
-                    <th>Description</th>
-                    <th>Students</th>
+                    <th>Lesson Name</th>
+                    <th>Focus</th>
+                    <th>Sequence</th>
+                    <th>Category</th>
+                    <th>Created By</th>
                     <th>Created Date</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
-                <tbody>
-                  <tr onClick={() => handleRowClick({
-                      name: "Pronunciation Basics 101",
-                      description: "Introductory class for beginners",
-                      students: 24,
-                      created: "2023-03-15"
-                    }, 'classes')}>
-                    <td>Pronunciation Basics 101</td>
-                    <td>Introductory class for beginners</td>
-                    <td>24</td>
-                    <td>2023-03-15</td>
-                    <td>
-                      <button 
-                        className="delete-btn" 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDelete({ name: "Pronunciation Basics 101" }, 'classes');
-                        }}
-                      >
-                        <FontAwesomeIcon icon={faTrash} />
-                      </button>
-                    </td>
-                  </tr>
-                  <tr onClick={() => handleRowClick({
-                      name: "Advanced Phonetics",
-                      description: "Advanced class focusing on complex phonetics",
-                      students: 18,
-                      created: "2023-04-02"
-                    }, 'classes')}>
-                    <td>Advanced Phonetics</td>
-                    <td>Advanced class focusing on complex phonetics</td>
-                    <td>18</td>
-                    <td>2023-04-02</td>
-                    <td>
-                      <button 
-                        className="delete-btn" 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDelete({ name: "Advanced Phonetics" }, 'classes');
-                        }}
-                      >
-                        <FontAwesomeIcon icon={faTrash} />
-                      </button>
-                    </td>
-                  </tr>
-                  <tr onClick={() => handleRowClick({
-                      name: "English for Business",
-                      description: "Specialized pronunciation for business contexts",
-                      students: 15,
-                      created: "2023-05-10"
-                    }, 'classes')}>
-                    <td>English for Business</td>
-                    <td>Specialized pronunciation for business contexts</td>
-                    <td>15</td>
-                    <td>2023-05-10</td>
-                    <td>
-                      <button 
-                        className="delete-btn" 
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDelete({ name: "English for Business" }, 'classes');
-                        }}
-                      >
-                        <FontAwesomeIcon icon={faTrash} />
-                      </button>
-                    </td>
-                  </tr>
-                </tbody>
+                <tbody>{renderLessonsTable()}</tbody>
               </table>
-            </div>
-          </>
-        );
-      case 'analytics':
-        return renderAnalyticsTable();
-      default: // dashboard
-        return (
-          <>
-            <h2 className="dashboard-title">Teacher Dashboard</h2>
-
-            <div className="metrics">
-              <div className="metric lessons">
-                <p>Created Lessons</p>
-                <h4>15</h4>
-              </div>
-              <div className="metric stars">
-                <p>Active Students</p>
-                <h4>48</h4>
-              </div>
-              <div className="metric hours">
-                <p>Avg. Completion Rate</p>
-                <h4>82%</h4>
-              </div>
-            </div>
-
-            <div className="marketplace">
-              <div className="card analytics">
-                <p>Content Management</p>
-                <h4>Recent Activities</h4>
-                <p>3 new lessons added this week</p>
-                <button onClick={() => setActiveSection('lessons')}>ADD NEW LESSON</button>
-              </div>
-              <div className="card flow">
-                <p>Student Engagement</p>
-                <h4>High Activity</h4>
-                <p>85% of students active in the past week</p>
-                <button onClick={() => setActiveSection('analytics')}>VIEW DETAILS</button>
-              </div>
-              <div className="card upgrade">
-                <p>Difficulty Levels</p>
-                <h4>3 Difficulty Levels</h4>
-                <p>Beginner, Intermediate, Advanced</p>
-                <button onClick={() => setActiveSection('difficulty')}>MANAGE LEVELS</button>
-              </div>
-            </div>
-
-            <div className="orders">
-              <h3>Recent Content Updates</h3>
-              <ul>
-                <li>Added "Common Pronunciation Mistakes" lesson to Intermediate difficulty</li>
-                <li>Created new "Vowel Sounds" category with 5 exercises</li>
-                <li>Updated feedback for "Consonant Blends" practice session</li>
-                <li>Added audio examples to "Word Stress Patterns" lesson</li>
-              </ul>
-            </div>
-
-            <div className="report-progress">
-              <h3>Student Progress Overview</h3>
-              <div className="graph-container animate-bars">
-                <div className="chart-bar beginner">
-                  <div className="chart-bar-percentage">65%</div>
-                  <div className="chart-bar-label">Beginner</div>
-                </div>
-                <div className="chart-bar intermediate">
-                  <div className="chart-bar-percentage">45%</div>
-                  <div className="chart-bar-label">Intermediate</div>
-                </div>
-                <div className="chart-bar advanced">
-                  <div className="chart-bar-percentage">20%</div>
-                  <div className="chart-bar-label">Advanced</div>
-                </div>
-              </div>
             </div>
           </>
         );
@@ -867,6 +448,7 @@ const TeacherDashboard = () => {
         setCategories(data);
       } catch (error) {
         console.error("Error fetching categories:", error);
+        showNotification("Error loading categories. Please try refreshing the page.", "error");
       } finally {
         setLoading(false);
       }
@@ -885,10 +467,12 @@ const TeacherDashboard = () => {
         } else {
           console.error("Invalid data format for lessons:", data);
           setLessons([]); // Fallback to an empty array
+          showNotification("Received invalid lesson data format.", "error");
         }
       } catch (error) {
         console.error("Error fetching lessons:", error);
         setLessons([]); // Fallback to an empty array in case of an error
+        showNotification("Error loading lessons. Please try refreshing the page.", "error");
       } finally {
         setLoading(false);
       }
@@ -914,100 +498,91 @@ const TeacherDashboard = () => {
       );
     }
 
-    return categories.map((category) => (
-      <tr key={category.categoryId}>
-        <td>{category.name}</td>
-        <td>{category.description}</td>
-        <td>{`${category.createdBy.firstName} ${category.createdBy.lastName}`}</td>
-        <td>{new Date(category.createdDate).toLocaleDateString()}</td>
-        <td>
-          <button
-            className="edit-btn"
-            onClick={(e) => {
-              e.stopPropagation();
-              openModal("categories", category); // Open modal for editing
-            }}
-          >
-            <FontAwesomeIcon icon={faPlus} /> {/* Replace with an edit icon */}
-          </button>
-          <button
-            className="delete-btn"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDelete(category); // Call handleDelete when the trash icon is clicked
-            }}
-          >
-            <FontAwesomeIcon icon={faTrash} />
-          </button>
-        </td>
-      </tr>
-    ));
+   return categories.map((category) => (
+  <tr key={category.categoryId}>
+    <td>{category.name}</td>
+    <td>{category.description}</td>
+    <td>{`${category.createdBy.firstName} ${category.createdBy.lastName}`}</td>
+    <td>{new Date(category.createdDate).toLocaleDateString()}</td>
+    <td className="action-buttons-cell">
+      <button
+        className="action-btn blue-btn"
+        onClick={(e) => {
+          e.stopPropagation();
+          openModal("categories", category); // Open modal for editing
+        }}
+      >
+        <FontAwesomeIcon icon={faEdit} /> Edit
+      </button>
+      <button
+        className="action-btn blue-btn"
+        onClick={(e) => {
+          e.stopPropagation();
+          handleDelete(category); // Call handleDelete when the trash icon is clicked
+        }}
+      >
+        <FontAwesomeIcon icon={faTrash} /> Delete
+      </button>
+    </td>
+  </tr>
+));
   };
 
   const renderLessonsTable = () => {
-    if (loading) {
-      return (
-        <tr>
-          <td colSpan="7">Loading...</td>
-        </tr>
-      );
-    }
-
-    if (lessons.length === 0) {
-      return (
-        <tr>
-          <td colSpan="7">No lessons found.</td>
-        </tr>
-      );
-    }
-
-    return lessons.map((lesson) => (
-      <tr key={lesson.lessonId}>
-        <td>{lesson.name}</td>
-        <td>{lesson.focus}</td>
-        <td>{lesson.sequence}</td>
-        <td>{lesson.category.name}</td>
-        <td>{`${lesson.createdBy.firstName} ${lesson.createdBy.lastName}`}</td>
-        <td>{new Date(lesson.createdDate).toLocaleDateString()}</td>
-        <td>
-          <button
-            className="edit-btn"
-            onClick={(e) => {
-              e.stopPropagation();
-              openModal("lessons", lesson); // Open modal for editing
-            }}
-          >
-            <FontAwesomeIcon icon={faPlus} /> {/* Replace with an edit icon */}
-          </button>
-          <button
-            className="delete-btn"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDeleteLesson(lesson); // Call handleDeleteLesson when the trash icon is clicked
-            }}
-          >
-            <FontAwesomeIcon icon={faTrash} />
-          </button>
-          {/* Add Words Button */}
-          <button
-            className="words-btn"
-            style={{
-              backgroundColor: "#007bff",
-              color: "white",
-              padding: "10px 20px",
-              fontSize: "16px",
-              borderRadius: "5px",
-              border: "none",
-              cursor: "pointer",
-            }}
-            onClick={() => navigate(`/words/${lesson.lessonId}`, { state: { lessonName: lesson.name } })}
-          >
-            Manage Words
-          </button>
-        </td>
+  if (loading) {
+    return (
+      <tr>
+        <td colSpan="7">Loading...</td>
       </tr>
-    ));
-  };
+    );
+  }
+
+  if (lessons.length === 0) {
+    return (
+      <tr>
+        <td colSpan="7">No lessons found.</td>
+      </tr>
+    );
+  }
+
+ return lessons.map((lesson) => (
+  <tr key={lesson.lessonId}>
+    <td>{lesson.name}</td>
+    <td>{lesson.focus}</td>
+    <td>{lesson.sequence}</td>
+    <td>{lesson.category.name}</td>
+    <td>{`${lesson.createdBy.firstName} ${lesson.createdBy.lastName}`}</td>
+    <td>{new Date(lesson.createdDate).toLocaleDateString()}</td>
+    <td className="action-buttons-cell">
+      <button
+        className="action-btn blue-btn"
+        onClick={(e) => {
+          e.stopPropagation();
+          openModal("lessons", lesson); // Open modal for editing
+        }}
+      >
+        <FontAwesomeIcon icon={faEdit} /> Edit
+      </button>
+      {/* Add Words Button - now in the middle */}
+      <button
+        className="words-btn action-btn blue-btn"
+        onClick={() => navigate(`/words/${lesson.lessonId}`, { state: { lessonName: lesson.name } })}
+      >
+        Manage Words
+      </button>
+      <button
+        className="action-btn blue-btn"
+        onClick={(e) => {
+          e.stopPropagation();
+          handleDeleteLesson(lesson); // Call handleDeleteLesson when the trash icon is clicked
+        }}
+      >
+        <FontAwesomeIcon icon={faTrash} /> Delete
+      </button>
+    </td>
+  </tr>
+));
+};
 
   const fetchUserData = async () => {
     try {
@@ -1028,6 +603,7 @@ const TeacherDashboard = () => {
       localStorage.removeItem("user");
       localStorage.removeItem("token");
       navigate("/login");
+      showNotification("Session expired. Please login again.", "error");
     }
   };
 
@@ -1055,11 +631,11 @@ const TeacherDashboard = () => {
       if (editingItem) {
         // Call the updateCategory function if editing
         await updateCategory(editingItem.categoryId, newCategory);
-        alert("Category updated successfully!");
+        showNotification("Category updated successfully!");
       } else {
         // Call the createCategory function if adding a new category
         await createCategory(newCategory, user.id);
-        alert("Category added successfully!");
+        showNotification("Category added successfully!");
       }
 
       // Refresh the categories list
@@ -1070,7 +646,7 @@ const TeacherDashboard = () => {
       setShowModal(false);
     } catch (error) {
       console.error("Error saving category:", error);
-      alert("Failed to save category. Please try again.");
+      showNotification("Failed to save category. Please try again.", "error");
     }
   };
 
@@ -1104,11 +680,11 @@ const TeacherDashboard = () => {
       if (isEditing) {
         // Call the updateLesson function if editing
         await updateLesson(editingItem.lessonId, newLesson);
-        alert("Lesson updated successfully!");
+        showNotification("Lesson updated successfully!");
       } else {
         // Call the createLesson function if adding a new lesson
         await createLesson(newLesson, user.id);
-        alert("Lesson added successfully!");
+        showNotification("Lesson added successfully!");
       }
 
       // Refresh the lessons list
@@ -1119,7 +695,7 @@ const TeacherDashboard = () => {
       setShowModal(false);
     } catch (error) {
       console.error("Error saving lesson:", error);
-      alert("Failed to save lesson. Please try again.");
+      showNotification("Failed to save lesson. Please try again.", "error");
     }
   };
 
@@ -1142,6 +718,7 @@ const TeacherDashboard = () => {
       setAnalyticsLessons(lessonsWithAttempts);
     } catch (error) {
       console.error("Failed to fetch analytics data:", error);
+      showNotification("Failed to load analytics data.", "error");
     }
   };
 
@@ -1234,20 +811,6 @@ const TeacherDashboard = () => {
           <nav>
             <ul>
               <li 
-                className={activeSection === "dashboard" ? "active" : ""}
-                onClick={() => handleNavClick("dashboard")}
-              >
-                <FontAwesomeIcon icon={faHome} className="sidebar-icon" />
-                Dashboard
-              </li>
-              <li 
-                className={activeSection === "difficulty" ? "active" : ""}
-                onClick={() => handleNavClick("difficulty")}
-              >
-                <FontAwesomeIcon icon={faLayerGroup} className="sidebar-icon" />
-                Add Difficulty
-              </li>
-              <li 
                 className={activeSection === "lessons" ? "active" : ""}
                 onClick={() => handleNavClick("lessons")}
               >
@@ -1260,13 +823,6 @@ const TeacherDashboard = () => {
               >
                 <FontAwesomeIcon icon={faFolder} className="sidebar-icon" />
                 Add Categories
-              </li>
-              <li 
-                className={activeSection === "classes" ? "active" : ""}
-                onClick={() => handleNavClick("classes")}
-              >
-                <FontAwesomeIcon icon={faUsers} className="sidebar-icon" />
-                Add Classes
               </li>
               <li 
                 className={activeSection === "analytics" ? "active" : ""}
@@ -1286,6 +842,7 @@ const TeacherDashboard = () => {
 
       {renderDropdown()}
       {renderModal()}
+      {renderNotification()}
     </div>
   );
 };

@@ -18,7 +18,7 @@
             "mainClass": "com.capstone.group46.pronounceit.PronounceItApplication",
             "projectName": "PronounceIT",
             "env": {
-                "GOOGLE_APPLICATION_CREDENTIALS": "C:\\Users\\Strevvv\\Downloads\\pronounceit-459014-ac6b197506b2.json"
+                "GOOGLE_APPLICATION_CREDENTIALS": "C:\\Users\\User\\Downloads\\pronounceit-459014-ac6b197506b2.json"
             }
         }
     ]
