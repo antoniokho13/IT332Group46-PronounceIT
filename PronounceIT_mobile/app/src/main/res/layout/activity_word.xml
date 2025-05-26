@@ -16,7 +16,6 @@
         android:layout_above="@id/buttonContainer"
         android:padding="16dp">
 
-        <!-- Add spacing at top to push content down -->
         <Space
             android:layout_width="match_parent"
             android:layout_height="15dp" />
@@ -115,7 +114,6 @@
             android:layout_height="0dp"
             android:layout_weight="0.5"/>
 
-        <!-- Container for the square image with animated border -->
         <FrameLayout
             android:id="@+id/imageFrameLayout"
             android:layout_width="300dp"
@@ -124,7 +122,6 @@
             android:padding="12dp"
             android:layout_marginBottom="12dp">
 
-            <!-- The inner container maintains the 1:1 aspect ratio -->
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
@@ -172,7 +169,6 @@
         </FrameLayout>
     </LinearLayout>
 
-    <!-- Microphone button container at the absolute bottom, now with no padding -->
     <FrameLayout
         android:id="@+id/buttonContainer"
         android:layout_width="match_parent"
@@ -180,7 +176,14 @@
         android:layout_alignParentBottom="true"
         android:paddingBottom="0dp">
 
-        <!-- Recording indicator text -->
+        <!-- Curved "Press Me" text above the mic button -->
+        <com.example.pronounceit.CurvedTextView
+            android:id="@+id/curvedTextView"
+            android:layout_width="match_parent"
+            android:layout_height="80dp"
+            android:layout_gravity="top|center_horizontal"
+            android:visibility="visible"/>
+
         <TextView
             android:id="@+id/recordingIndicatorText"
             android:layout_width="wrap_content"
@@ -196,7 +199,6 @@
             android:fontFamily="@font/nunito"
             android:visibility="gone"/>
 
-        <!-- Reduced height and adjusted to appear attached to the bottom -->
         <ImageButton
             android:id="@+id/recordPronunciationButton"
             android:layout_width="match_parent"
@@ -207,7 +209,6 @@
             android:scaleType="fitCenter"
             android:src="@drawable/microphone" />
 
-        <!-- Also reduced height of stop button to match -->
         <ImageButton
             android:id="@+id/stopRecordingButton"
             android:layout_width="match_parent"
@@ -220,7 +221,6 @@
             android:visibility="gone" />
     </FrameLayout>
 
-    <!-- Add the KonfettiView on top of everything for confetti animation -->
     <nl.dionsegijn.konfetti.KonfettiView
         android:id="@+id/konfettiView"
         android:layout_width="match_parent"

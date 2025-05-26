@@ -11,7 +11,6 @@ import android.util.Log
 import android.view.View
 import android.view.animation.AlphaAnimation
 import android.view.animation.Animation
-import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.bumptech.glide.Glide
 import com.example.pronounceit.databinding.ActivityWordBinding
@@ -88,7 +87,6 @@ class WordActivity : AppCompatActivity() {
 
         lessonId = intent.getLongExtra("lessonId", -1L)
         if (lessonId == -1L) {
-            Toast.makeText(this, "Invalid lesson ID", Toast.LENGTH_SHORT).show()
             finish()
             return
         }
@@ -108,7 +106,6 @@ class WordActivity : AppCompatActivity() {
                 }
             } else {
                 Log.e("WordActivity", "TTS initialization failed")
-                Toast.makeText(this, "TTS initialization failed", Toast.LENGTH_SHORT).show()
             }
         }
 
@@ -118,14 +115,24 @@ class WordActivity : AppCompatActivity() {
             requestPermissions(arrayOf(android.Manifest.permission.RECORD_AUDIO), RECORD_AUDIO_PERMISSION_CODE)
         }
 
+        // Show and animate the curved "Press Me" text when idle
+        binding.curvedTextView.visibility = View.VISIBLE
+        binding.curvedTextView.startBlinkAnimation()
+
         binding.recordPronunciationButton.setOnClickListener {
             startRecording()
             startRecordingAnimation()
+            // Hide and stop animation when recording starts
+            binding.curvedTextView.visibility = View.GONE
+            binding.curvedTextView.stopBlinkAnimation()
         }
 
         binding.stopRecordingButton.setOnClickListener {
             stopRecording()
             stopRecordingAnimation()
+            // Show and animate again when recording stops
+            binding.curvedTextView.visibility = View.VISIBLE
+            binding.curvedTextView.startBlinkAnimation()
         }
 
         // Generate sessionId ONCE per session
@@ -167,9 +174,8 @@ class WordActivity : AppCompatActivity() {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == RECORD_AUDIO_PERMISSION_CODE) {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                Toast.makeText(this, "Record Audio permission granted", Toast.LENGTH_SHORT).show()
+                // Permission granted
             } else {
-                Toast.makeText(this, "Record Audio permission denied. Cannot record pronunciation.", Toast.LENGTH_LONG).show()
                 binding.recordPronunciationButton.isEnabled = false
             }
         }
@@ -189,7 +195,6 @@ class WordActivity : AppCompatActivity() {
                     }
                 } else {
                     withContext(Dispatchers.Main) {
-                        Toast.makeText(this@WordActivity, "Failed to fetch words: ${response.code()}", Toast.LENGTH_SHORT).show()
                         finish()
                     }
                 }
@@ -197,7 +202,6 @@ class WordActivity : AppCompatActivity() {
                 val errorMessage = "Error fetching words: ${e.message}"
                 Log.e("WordActivity", errorMessage, e)
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(this@WordActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
                     finish()
                 }
             }
@@ -263,12 +267,10 @@ class WordActivity : AppCompatActivity() {
             }
             mediaPlayer?.setOnErrorListener { _, what, extra ->
                 Log.e("WordActivity", "Error playing audio: what=$what, extra=$extra")
-                Toast.makeText(this, "Error playing audio", Toast.LENGTH_SHORT).show()
                 true
             }
         } catch (e: IOException) {
             Log.e("WordActivity", "Error setting data source: ${e.message}", e)
-            Toast.makeText(this, "Error playing audio", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -353,7 +355,6 @@ class WordActivity : AppCompatActivity() {
 
     private fun startRecording() {
         if (checkSelfPermission(android.Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-            Toast.makeText(this, "Record Audio permission not granted.", Toast.LENGTH_SHORT).show()
             requestPermissions(arrayOf(android.Manifest.permission.RECORD_AUDIO), RECORD_AUDIO_PERMISSION_CODE)
             return
         }
@@ -363,7 +364,6 @@ class WordActivity : AppCompatActivity() {
         val recordingDir = getExternalFilesDir("recordings") // Using custom directory name
         if (recordingDir == null) {
             Log.e("WordActivity", "Cannot get recording directory")
-            Toast.makeText(this, "Cannot access storage for recording.", Toast.LENGTH_SHORT).show()
             return
         }
         audioFile = File(recordingDir, fileName)
@@ -380,16 +380,12 @@ class WordActivity : AppCompatActivity() {
             try {
                 prepare()
                 start()
-                // Toast now shows recording is in progress
-                Toast.makeText(this@WordActivity, "Recording in progress...", Toast.LENGTH_SHORT).show()
                 Log.d("WordActivity", "MediaRecorder prepared and started.")
             } catch (e: IOException) {
                 Log.e("WordActivity", "prepare() failed: ${e.message}", e)
-                Toast.makeText(this@WordActivity, "Recording preparation failed", Toast.LENGTH_SHORT).show()
                 stopRecordingAnimation()
             } catch (e: IllegalStateException) {
                 Log.e("WordActivity", "IllegalStateException during recording: ${e.message}", e)
-                Toast.makeText(this@WordActivity, "Recording failed: ${e.message}", Toast.LENGTH_SHORT).show()
                 stopRecordingAnimation()
             }
         }
@@ -401,10 +397,8 @@ class WordActivity : AppCompatActivity() {
                 stop()
                 release()
                 Log.d("WordActivity", "MediaRecorder stopped and released.")
-                Toast.makeText(this@WordActivity, "Recording stopped. Sending for validation...", Toast.LENGTH_SHORT).show()
             } catch (e: RuntimeException) {
                 Log.e("WordActivity", "Stop/release failed: ${e.message}", e)
-                Toast.makeText(this@WordActivity, "Recording stop failed. Audio might be corrupt.", Toast.LENGTH_SHORT).show()
                 audioFile?.delete()
                 return
             }
@@ -417,7 +411,6 @@ class WordActivity : AppCompatActivity() {
             }
         } else {
             Log.e("WordActivity", "Audio file invalid: exists=${audioFile?.exists()}, size=${audioFile?.length()}")
-            Toast.makeText(this@WordActivity, "No audio recorded or file is too small.", Toast.LENGTH_SHORT).show()
             audioFile?.delete()
         }
     }
@@ -457,8 +450,6 @@ class WordActivity : AppCompatActivity() {
                             // Play the correct sound effect
                             playCorrectSound()
 
-                            Toast.makeText(this@WordActivity, "Correct Pronunciation!", Toast.LENGTH_SHORT).show()
-
                             // Switch from play button to next button
                             binding.playAudioButton.visibility = View.GONE
                             binding.nextWordButton.visibility = View.VISIBLE
@@ -469,14 +460,10 @@ class WordActivity : AppCompatActivity() {
                             // Play the error sound effect for incorrect pronunciation
                             playErrorSound()
 
-                            if (attemptCount < maxAttempts) {
-                                // Fixed: Remove direct feedback reference
-                                Toast.makeText(this@WordActivity, "Try again. Attempts left: ${maxAttempts - attemptCount}", Toast.LENGTH_SHORT).show()
-                            } else {
+                            if (attemptCount >= maxAttempts) {
                                 if (!wordScored) {
                                     wordScored = true // Mark as scored to prevent duplicate entries even if not correct
                                 }
-                                Toast.makeText(this@WordActivity, "Maximum attempts reached. Moving to next word.", Toast.LENGTH_SHORT).show()
                                 binding.playAudioButton.visibility = View.GONE
                                 binding.nextWordButton.visibility = View.VISIBLE
 
@@ -495,15 +482,11 @@ class WordActivity : AppCompatActivity() {
                     val errorBody = response.errorBody()?.string()
                     val errorMessage = "Failed to check pronunciation: ${response.code()}, ${response.message()}, Body: $errorBody"
                     Log.e("WordActivity", errorMessage)
-                    Toast.makeText(this@WordActivity, "Error: ${errorBody ?: "Unknown error"}", Toast.LENGTH_LONG).show()
                 }
                 audioFile.delete()
             }
         } catch (e: Exception) {
             Log.e("WordActivity", "Error sending audio: ${e.message}", e)
-            withContext(Dispatchers.Main) {
-                Toast.makeText(this@WordActivity, "Error sending audio: ${e.localizedMessage}", Toast.LENGTH_SHORT).show()
-            }
             audioFile.delete()
         }
     }
@@ -561,25 +544,20 @@ class WordActivity : AppCompatActivity() {
     }
 
     private fun showSessionEndDialog() {
-        // Save or update score at the end of the session
         sendScoreToBackend()
 
-        // Create a custom view for the dialog with an ImageView
         val dialogView = layoutInflater.inflate(R.layout.dialog_session_end, null)
         val congratsImage = dialogView.findViewById<android.widget.ImageView>(R.id.congratsImageView)
         val scoreMessage = dialogView.findViewById<android.widget.TextView>(R.id.scoreMessageTextView)
-        val returnToLessonsButton = dialogView.findViewById<android.widget.ImageButton>(R.id.returnToLessonsButton)
+        val nextLessonButton = dialogView.findViewById<android.widget.ImageButton>(R.id.nextLessonButton)
         val tryAgainButton = dialogView.findViewById<android.widget.ImageButton>(R.id.tryAgainButton)
         val viewScoreDetailsButton = dialogView.findViewById<android.widget.ImageButton>(R.id.viewScoreDetailsButton)
+        val nextButtonLayout = dialogView.findViewById<android.view.View>(R.id.nextButtonLayout)
 
-        // Find the return button layout by ID to properly hide/show both button and text
-        val returnButtonLayout = dialogView.findViewById<android.view.View>(R.id.returnButtonLayout)
-
-        // Set image based on score (half or more = congratulations, less than half = game over)
         if (score >= totalWords / 2) {
             congratsImage.setImageResource(R.drawable.congratulations)
             congratsImage.visibility = View.VISIBLE
-            scoreMessage.text = "You scored $score/$totalWords. Return to lessons?"
+            scoreMessage.text = "You scored $score/$totalWords. Proceed to next lesson?"
 
             // Mark lesson as completed for this user
             val prefs = getSharedPreferences("PronounceItPrefs", Context.MODE_PRIVATE)
@@ -590,32 +568,50 @@ class WordActivity : AppCompatActivity() {
             set.add(lessonId.toString())
             lessonPrefs.edit().putStringSet(key, set).apply()
 
-            // Show return button and its text
-            returnButtonLayout.visibility = View.VISIBLE
+            nextButtonLayout.visibility = View.VISIBLE
         } else {
             congratsImage.setImageResource(R.drawable.gameover)
             congratsImage.visibility = View.VISIBLE
             scoreMessage.text = "You scored $score/$totalWords. You need at least ${totalWords/2} points to proceed."
-
-            // Hide the entire return button layout (both button and text)
-            returnButtonLayout.visibility = View.GONE
+            nextButtonLayout.visibility = View.GONE
         }
 
-        // Create and configure the dialog
         val dialog = android.app.AlertDialog.Builder(this)
             .setView(dialogView)
             .setCancelable(false)
             .create()
 
-        // Set button click listeners
-        returnToLessonsButton.setOnClickListener {
-            // Return to LessonActivity and refresh
-            val intent = Intent(this, LessonActivity::class.java)
-            intent.putExtra("categoryId", getIntent().getLongExtra("categoryId", -1L))
-            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
-            startActivity(intent)
-            finish()
-            dialog.dismiss()
+        nextLessonButton.setOnClickListener {
+            // Find the next lesson by sequence
+            CoroutineScope(Dispatchers.IO).launch {
+                val api = RetrofitInstance.getApi(this@WordActivity)
+                val response = api.getLessonsByCategoryId(intent.getLongExtra("categoryId", -1L))
+                if (response.isSuccessful) {
+                    val lessons = response.body()?.sortedBy { it.sequence } ?: emptyList()
+                    val currentIndex = lessons.indexOfFirst { it.lessonId == lessonId }
+                    val nextLesson = if (currentIndex != -1 && currentIndex + 1 < lessons.size) lessons[currentIndex + 1] else null
+                    withContext(Dispatchers.Main) {
+                        if (nextLesson != null) {
+                            val intent = Intent(this@WordActivity, WordActivity::class.java)
+                            intent.putExtra("lessonId", nextLesson.lessonId)
+                            intent.putExtra("categoryId", nextLesson.category.categoryId)
+                            startActivity(intent)
+                            finish()
+                        } else {
+                            val intent = Intent(this@WordActivity, LessonActivity::class.java)
+                            intent.putExtra("categoryId", getIntent().getLongExtra("categoryId", -1L))
+                            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                            startActivity(intent)
+                            finish()
+                        }
+                        dialog.dismiss()
+                    }
+                } else {
+                    withContext(Dispatchers.Main) {
+                        dialog.dismiss()
+                    }
+                }
+            }
         }
 
         tryAgainButton.setOnClickListener {
@@ -633,7 +629,6 @@ class WordActivity : AppCompatActivity() {
             dialog.dismiss()
         }
 
-        // Update the button content descriptions for accessibility
         tryAgainButton.contentDescription = "Try Again"
         viewScoreDetailsButton.contentDescription = "View Score"
 
