@@ -1,0 +1,284 @@
+/* App Promo Styles - New file */
+.app-promo-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 70px);
+  width: 100%;
+  padding: 40px 20px;
+  margin-top: 70px;
+  background: linear-gradient(135deg, #f5f9ff 0%, #ebf4ff 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Decorative elements */
+.app-promo-container:before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 15px;
+  background: linear-gradient(
+    90deg, 
+    #ff8a8a, 
+    #ffbe7b, 
+    #fff07b, 
+    #9affaf, 
+    #9ebbff, 
+    #c48aff, 
+    #ffb0ff
+  );
+  background-size: 400% 400%;
+  animation: rainbow-wave 5s linear infinite;
+  z-index: 10;
+}
+
+.app-promo-content {
+  display: flex;
+  max-width: 1200px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 30px 0;
+  flex-wrap: wrap;
+}
+
+.app-promo-text {
+  flex: 1;
+  min-width: 300px;
+  padding: 20px;
+}
+
+.app-promo-text h1 {
+  font-size: 3rem;
+  font-weight: 800;
+  margin-bottom: 20px;
+  color: #4f46e5;
+  line-height: 1.1;
+  position: relative;
+}
+
+.app-promo-text h1:after {
+  content: '';
+  position: absolute;
+  bottom: -10px;
+  left: 0;
+  width: 80px;
+  height: 4px;
+  background-color: #4f46e5;
+  border-radius: 2px;
+}
+
+.app-description {
+  font-size: 1.2rem;
+  line-height: 1.5;
+  margin-bottom: 30px;
+  color: #555;
+}
+
+/* App Features Section */
+.app-features {
+  margin: 40px 0;
+}
+
+.feature-item {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 25px;
+  background-color: white;
+  padding: 15px;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.feature-item:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.feature-icon {
+  font-size: 2.5rem;
+  margin-right: 15px;
+  color: #4f46e5;
+  background-color: #f0f0ff;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+}
+
+.feature-text h3 {
+  font-size: 1.2rem;
+  font-weight: 700;
+  margin-bottom: 5px;
+  color: #333;
+}
+
+.feature-text p {
+  font-size: 0.95rem;
+  color: #666;
+  margin: 0;
+}
+
+/* App Download Buttons */
+.app-buttons {
+  display: flex;
+  gap: 15px;
+  margin-top: 30px;
+  flex-wrap: wrap;
+}
+
+.app-store-btn, .google-play-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 25px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 1rem;
+  color: white;
+  text-decoration: none;
+  transition: all 0.3s ease;
+}
+
+.app-store-btn {
+  background-color: #4f46e5;
+}
+
+.google-play-btn {
+  background-color: #333;
+}
+
+.app-store-btn:hover, .google-play-btn:hover {
+  transform: scale(1.05);
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+}
+
+.app-store-btn svg, .google-play-btn svg {
+  margin-right: 10px;
+}
+
+/* Learn More Section */
+.learn-more {
+  margin-top: 30px;
+}
+
+.learn-more a {
+  display: inline-flex;
+  align-items: center;
+  color: #4f46e5;
+  font-weight: 600;
+  font-size: 1rem;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.learn-more a:hover {
+  color: #3730a3;
+}
+
+.arrow-icon {
+  margin-left: 8px;
+  transition: transform 0.2s ease;
+}
+
+.learn-more a:hover .arrow-icon {
+  transform: translateX(5px);
+}
+
+/* App Preview Image */
+.app-promo-image {
+  flex: 1;
+  min-width: 300px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  position: relative;
+}
+
+.app-promo-image img {
+  max-width: 400px;
+  width: 100%;
+  height: auto;
+  border-radius: 30px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+  border: 10px solid white;
+}
+
+/* QR Code Section */
+.app-qr-code {
+  margin-top: 30px;
+  text-align: center;
+}
+
+.app-qr-code img {
+  width: 120px;
+  height: 120px;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+  border: 4px solid white;
+  border-radius: 10px;
+}
+
+.app-qr-code p {
+  margin-top: 10px;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+/* Responsive Styles */
+@media (max-width: 992px) {
+  .app-promo-content {
+    flex-direction: column;
+  }
+  
+  .app-promo-text h1 {
+    font-size: 2.5rem;
+  }
+  
+  .app-promo-image {
+    margin-top: 40px;
+    order: -1;
+  }
+  
+  .app-promo-image img {
+    max-width: 300px;
+  }
+}
+
+@media (max-width: 768px) {
+  .app-promo-text h1 {
+    font-size: 2rem;
+  }
+  
+  .feature-item {
+    padding: 12px;
+  }
+  
+  .feature-icon {
+    width: 50px;
+    height: 50px;
+    font-size: 2rem;
+  }
+  
+  .app-buttons {
+    flex-direction: column;
+  }
+  
+  .app-store-btn, .google-play-btn {
+    width: 100%;
+  }
+}
+
+/* Animation for rainbow gradient */
+@keyframes rainbow-wave {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}

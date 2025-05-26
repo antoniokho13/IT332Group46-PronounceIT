@@ -363,25 +363,32 @@ const Login = () => {
                   {errors.confirmPassword && <span className="error-message">{errors.confirmPassword}</span>}
                 </div>
               )}
-              <button type="submit" className="login-button" disabled={loading}>
+              <button type="submit" className="login-button" disabled={loading} style={{ 
+                marginTop: '15px',
+                marginBottom: '5px',
+                width: '100%',
+                padding: '10px'
+              }}>
                 {loading ? 'Processing...' : isLogin ? 'Log In' : 'Create Account'}
               </button>
             </form>
           )}
-          <div className="login-footer">
-            <p>
-              {isLogin ? "Don't have an account?" : "Already registered?"}
-              <button 
-                onClick={isLogin ? handleSignUpClick : () => setIsLogin(true)} 
-                className="switch-button"
-              >
-                {isLogin ? 'Sign Up' : 'Sign In'}
-              </button>
-            </p>
-            <div className="home-link">
-              <Link to="/">Back to Home</Link>
+          {isLogin && (
+            <div className="login-footer">
+              <p>
+                Don't have an account?
+                <button 
+                  onClick={handleSignUpClick} 
+                  className="switch-button"
+                >
+                  Sign Up
+                </button>
+              </p>
+              <div className="home-link">
+                <Link to="/">Back to Home</Link>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </>
