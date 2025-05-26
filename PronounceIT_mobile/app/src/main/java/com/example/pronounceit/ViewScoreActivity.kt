@@ -129,7 +129,7 @@ class ViewScoreActivity : AppCompatActivity() {
 
             // Set icon based on result
             if (item["result"] == "Correct") {
-                resultIcon.setImageResource(android.R.drawable.ic_input_add)
+                resultIcon.setImageResource(R.drawable.ic_check)
                 resultIcon.setColorFilter(Color.GREEN)
                 view.setBackgroundResource(R.drawable.correct_item_background)
             } else {
