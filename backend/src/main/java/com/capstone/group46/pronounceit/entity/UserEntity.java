@@ -37,7 +37,7 @@ public class UserEntity implements UserDetails {
     @Column
     private String password;
     @Column
-    private String role; //TEACHER OR USER
+    private String role; //TEACHER OR STUDENT
 
     @OneToMany(mappedBy = "createdBy", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonIgnore

@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation, useParams } from "react-router-dom";
-import { getAllScoreRecords } from "../services/scoreService";
 import { getWordStatisticsByLessonId } from "../services/pronounciationAttemptService"; // Use the correct service
+import { getAllScoreRecords } from "../services/scoreService";
 
 const Analytics = () => {
   const { lessonId } = useParams(); // Get lessonId from URL
@@ -41,7 +41,7 @@ const Analytics = () => {
         const transformedData = Object.values(groupedScores).map(user => {
           const bestScore = Math.max(...user.scores);
           const totalPerfectScore = 10; // Assuming the perfect score is 10
-          const passThreshold = totalPerfectScore * 0.6;
+          const passThreshold = totalPerfectScore * 0.5;
           return {
             name: `${user.firstName} ${user.lastName}`,
             email: user.email,
