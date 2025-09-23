@@ -1,14 +1,15 @@
-import React from 'react';
 import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 import './App.css';
+import AchievementManagement from './components/AchievementManagement'; // Import AchievementManagement
+import Analytics from './components/Analytics';
 import Home from './components/Home';
 import Login from './components/Login';
 import ProtectedRoute from './components/ProtectedRoute';
 import TeacherDashboard from './components/TeacherDashboard';
 import UserDashboard from './components/UserDashboard';
 import UserInformation from './components/UserInformation';
-import Words from './components/Words'; // Import the Words component
-import Analytics from './components/Analytics';
+import UserManagement from './components/UserManagement';
+import Words from './components/Words';
 
 function App() {
   return (
@@ -28,8 +29,16 @@ function App() {
         <Route 
           path="/words/:lessonId" 
           element={<ProtectedRoute component={Words} requiredRole="ADMIN" />} 
-        /> {/* Add the Words route */}
+        />
         <Route path="/analytics/:lessonId" element={<Analytics />} />
+        <Route 
+          path="/user-management" 
+          element={<ProtectedRoute component={UserManagement} requiredRole="ADMIN" />} 
+        />
+        <Route 
+          path="/achievement-management" 
+          element={<ProtectedRoute component={AchievementManagement} requiredRole="ADMIN" />} 
+        />
       </Routes>
     </Router>
   );
