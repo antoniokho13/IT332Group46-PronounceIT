@@ -1,6 +1,6 @@
 import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 import './App.css';
-import AchievementManagement from './components/AchievementManagement'; // Import AchievementManagement
+import AchievementManagement from './components/AchievementManagement';
 import Analytics from './components/Analytics';
 import Home from './components/Home';
 import Login from './components/Login';
@@ -19,11 +19,11 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route 
           path="/user-dashboard" 
-          element={<ProtectedRoute component={UserDashboard} requiredRole="USER" />} 
+          element={<ProtectedRoute component={UserDashboard} requiredRole="STUDENT" />} 
         />
         <Route 
           path="/teacher-dashboard" 
-          element={<ProtectedRoute component={TeacherDashboard} requiredRole="ADMIN" />} 
+          element={<ProtectedRoute component={TeacherDashboard} requiredRole="TEACHER" />} 
         />
         <Route path="/profile" element={<ProtectedRoute component={UserInformation} />} />
         <Route 

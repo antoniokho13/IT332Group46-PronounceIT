@@ -15,8 +15,22 @@ const ProtectedRoute = ({ component: Component, requiredRole = null }) => {
   
   // If a specific role is required, check user's role
   if (requiredRole && user.role !== requiredRole) {
-    // Redirect to the appropriate dashboard instead of showing "unauthorized"
-    const dashboardPath = user.role === "ADMIN" ? '/teacher-dashboard' : '/user-dashboard';
+    // Redirect to the appropriate dashboard based on role
+    let dashboardPath;
+    switch (user.role) {
+      case 'ADMIN':
+        // TODO: This path has not been added yet. Change this to the actual path for the admin dashboard if needed.
+        dashboardPath = '/achievement-management';
+        break;
+      case 'TEACHER':
+        dashboardPath = '/teacher-dashboard';
+        break;
+      case 'STUDENT':
+        dashboardPath = '/user-dashboard';
+        break;
+      default:
+        dashboardPath = '/login'; // Fallback to login for unexpected roles
+    }
     return <Navigate to={dashboardPath} replace />;
   }
   
