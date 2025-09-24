@@ -3,7 +3,6 @@ package com.capstone.group46.pronounceit.service;
 import com.capstone.group46.pronounceit.repository.UserRepository;
 import com.capstone.group46.pronounceit.entity.UserEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.util.List;
@@ -28,12 +27,12 @@ public class UserService {
     }
 
     public UserEntity createUser(UserEntity user) {
-        // ✅ Set default role if none provided
+        // ✅ Updated to allow TEACHER and STUDENT roles for new users
         String role = user.getRole();
         if (role == null || role.isEmpty()) {
-            user.setRole("USER");
-        } else if (!role.equalsIgnoreCase("ADMIN") && !role.equalsIgnoreCase("USER")) {
-            throw new IllegalArgumentException("Invalid role. Allowed roles: ADMIN, USER.");
+            user.setRole("STUDENT"); // Set default role if none provided
+        } else if (!role.equalsIgnoreCase("ADMIN") && !role.equalsIgnoreCase("TEACHER") && !role.equalsIgnoreCase("STUDENT")) {
+            throw new IllegalArgumentException("Invalid role. Allowed roles: ADMIN, TEACHER, STUDENT.");
         }
 
         // ✅ Hash the password before saving
