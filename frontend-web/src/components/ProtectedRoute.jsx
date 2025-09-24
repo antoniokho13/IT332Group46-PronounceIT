@@ -1,4 +1,3 @@
-import React from 'react';
 import { Navigate } from 'react-router-dom';
 
 const ProtectedRoute = ({ component: Component, requiredRole = null }) => {
@@ -25,7 +24,7 @@ const ProtectedRoute = ({ component: Component, requiredRole = null }) => {
       case 'TEACHER':
         dashboardPath = '/teacher-dashboard';
         break;
-      case 'STUDENT':
+      case 'USER':
         dashboardPath = '/user-dashboard';
         break;
       default:
