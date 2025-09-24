@@ -85,6 +85,18 @@
             android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
 
         <activity
+            android:name=".AchievementsActivity"
+            android:exported="false"
+            android:label="Score Details"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+
+        <activity
+            android:name=".DetailedScoresActivity"
+            android:exported="false"
+            android:label="Score Details"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+
+        <activity
             android:name=".MyProgressActivity"
             android:exported="true"
             android:label="My Progress"
