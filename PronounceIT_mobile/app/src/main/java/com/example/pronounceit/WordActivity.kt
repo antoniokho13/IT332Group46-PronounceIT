@@ -217,7 +217,7 @@ class WordActivity : AppCompatActivity() {
             // Add this line to update the word counter
             binding.wordCounterTextView.text = "Word: ${currentWordIndex + 1}/$totalWords"
 
-            val baseUrl = "http://192.168.174.71:8080"
+            val baseUrl = "http://10.0.2.2:8080"
             val imageUrl = if (currentWord.imageURL?.startsWith("/") == true) {
                 baseUrl + currentWord.imageURL
             } else {
