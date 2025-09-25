@@ -19,7 +19,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route 
           path="/user-dashboard" 
-          element={<ProtectedRoute component={UserDashboard} requiredRole="STUDENT" />} 
+          element={<ProtectedRoute component={UserDashboard} requiredRole="USER" />} 
         />
         <Route 
           path="/teacher-dashboard" 
@@ -28,7 +28,7 @@ function App() {
         <Route path="/profile" element={<ProtectedRoute component={UserInformation} />} />
         <Route 
           path="/words/:lessonId" 
-          element={<ProtectedRoute component={Words} requiredRole="ADMIN" />} 
+          element={<ProtectedRoute component={Words} requiredRole="TEACHER" />} 
         />
         <Route path="/analytics/:lessonId" element={<Analytics />} />
         <Route 
