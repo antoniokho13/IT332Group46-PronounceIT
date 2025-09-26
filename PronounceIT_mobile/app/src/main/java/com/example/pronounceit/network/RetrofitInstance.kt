@@ -19,7 +19,7 @@ import java.time.format.DateTimeFormatter
 
 @RequiresApi(Build.VERSION_CODES.O)
 object RetrofitInstance {
-    private const val BASE_URL = "http://192.168.174.71:8080" // Use 10.0.2.2 for localhost in Android Emulator
+    private const val BASE_URL = "http://10.0.2.2:8080" // Use 10.0.2.2 for localhost in Android Emulator
 
     // Custom deserializer for LocalDateTime to handle parsing from JSON String
     class LocalDateTimeDeserializer : JsonDeserializer<LocalDateTime> {
@@ -92,4 +92,7 @@ object RetrofitInstance {
             .build()
             .create(AuthApi::class.java)
     }
+
+    // Add public method to get base URL
+    fun getBaseUrl(): String = BASE_URL
 }
