@@ -45,11 +45,10 @@ export const createAchievement = async (achievementData) => {
       name: response.data.title,
       description: response.data.description,
       pointsRequired: response.data.pointsRequired || 100,
-      icon: achievementData.icon || 'faAward', // Use the icon from frontend
       isActive: response.data.isActive,
       createdDate: response.data.createdAt || new Date().toISOString(),
       badgeUrl: response.data.badgeImagePath ? 
-        `http://localhost:8080/${response.data.badgeImagePath}` : null
+        `http://localhost:8080${response.data.badgeImagePath}` : null
     };
   } catch (error) {
     console.error("Error creating achievement:", error);
@@ -96,11 +95,10 @@ export const updateAchievement = async (id, achievementData) => {
       name: response.data.title,
       description: response.data.description,
       pointsRequired: response.data.pointsRequired || 100,
-      icon: achievementData.icon || 'faAward', // Use the icon from frontend
       isActive: response.data.isActive,
       createdDate: response.data.createdAt || new Date().toISOString(),
       badgeUrl: response.data.badgeImagePath ? 
-        `http://localhost:8080/${response.data.badgeImagePath}` : null
+        `http://localhost:8080${response.data.badgeImagePath}` : null
     };
   } catch (error) {
     console.error(`Error updating achievement ${id}:`, error);
@@ -131,12 +129,15 @@ export const getAllAchievements = async () => {
       name: achievement.title,
       description: achievement.description,
       pointsRequired: achievement.pointsRequired || 100,
-      icon: 'faAward', // Default icon since we removed trigger types
       createdDate: achievement.createdAt || new Date().toISOString(),
       isActive: achievement.isActive,
       // Update the URL construction to match the server's resource handler path
       badgeUrl: achievement.badgeImagePath ? 
-        `http://localhost:8080/${achievement.badgeImagePath}` : null
+        (() => {
+          const url = `http://localhost:8080${achievement.badgeImagePath}`;
+          console.log('Generated badge URL:', url, 'from path:', achievement.badgeImagePath);
+          return url;
+        })() : null
     }));
   } catch (error) {
     console.error("Error fetching achievements:", error);
@@ -181,11 +182,10 @@ export const toggleAchievementStatus = async (id) => {
       name: response.data.title,
       description: response.data.description,
       pointsRequired: response.data.pointsRequired || 100,
-      icon: 'faAward', // Default icon since we removed trigger types
       isActive: response.data.isActive,
       createdDate: response.data.createdAt || new Date().toISOString(),
       badgeUrl: response.data.badgeImagePath ? 
-        `http://localhost:8080/${response.data.badgeImagePath}` : null
+        `http://localhost:8080${response.data.badgeImagePath}` : null
     };
   } catch (error) {
     console.error(`Error toggling achievement status ${id}:`, error);
