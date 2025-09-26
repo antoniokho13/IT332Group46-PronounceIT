@@ -1,18 +1,24 @@
 import {
-    faAward,
-    faCheckCircle,
-    faEdit,
-    faExclamationCircle,
-    faInfoCircle,
-    faMedal,
-    faPlus,
-    faSignOutAlt,
-    faStar,
-    faTimes,
-    faTrash,
-    faTrophy,
-    faUser,
-    faUsers
+  faAward,
+  faCalendar,
+  faCalendarWeek,
+  faCheckCircle,
+  faClock,
+  faEdit,
+  faExclamationCircle,
+  faInfoCircle,
+  faMedal,
+  faMicrophone,
+  faPlus,
+  faSignInAlt,
+  faSignOutAlt,
+  faStar,
+  faTimes,
+  faTrash,
+  faTrophy,
+  faUser,
+  faUserCheck,
+  faUsers
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useEffect, useRef, useState } from "react";
@@ -21,6 +27,12 @@ import { Link, useNavigate } from "react-router-dom";
 import "../assets/css/AchievementManagement.css";
 import "../assets/css/Dashboard.css";
 import logo from "../assets/images/logo.png";
+import {
+  createAchievement,
+  deleteAchievement,
+  getAllAchievements,
+  updateAchievement
+} from "../services/achievementService";
 
 const AchievementManagement = () => {
   const [showModal, setShowModal] = useState(false);
@@ -34,12 +46,46 @@ const AchievementManagement = () => {
   const [activeSection, setActiveSection] = useState("achievements");
   const [showDropdown, setShowDropdown] = useState(false);
   const [user, setUser] = useState({ firstName: "Admin", lastName: "User", id: 1 });
+  const [previewImage, setPreviewImage] = useState(null);
+  const fileInputRef = useRef(null);
   
   const modalRef = useRef(null);
   const deleteModalRef = useRef(null);
   const dropdownRef = useRef(null);
   const userCardRef = useRef(null);
   const navigate = useNavigate();
+
+  // Reset preview image when modal opens/closes
+  useEffect(() => {
+    if (showModal) {
+      if (editingItem && editingItem.badgeUrl) {
+        setPreviewImage(editingItem.badgeUrl);
+      } else {
+        setPreviewImage(null);
+      }
+    }
+  }, [showModal, editingItem]);
+  
+  // Load achievements from backend on component mount
+  useEffect(() => {
+    const fetchAchievements = async () => {
+      try {
+        const data = await getAllAchievements();
+        setAchievements(data);
+      } catch (error) {
+        console.error("Error fetching achievements:", error);
+        setNotification({
+          show: true,
+          message: "Failed to load achievements. Please try again.",
+          type: "error"
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAchievements();
+  }, []);
   
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -70,6 +116,7 @@ const AchievementManagement = () => {
       ) {
         setShowModal(false);
         setEditingItem(null);
+        setPreviewImage(null);
       }
     };
 
@@ -112,8 +159,37 @@ const AchievementManagement = () => {
   };
 
   const handleLogout = () => {
-    // Static version: Just navigate to login page
+    localStorage.removeItem("token");
     navigate("/login");
+  };
+
+  // Function to handle image selection
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      // Check file size - limit to 5MB
+      const maxSize = 5 * 1024 * 1024; // 5MB in bytes
+      if (file.size > maxSize) {
+        setNotification({
+          show: true,
+          message: "Image is too large. Please select an image smaller than 5MB.",
+          type: "error"
+        });
+        
+        // Reset file input
+        if (fileInputRef.current) {
+          fileInputRef.current.value = '';
+        }
+        return;
+      }
+      
+      // Preview the image
+      const reader = new FileReader();
+      reader.onload = () => {
+        setPreviewImage(reader.result);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   // Function to open modal with specific type
@@ -137,8 +213,9 @@ const AchievementManagement = () => {
   // Function to confirm deletion
   const confirmDelete = async () => {
     try {
-      // In a real app, this would make an API call to delete the achievement
-      // For now, just filter out the achievement from the list
+      await deleteAchievement(itemToDelete.id);
+      
+      // Update the local state
       const updatedAchievements = achievements.filter(achievement => achievement.id !== itemToDelete.id);
       setAchievements(updatedAchievements);
       
@@ -198,6 +275,52 @@ const AchievementManagement = () => {
               rows={3}
             />
           </div>
+          
+          {/* Badge Image Upload */}
+          <div className="form-group">
+            <label htmlFor="badgeImage">Badge Image</label>
+            <div className="badge-image-container">
+              {previewImage ? (
+                <div className="badge-preview">
+                  <img src={previewImage} alt="Badge Preview" />
+                  <button 
+                    type="button" 
+                    className="remove-badge-btn"
+                    onClick={() => {
+                      setPreviewImage(null);
+                      if (fileInputRef.current) {
+                        fileInputRef.current.value = '';
+                      }
+                    }}
+                  >
+                    <FontAwesomeIcon icon={faTimes} />
+                  </button>
+                </div>
+              ) : (
+                <div className="badge-upload-placeholder">
+                  <FontAwesomeIcon icon={faAward} size="2x" />
+                  <span>Upload a badge image</span>
+                </div>
+              )}
+              <input
+                type="file"
+                id="badgeImage"
+                name="badgeImage"
+                accept="image/*"
+                ref={fileInputRef}
+                onChange={handleImageChange}
+                className="file-input"
+              />
+              <button 
+                type="button" 
+                className="browse-btn"
+                onClick={() => fileInputRef.current.click()}
+              >
+                Browse...
+              </button>
+            </div>
+          </div>
+          
           <div className="form-group">
             <label htmlFor="points">Points</label>
             <input
@@ -210,24 +333,54 @@ const AchievementManagement = () => {
             />
           </div>
           <div className="form-group">
-            <label htmlFor="icon">Icon</label>
+            <label htmlFor="icon">Trigger Type</label>
             <select
               id="icon"
               defaultValue={isEditing ? editingItem.icon : ""}
               required
             >
-              <option value="">Select an icon</option>
-              <option value="faTrophy">Trophy</option>
-              <option value="faStar">Star</option>
-              <option value="faMedal">Medal</option>
-              <option value="faAward">Award</option>
+              <option value="">Select a trigger type</option>
+              <option value="faTrophy">Consecutive Correct Answers</option>
+              <option value="faStar">First Correct Answer</option>
+              <option value="faMedal">Total Correct Answers</option>
+              <option value="faAward">Lessons Completed</option>
+              <option value="faCalendar">Daily Streak</option>
+              <option value="faCalendarWeek">Weekly Streak</option>
+              <option value="faMicrophone">Perfect Pronunciation Score</option>
+              <option value="faClock">Time Spent Learning</option>
+              <option value="faSignInAlt">First Login</option>
+              <option value="faUserCheck">Profile Completion</option>
+            </select>
+          </div>
+          <div className="form-group">
+            <label htmlFor="triggerValue">Trigger Value</label>
+            <input
+              type="number"
+              id="triggerValue"
+              placeholder="Enter trigger value"
+              defaultValue={isEditing && editingItem.triggerValue ? editingItem.triggerValue : "1"}
+              min="1"
+              required
+            />
+          </div>
+          <div className="form-group">
+            <label htmlFor="isActive">Status</label>
+            <select
+              id="isActive"
+              defaultValue={isEditing ? (editingItem.isActive ? "true" : "false") : "true"}
+            >
+              <option value="true">Active</option>
+              <option value="false">Inactive</option>
             </select>
           </div>
           <div className="modal-actions">
             <button
               type="button"
               className="cancel-btn"
-              onClick={() => setShowModal(false)}
+              onClick={() => {
+                setShowModal(false);
+                setPreviewImage(null);
+              }}
             >
               Cancel
             </button>
@@ -365,105 +518,85 @@ const AchievementManagement = () => {
     );
   };
 
-  const handleAddAchievement = (e) => {
+  // Handle form submission for adding/editing achievements
+  const handleAddAchievement = async (e) => {
     e.preventDefault();
+    setLoading(true);
     
-    // Get form values
-    const name = e.target.name.value;
-    const description = e.target.description.value;
-    const points = parseInt(e.target.points.value, 10);
-    const icon = e.target.icon.value;
-    
-    // Create new achievement object
-    const newAchievement = {
-      id: editingItem ? editingItem.id : Date.now(), // Use existing ID or generate a temporary one
-      name,
-      description,
-      points,
-      icon,
-      createdDate: editingItem ? editingItem.createdDate : new Date().toISOString()
-    };
-    
-    if (editingItem) {
-      // Update existing achievement
-      const updatedAchievements = achievements.map(achievement => 
-        achievement.id === editingItem.id ? newAchievement : achievement
-      );
-      setAchievements(updatedAchievements);
-      setNotification({
-        show: true,
-        message: "Achievement updated successfully!",
-        type: "success"
-      });
-    } else {
-      // Add new achievement
-      setAchievements([...achievements, newAchievement]);
-      setNotification({
-        show: true,
-        message: "Achievement added successfully!",
-        type: "success"
-      });
-    }
-    
-    // Close modal
-    setShowModal(false);
-    setEditingItem(null);
-    
-    // Auto-hide notification
-    setTimeout(() => {
-      setNotification({ show: false, message: "", type: "" });
-    }, 5000);
-  };
-
-  // Load static achievement data
-  useEffect(() => {
-    // Static achievement data for demonstration
-    const sampleAchievements = [
-      {
-        id: 1,
-        name: "First Lesson Completed",
-        description: "Complete your first pronunciation lesson",
-        points: 10,
-        icon: "faTrophy",
-        createdDate: "2023-09-15T10:30:00Z"
-      },
-      {
-        id: 2,
-        name: "Perfect Score",
-        description: "Get 100% score in any lesson",
-        points: 25,
-        icon: "faStar",
-        createdDate: "2023-08-20T14:45:00Z"
-      },
-      {
-        id: 3,
-        name: "Pronunciation Master",
-        description: "Complete 10 different lessons with 90% or higher score",
-        points: 50,
-        icon: "faMedal",
-        createdDate: "2023-09-05T09:15:00Z"
-      },
-      {
-        id: 4,
-        name: "Practice Makes Perfect",
-        description: "Practice the same lesson 5 times",
-        points: 15,
-        icon: "faAward",
-        createdDate: "2023-07-12T11:20:00Z"
-      },
-      {
-        id: 5,
-        name: "Weekly Streak",
-        description: "Complete at least one lesson every day for a week",
-        points: 30,
-        icon: "faStar",
-        createdDate: "2023-06-28T16:10:00Z"
+    try {
+      // Get form values
+      const name = e.target.name.value;
+      const description = e.target.description.value;
+      const points = parseInt(e.target.points.value, 10);
+      const icon = e.target.icon.value;
+      const triggerValue = parseInt(e.target.triggerValue.value, 10);
+      const isActive = e.target.isActive.value === "true";
+      const badgeFile = e.target.badgeImage.files[0];
+      
+      // Create achievement data object
+      const achievementData = {
+        name,
+        description,
+        points,
+        icon,
+        triggerValue,
+        isActive,
+        badgeFile
+      };
+      
+      if (editingItem) {
+        // Update existing achievement
+        const updatedAchievement = await updateAchievement(editingItem.id, achievementData);
+        
+        // Update state with the returned achievement
+        setAchievements(achievements.map(item => 
+          item.id === editingItem.id ? updatedAchievement : item
+        ));
+        
+        setNotification({
+          show: true,
+          message: "Achievement updated successfully!",
+          type: "success"
+        });
+      } else {
+        // Create new achievement
+        const newAchievement = await createAchievement(achievementData);
+        
+        // Add the new achievement to state
+        setAchievements([...achievements, newAchievement]);
+        
+        setNotification({
+          show: true,
+          message: "Achievement added successfully!",
+          type: "success"
+        });
       }
-    ];
-    
-    setAchievements(sampleAchievements);
-    setLoading(false);
-  }, []);
+      
+      // Close modal and clean up
+      setShowModal(false);
+      setEditingItem(null);
+      setPreviewImage(null);
+      
+      // Auto-hide notification after 5 seconds
+      setTimeout(() => {
+        setNotification({ show: false, message: "", type: "" });
+      }, 5000);
+      
+    } catch (error) {
+      console.error("Error saving achievement:", error);
+      setNotification({
+        show: true,
+        message: `Failed to ${editingItem ? 'update' : 'create'} achievement: ${error.message}`,
+        type: "error"
+      });
+      
+      setTimeout(() => {
+        setNotification({ show: false, message: "", type: "" });
+      }, 5000);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Render icon based on string
   const renderIconComponent = (iconName) => {
@@ -476,6 +609,18 @@ const AchievementManagement = () => {
         return <FontAwesomeIcon icon={faMedal} />;
       case 'faAward':
         return <FontAwesomeIcon icon={faAward} />;
+      case 'faCalendar':
+        return <FontAwesomeIcon icon={faCalendar} />;
+      case 'faCalendarWeek':
+        return <FontAwesomeIcon icon={faCalendarWeek} />;
+      case 'faMicrophone':
+        return <FontAwesomeIcon icon={faMicrophone} />;
+      case 'faClock':
+        return <FontAwesomeIcon icon={faClock} />;
+      case 'faSignInAlt':
+        return <FontAwesomeIcon icon={faSignInAlt} />;
+      case 'faUserCheck':
+        return <FontAwesomeIcon icon={faUserCheck} />;
       default:
         return <FontAwesomeIcon icon={faAward} />;
     }
@@ -502,7 +647,15 @@ const AchievementManagement = () => {
       <tr key={achievement.id}>
         <td className="achievement-icon">
           <div className="achievement-icon-container">
-            {renderIconComponent(achievement.icon)}
+            {achievement.badgeUrl ? (
+              <img 
+                src={achievement.badgeUrl} 
+                alt={achievement.name}
+                className="badge-image"
+              />
+            ) : (
+              renderIconComponent(achievement.icon)
+            )}
           </div>
         </td>
         <td>{achievement.name}</td>
