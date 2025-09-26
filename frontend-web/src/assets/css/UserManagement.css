@@ -9,21 +9,45 @@
   font-size: 12px;
   font-weight: 500;
   text-align: center;
+  border: 1px solid #1976d2; /* Default blue border for all roles */
+  background-color: #e3f2fd; /* Default blue background */
+  color: #1976d2; /* Default blue text */
 }
 
-.role-student {
+/* Student role - match both lowercase and uppercase */
+.role-student,
+.role-STUDENT,
+.role-Student {
   background-color: #e3f2fd;
   color: #1976d2;
+  border-color: #1976d2; /* Blue border for students */
 }
 
-.role-teacher {
+/* Teacher role - match both lowercase and uppercase */
+.role-teacher,
+.role-TEACHER,
+.role-Teacher {
   background-color: #e8f5e9;
   color: #2e7d32;
+  border-color: #2e7d32; /* Green border for teachers */
 }
 
-.role-admin {
+/* Admin role - match both lowercase and uppercase */
+.role-admin,
+.role-ADMIN,
+.role-Admin {
   background-color: #fce4ec;
   color: #c2185b;
+  border-color: #c2185b; /* Pink border for admins */
+}
+
+/* User role if it exists - match both lowercase and uppercase */
+.role-user,
+.role-USER,
+.role-User {
+  background-color: #e3f2fd;
+  color: #1976d2;
+  border-color: #1976d2; /* Blue border for users */
 }
 
 /* Back to dashboard button */

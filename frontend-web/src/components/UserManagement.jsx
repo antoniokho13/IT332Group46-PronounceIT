@@ -1,23 +1,27 @@
 import {
-    faAward,
-    faCheckCircle,
-    faEdit,
-    faExclamationCircle,
-    faInfoCircle,
-    faPlus,
-    faSignOutAlt,
-    faTimes,
-    faTrash,
-    faUser,
-    faUsers
+  faAward,
+  faCheckCircle,
+  faEdit,
+  faExclamationCircle,
+  faInfoCircle,
+  faPlus,
+  faSignOutAlt,
+  faTimes,
+  faTrash,
+  faUser,
+  faUsers
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import axios from "axios";
 import { useEffect, useRef, useState } from "react";
 import ReactDOM from "react-dom";
 import { Link, useNavigate } from "react-router-dom";
 import "../assets/css/Dashboard.css";
 import "../assets/css/UserManagement.css";
 import logo from "../assets/images/logo.png";
+import { deleteUser, updateUser } from "../services/userService";
+
+const API_BASE_URL = "http://localhost:8080/api/users"; // Base URL for user API
 
 const UserManagement = () => {
   const [showModal, setShowModal] = useState(false);
@@ -31,6 +35,7 @@ const UserManagement = () => {
   const [activeSection, setActiveSection] = useState("users");
   const [showDropdown, setShowDropdown] = useState(false);
   const [user, setUser] = useState({ firstName: "Admin", lastName: "User", id: 1 });
+  const [error, setError] = useState(null);
   
   const modalRef = useRef(null);
   const deleteModalRef = useRef(null);
@@ -109,7 +114,10 @@ const UserManagement = () => {
   };
 
   const handleLogout = () => {
-    // Static version: Just navigate to login page
+    // Remove token from localStorage and navigate to login
+    localStorage.removeItem("token");
+    localStorage.removeItem("userId");
+    localStorage.removeItem("role");
     navigate("/login");
   };
 
@@ -134,8 +142,15 @@ const UserManagement = () => {
   // Function to confirm deletion
   const confirmDelete = async () => {
     try {
-      // In a real app, this would make an API call to delete the user
-      // For now, just filter out the user from the list
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("No authentication token found");
+      }
+      
+      // Call the deleteUser function from userService
+      await deleteUser(itemToDelete.id, token);
+      
+      // Update local state
       const updatedUsers = users.filter(user => user.id !== itemToDelete.id);
       setUsers(updatedUsers);
       
@@ -164,6 +179,59 @@ const UserManagement = () => {
       setTimeout(() => {
         setNotification({ show: false, message: "", type: "" });
       }, 5000);
+    }
+  };
+
+  // Add function to get all users
+  const fetchAllUsers = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("No authentication token found");
+      }
+      
+      const response = await axios.get(API_BASE_URL, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      
+      setUsers(response.data);
+      setLoading(false);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+      setError("Failed to load users. Please try again.");
+      setNotification({
+        show: true,
+        message: "Failed to load users from the server.",
+        type: "error"
+      });
+      setLoading(false);
+    }
+  };
+
+  // Add function to create a new user
+  const createUser = async (userData) => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("No authentication token found");
+      }
+      
+      const response = await axios.post(API_BASE_URL, userData, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      
+      return response.data;
+    } catch (error) {
+      console.error("Error creating user:", error);
+      throw error;
     }
   };
 
@@ -218,6 +286,17 @@ const UserManagement = () => {
               <option value="ADMIN">Admin</option>
             </select>
           </div>
+          {!isEditing && (
+            <div className="form-group">
+              <label htmlFor="password">Password</label>
+              <input
+                type="password"
+                id="password"
+                placeholder="Enter password"
+                required
+              />
+            </div>
+          )}
           <div className="modal-actions">
             <button
               type="button"
@@ -374,21 +453,25 @@ const UserManagement = () => {
             </div>
             <div className="existing-items">
               <h3>Existing Users</h3>
-              <table className="items-table">
-                <thead>
-                  <tr>
-                    <th>First Name</th>
-                    <th>Last Name</th>
-                    <th>Email</th>
-                    <th>Role</th>
-                    <th>Created Date</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {renderUsersTable()}
-                </tbody>
-              </table>
+              {error ? (
+                <div className="error-message">{error}</div>
+              ) : (
+                <table className="items-table">
+                  <thead>
+                    <tr>
+                      <th>First Name</th>
+                      <th>Last Name</th>
+                      <th>Email</th>
+                      <th>Role</th>
+                      <th>Created Date</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {renderUsersTable()}
+                  </tbody>
+                </table>
+              )}
             </div>
           </>
         );
@@ -412,132 +495,128 @@ const UserManagement = () => {
             </div>
             <div className="existing-items">
               <h3>Existing Users</h3>
-              <table className="items-table">
-                <thead>
-                  <tr>
-                    <th>First Name</th>
-                    <th>Last Name</th>
-                    <th>Email</th>
-                    <th>Role</th>
-                    <th>Created Date</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {renderUsersTable()}
-                </tbody>
-              </table>
+              {error ? (
+                <div className="error-message">{error}</div>
+              ) : (
+                <table className="items-table">
+                  <thead>
+                    <tr>
+                      <th>First Name</th>
+                      <th>Last Name</th>
+                      <th>Email</th>
+                      <th>Role</th>
+                      <th>Created Date</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {renderUsersTable()}
+                  </tbody>
+                </table>
+              )}
             </div>
           </>
         );
     }
   };
 
-  const handleAddUser = (e) => {
+  const handleAddUser = async (e) => {
     e.preventDefault();
     
-    // Get form values
-    const firstName = e.target.firstName.value;
-    const lastName = e.target.lastName.value;
-    const email = e.target.email.value;
-    const role = e.target.role.value;
-    
-    // Create new user object
-    const newUser = {
-      id: editingItem ? editingItem.id : Date.now(), // Use existing ID or generate a temporary one
-      firstName,
-      lastName,
-      email,
-      role,
-      createdDate: editingItem ? editingItem.createdDate : new Date().toISOString()
-    };
-    
-    if (editingItem) {
-      // Update existing user
-      const updatedUsers = users.map(user => 
-        user.id === editingItem.id ? newUser : user
-      );
-      setUsers(updatedUsers);
+    try {
+      // Get form values
+      const firstName = e.target.firstName.value;
+      const lastName = e.target.lastName.value;
+      const email = e.target.email.value;
+      const role = e.target.role.value;
+      
+      // Create new user object
+      const userData = {
+        firstName,
+        lastName,
+        email,
+        role
+      };
+      
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("No authentication token found");
+      }
+      
+      if (editingItem) {
+        // Update existing user via API
+        await updateUser(editingItem.id, userData, token);
+        
+        // Refresh the user list to get updated data
+        await fetchAllUsers();
+        
+        setNotification({
+          show: true,
+          message: "User updated successfully!",
+          type: "success"
+        });
+      } else {
+        // Add password for new user
+        userData.password = e.target.password.value;
+        
+        // Create new user via API
+        await createUser(userData);
+        
+        // Refresh the user list to get updated data
+        await fetchAllUsers();
+        
+        setNotification({
+          show: true,
+          message: "User added successfully!",
+          type: "success"
+        });
+      }
+      
+      // Close modal
+      setShowModal(false);
+      setEditingItem(null);
+      
+      // Auto-hide notification
+      setTimeout(() => {
+        setNotification({ show: false, message: "", type: "" });
+      }, 5000);
+    } catch (error) {
+      console.error("Error saving user:", error);
       setNotification({
         show: true,
-        message: "User updated successfully!",
-        type: "success"
+        message: `Failed to ${editingItem ? 'update' : 'add'} user: ${error.message || 'Unknown error'}`,
+        type: "error"
       });
-    } else {
-      // Add new user
-      setUsers([...users, newUser]);
-      setNotification({
-        show: true,
-        message: "User added successfully!",
-        type: "success"
-      });
+      
+      // Auto-hide notification after longer period for errors
+      setTimeout(() => {
+        setNotification({ show: false, message: "", type: "" });
+      }, 7000);
     }
-    
-    // Close modal
-    setShowModal(false);
-    setEditingItem(null);
-    
-    // Auto-hide notification
-    setTimeout(() => {
-      setNotification({ show: false, message: "", type: "" });
-    }, 5000);
   };
 
-  // Load static user data
+  // Load users from API when component mounts
   useEffect(() => {
-    // Static user data for demonstration
-    const sampleUsers = [
-      {
-        id: 1,
-        firstName: "John",
-        lastName: "Doe",
-        email: "john.doe@example.com",
-        role: "STUDENT",
-        createdDate: "2023-09-15T10:30:00Z"
-      },
-      {
-        id: 2,
-        firstName: "Jane",
-        lastName: "Smith",
-        email: "jane.smith@example.com",
-        role: "TEACHER",
-        createdDate: "2023-08-20T14:45:00Z"
-      },
-      {
-        id: 3,
-        firstName: "Michael",
-        lastName: "Johnson",
-        email: "michael.johnson@example.com",
-        role: "STUDENT",
-        createdDate: "2023-09-05T09:15:00Z"
-      },
-      {
-        id: 4,
-        firstName: "Emily",
-        lastName: "Brown",
-        email: "emily.brown@example.com",
-        role: "STUDENT",
-        createdDate: "2023-07-12T11:20:00Z"
-      },
-      {
-        id: 5,
-        firstName: "David",
-        lastName: "Wilson",
-        email: "david.wilson@example.com",
-        role: "ADMIN",
-        createdDate: "2023-06-28T16:10:00Z"
-      }
-    ];
+    // Get current user info
+    const currentUserName = localStorage.getItem('firstName') || 'Admin';
+    const currentUserLastName = localStorage.getItem('lastName') || 'User';
+    const currentUserId = localStorage.getItem('userId') || '1';
     
-    setUsers(sampleUsers);
-    setLoading(false);
+    setUser({
+      firstName: currentUserName,
+      lastName: currentUserLastName,
+      id: currentUserId
+    });
+    
+    // Fetch all users
+    fetchAllUsers();
   }, []);
 
   const renderUsersTable = () => {
     if (loading) {
       return (
         <tr>
-          <td colSpan="6">Loading...</td>
+          <td colSpan="6">Loading users...</td>
         </tr>
       );
     }
@@ -556,11 +635,11 @@ const UserManagement = () => {
         <td>{user.lastName}</td>
         <td>{user.email}</td>
         <td>
-          <span className={`user-role role-${user.role.toLowerCase()}`}>
-            {user.role}
+          <span className={`user-role role-${(user.role || 'user').toLowerCase()}`}>
+            {user.role || 'USER'}
           </span>
         </td>
-        <td>{new Date(user.createdDate).toLocaleDateString()}</td>
+        <td>{new Date(user.createdDate || user.createdAt || Date.now()).toLocaleDateString()}</td>
         <td className="action-buttons-cell">
           <button
             className="action-btn blue-btn"
