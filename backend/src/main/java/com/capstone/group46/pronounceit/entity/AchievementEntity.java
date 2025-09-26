@@ -1,14 +1,18 @@
 package com.capstone.group46.pronounceit.entity;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
@@ -30,15 +34,8 @@ public class AchievementEntity {
     @Column(name = "badge_image_path")
     private String badgeImagePath;
     
-    @Enumerated(EnumType.STRING)
-    @Column(name = "trigger_type", nullable = false)
-    private TriggerType triggerType;
-    
-    @Column(name = "trigger_value")
-    private Integer triggerValue;
-    
-    @Column(name = "points_reward")
-    private Integer pointsReward;
+    @Column(name = "points_required", nullable = false)
+    private Integer pointsRequired;
     
     @Column(name = "is_active")
     private Boolean isActive = true;
@@ -49,18 +46,9 @@ public class AchievementEntity {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
     
-    public enum TriggerType {
-        FIRST_CORRECT_ANSWER,
-        CONSECUTIVE_CORRECT_ANSWERS,
-        TOTAL_CORRECT_ANSWERS,
-        DAILY_STREAK,
-        WEEKLY_STREAK,
-        LESSONS_COMPLETED,
-        PERFECT_PRONUNCIATION_SCORE,
-        TIME_SPENT_LEARNING,
-        FIRST_LOGIN,
-        PROFILE_COMPLETION
-    }
+    @ManyToMany(mappedBy = "achievements", fetch = FetchType.LAZY)
+    @JsonIgnore
+    private List<UserEntity> users = new ArrayList<>();
     
     @PrePersist
     protected void onCreate() {
@@ -76,10 +64,10 @@ public class AchievementEntity {
     // Constructors
     public AchievementEntity() {}
     
-    public AchievementEntity(String title, String description, TriggerType triggerType) {
+    public AchievementEntity(String title, String description, Integer pointsRequired) {
         this.title = title;
         this.description = description;
-        this.triggerType = triggerType;
+        this.pointsRequired = pointsRequired;
     }
     
     // Getters and Setters
@@ -115,28 +103,12 @@ public class AchievementEntity {
         this.badgeImagePath = badgeImagePath;
     }
     
-    public TriggerType getTriggerType() {
-        return triggerType;
+    public Integer getPointsRequired() {
+        return pointsRequired;
     }
     
-    public void setTriggerType(TriggerType triggerType) {
-        this.triggerType = triggerType;
-    }
-    
-    public Integer getTriggerValue() {
-        return triggerValue;
-    }
-    
-    public void setTriggerValue(Integer triggerValue) {
-        this.triggerValue = triggerValue;
-    }
-    
-    public Integer getPointsReward() {
-        return pointsReward;
-    }
-    
-    public void setPointsReward(Integer pointsReward) {
-        this.pointsReward = pointsReward;
+    public void setPointsRequired(Integer pointsRequired) {
+        this.pointsRequired = pointsRequired;
     }
     
     public Boolean getIsActive() {
@@ -161,5 +133,13 @@ public class AchievementEntity {
     
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+    
+    public List<UserEntity> getUsers() {
+        return users;
+    }
+    
+    public void setUsers(List<UserEntity> users) {
+        this.users = users;
     }
 }

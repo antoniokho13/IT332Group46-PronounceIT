@@ -6,12 +6,14 @@ public class LoginResponse {
     private Long userId;
     private String email;
     private String role;
+    private Integer accumulatedPoints;
 
-    public LoginResponse(String token, Long userId, String email, String role) {
+    public LoginResponse(String token, Long userId, String email, String role, Integer accumulatedPoints) {
         this.token = token;
         this.userId = userId;
         this.email = email;
-        this.role=role;
+        this.role = role;
+        this.accumulatedPoints = accumulatedPoints;
     }
 
     public String getToken() {
@@ -31,5 +33,9 @@ public class LoginResponse {
     }
     public String getRole(){
         return role;
+    }
+    
+    public Integer getAccumulatedPoints() {
+        return accumulatedPoints;
     }
 }

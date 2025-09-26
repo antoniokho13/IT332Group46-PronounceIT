@@ -1,6 +1,7 @@
 package com.capstone.group46.pronounceit.service;
 
 import com.capstone.group46.pronounceit.repository.UserRepository;
+import com.capstone.group46.pronounceit.entity.AchievementEntity;
 import com.capstone.group46.pronounceit.entity.UserEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -35,6 +36,11 @@ public class UserService {
             throw new IllegalArgumentException("Invalid role. Allowed roles: ADMIN, TEACHER, STUDENT.");
         }
 
+        // ✅ Initialize accumulated points to 0 for new users
+        if (user.getAccumulatedPoints() == null) {
+            user.setAccumulatedPoints(0);
+        }
+
         // ✅ Hash the password before saving
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         return userRepository.save(user);
@@ -54,6 +60,10 @@ public class UserService {
                 user.setRole(updatedUser.getRole());
             }
 
+            if (updatedUser.getAccumulatedPoints() != null) {
+                user.setAccumulatedPoints(updatedUser.getAccumulatedPoints());
+            }
+
             return userRepository.save(user);
         });
     }
@@ -69,5 +79,56 @@ public class UserService {
     public UserEntity findByEmail(String email) {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+    }
+
+    // ========= Accumulated Points Management ========= //
+    
+    public UserEntity addPoints(Long userId, Integer points) {
+        return userRepository.findById(userId).map(user -> {
+            Integer currentPoints = user.getAccumulatedPoints() != null ? user.getAccumulatedPoints() : 0;
+            user.setAccumulatedPoints(currentPoints + points);
+            return userRepository.save(user);
+        }).orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+    }
+
+    public UserEntity subtractPoints(Long userId, Integer points) {
+        return userRepository.findById(userId).map(user -> {
+            Integer currentPoints = user.getAccumulatedPoints() != null ? user.getAccumulatedPoints() : 0;
+            Integer newPoints = Math.max(0, currentPoints - points); // Ensure points don't go below 0
+            user.setAccumulatedPoints(newPoints);
+            return userRepository.save(user);
+        }).orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+    }
+
+    public UserEntity setPoints(Long userId, Integer points) {
+        return userRepository.findById(userId).map(user -> {
+            user.setAccumulatedPoints(Math.max(0, points)); // Ensure points are not negative
+            return userRepository.save(user);
+        }).orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+    }
+
+    // ========= Achievement Management ========= //
+
+    public UserEntity unlockAchievement(Long userId, AchievementEntity achievement) {
+        return userRepository.findById(userId).map(user -> {
+            if (!user.getAchievements().contains(achievement)) {
+                user.getAchievements().add(achievement);
+                return userRepository.save(user);
+            }
+            return user; // Achievement already unlocked
+        }).orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+    }
+
+    public boolean hasAchievement(Long userId, Long achievementId) {
+        return userRepository.findById(userId).map(user -> 
+            user.getAchievements().stream()
+                .anyMatch(achievement -> achievement.getId().equals(achievementId))
+        ).orElse(false);
+    }
+
+    public List<AchievementEntity> getUserAchievements(Long userId) {
+        return userRepository.findById(userId)
+            .map(UserEntity::getAchievements)
+            .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
     }
 }
