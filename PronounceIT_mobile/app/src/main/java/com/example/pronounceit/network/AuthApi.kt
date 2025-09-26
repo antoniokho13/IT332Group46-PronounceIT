@@ -16,6 +16,7 @@ import com.example.pronounceit.network.models.ScoreRecordDTO
 import com.example.pronounceit.network.models.ScoreRecordEntity
 import com.example.pronounceit.network.models.UpdateUserRequest
 import com.example.pronounceit.network.models.WordEntity
+import com.example.pronounceit.network.models.AchievementEntity
 import okhttp3.MultipartBody
 import okhttp3.ResponseBody
 import retrofit2.Response
@@ -120,6 +121,9 @@ interface AuthApi {
     @POST("api/score-records/save-session-score")
     suspend fun createScoreRecord(@Body scoreRecordDTO: ScoreRecordDTO): Response<ScoreRecordEntity>
 
+    @GET("/api/achievements/active")  // Changed from "achievements/active"
+    suspend fun getActiveAchievements(): Response<List<AchievementEntity>>
+
     @PUT("/api/score-records/{scoreId}")
     suspend fun updateScoreRecord(
         @Path("scoreId") scoreId: Long,
@@ -177,4 +181,7 @@ interface AuthApi {
         @Part audio: MultipartBody.Part
     ): Response<PronunciationCheckResponse>
 
+    // Add this endpoint for badge images
+    @GET("/api/achievements/{achievementId}/badge")
+    suspend fun getAchievementBadge(@Path("achievementId") achievementId: Long): Response<ResponseBody>
 }
