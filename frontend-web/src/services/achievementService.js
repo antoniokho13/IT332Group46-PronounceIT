@@ -24,9 +24,7 @@ export const createAchievement = async (achievementData) => {
     // Append all the fields individually to match backend controller parameters
     formData.append('title', achievementData.name);
     formData.append('description', achievementData.description);
-    formData.append('triggerType', mapIconToTriggerType(achievementData.icon));
-    formData.append('triggerValue', achievementData.triggerValue || 1);
-    formData.append('pointsReward', achievementData.points || 0);
+    formData.append('pointsRequired', achievementData.pointsRequired || 100);
     formData.append('isActive', achievementData.isActive);
     
     // Only append badge file if it exists
@@ -46,9 +44,8 @@ export const createAchievement = async (achievementData) => {
       id: response.data.id,
       name: response.data.title,
       description: response.data.description,
-      points: response.data.pointsReward || 0,
-      icon: mapTriggerTypeToIcon(response.data.triggerType),
-      triggerValue: response.data.triggerValue || 1,
+      pointsRequired: response.data.pointsRequired || 100,
+      icon: achievementData.icon || 'faAward', // Use the icon from frontend
       isActive: response.data.isActive,
       createdDate: response.data.createdAt || new Date().toISOString(),
       badgeUrl: response.data.badgeImagePath ? 
@@ -78,9 +75,7 @@ export const updateAchievement = async (id, achievementData) => {
     // Append all the fields individually to match backend controller parameters
     formData.append('title', achievementData.name);
     formData.append('description', achievementData.description);
-    formData.append('triggerType', mapIconToTriggerType(achievementData.icon));
-    formData.append('triggerValue', achievementData.triggerValue || 1);
-    formData.append('pointsReward', achievementData.points || 0);
+    formData.append('pointsRequired', achievementData.pointsRequired || 100);
     formData.append('isActive', achievementData.isActive);
     
     // Only append badge file if it exists
@@ -100,9 +95,8 @@ export const updateAchievement = async (id, achievementData) => {
       id: response.data.id,
       name: response.data.title,
       description: response.data.description,
-      points: response.data.pointsReward || 0,
-      icon: mapTriggerTypeToIcon(response.data.triggerType),
-      triggerValue: response.data.triggerValue || 1,
+      pointsRequired: response.data.pointsRequired || 100,
+      icon: achievementData.icon || 'faAward', // Use the icon from frontend
       isActive: response.data.isActive,
       createdDate: response.data.createdAt || new Date().toISOString(),
       badgeUrl: response.data.badgeImagePath ? 
@@ -118,44 +112,8 @@ export const updateAchievement = async (id, achievementData) => {
   }
 };
 
-/**
- * Map icon name to backend trigger type
- * @param {string} iconName 
- * @returns {string} triggerType
- */
-const mapIconToTriggerType = (iconName) => {
-  const triggerTypeMap = {
-    "faTrophy": "CONSECUTIVE_CORRECT_ANSWERS",
-    "faStar": "FIRST_CORRECT_ANSWER",
-    "faMedal": "TOTAL_CORRECT_ANSWERS",
-    "faAward": "LESSONS_COMPLETED"
-  };
-  
-  return triggerTypeMap[iconName] || "LESSONS_COMPLETED";
-};
-
-/**
- * Map backend trigger type to icon name
- * @param {string} triggerType 
- * @returns {string} iconName
- */
-const mapTriggerTypeToIcon = (triggerType) => {
-  const iconMap = {
-    "CONSECUTIVE_CORRECT_ANSWERS": "faTrophy",
-    "FIRST_CORRECT_ANSWER": "faStar",
-    "TOTAL_CORRECT_ANSWERS": "faMedal",
-    "LESSONS_COMPLETED": "faAward",
-    // Add other mappings if needed
-    "DAILY_STREAK": "faCalendar",
-    "WEEKLY_STREAK": "faCalendarWeek",
-    "PERFECT_PRONUNCIATION_SCORE": "faMicrophone",
-    "TIME_SPENT_LEARNING": "faClock",
-    "FIRST_LOGIN": "faSignInAlt",
-    "PROFILE_COMPLETION": "faUserCheck"
-  };
-  
-  return iconMap[triggerType] || "faAward";
-};
+// Note: Icon mapping functions removed since we simplified the achievement system
+// Achievements now only require title, description, pointsRequired, and badge image
 
 /**
  * Get all achievements from the backend
@@ -172,14 +130,13 @@ export const getAllAchievements = async () => {
       id: achievement.id,
       name: achievement.title,
       description: achievement.description,
-      points: achievement.pointsReward || 0,
-      icon: mapTriggerTypeToIcon(achievement.triggerType),
+      pointsRequired: achievement.pointsRequired || 100,
+      icon: 'faAward', // Default icon since we removed trigger types
       createdDate: achievement.createdAt || new Date().toISOString(),
-      triggerValue: achievement.triggerValue || 1,
       isActive: achievement.isActive,
       // Update the URL construction to match the server's resource handler path
       badgeUrl: achievement.badgeImagePath ? 
-        `http://localhost:8080${achievement.badgeImagePath}` : null
+        `http://localhost:8080/${achievement.badgeImagePath}` : null
     }));
   } catch (error) {
     console.error("Error fetching achievements:", error);
@@ -223,9 +180,8 @@ export const toggleAchievementStatus = async (id) => {
       id: response.data.id,
       name: response.data.title,
       description: response.data.description,
-      points: response.data.pointsReward || 0,
-      icon: mapTriggerTypeToIcon(response.data.triggerType),
-      triggerValue: response.data.triggerValue || 1,
+      pointsRequired: response.data.pointsRequired || 100,
+      icon: 'faAward', // Default icon since we removed trigger types
       isActive: response.data.isActive,
       createdDate: response.data.createdAt || new Date().toISOString(),
       badgeUrl: response.data.badgeImagePath ? 

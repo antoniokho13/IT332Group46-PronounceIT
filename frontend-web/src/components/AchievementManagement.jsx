@@ -322,46 +322,35 @@ const AchievementManagement = () => {
           </div>
           
           <div className="form-group">
-            <label htmlFor="points">Points</label>
+            <label htmlFor="pointsRequired">Points Required to Unlock</label>
             <input
               type="number"
-              id="points"
-              placeholder="Enter points"
-              defaultValue={isEditing ? editingItem.points : ""}
-              min="0"
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label htmlFor="icon">Trigger Type</label>
-            <select
-              id="icon"
-              defaultValue={isEditing ? editingItem.icon : ""}
-              required
-            >
-              <option value="">Select a trigger type</option>
-              <option value="faTrophy">Consecutive Correct Answers</option>
-              <option value="faStar">First Correct Answer</option>
-              <option value="faMedal">Total Correct Answers</option>
-              <option value="faAward">Lessons Completed</option>
-              <option value="faCalendar">Daily Streak</option>
-              <option value="faCalendarWeek">Weekly Streak</option>
-              <option value="faMicrophone">Perfect Pronunciation Score</option>
-              <option value="faClock">Time Spent Learning</option>
-              <option value="faSignInAlt">First Login</option>
-              <option value="faUserCheck">Profile Completion</option>
-            </select>
-          </div>
-          <div className="form-group">
-            <label htmlFor="triggerValue">Trigger Value</label>
-            <input
-              type="number"
-              id="triggerValue"
-              placeholder="Enter trigger value"
-              defaultValue={isEditing && editingItem.triggerValue ? editingItem.triggerValue : "1"}
+              id="pointsRequired"
+              placeholder="Enter points required (e.g., 100, 250, 500)"
+              defaultValue={isEditing ? editingItem.pointsRequired : "100"}
               min="1"
               required
             />
+            <small className="field-hint">Students will unlock this achievement when they accumulate this many points</small>
+          </div>
+          <div className="form-group">
+            <label htmlFor="icon">Badge Icon</label>
+            <select
+              id="icon"
+              defaultValue={isEditing ? editingItem.icon : "faAward"}
+              required
+            >
+              <option value="faAward">Award (Default)</option>
+              <option value="faTrophy">Trophy</option>
+              <option value="faStar">Star</option>
+              <option value="faMedal">Medal</option>
+              <option value="faCalendar">Calendar</option>
+              <option value="faCalendarWeek">Weekly Calendar</option>
+              <option value="faMicrophone">Microphone</option>
+              <option value="faClock">Clock</option>
+              <option value="faSignInAlt">Sign In</option>
+              <option value="faUserCheck">User Check</option>
+            </select>
           </div>
           <div className="form-group">
             <label htmlFor="isActive">Status</label>
@@ -527,9 +516,8 @@ const AchievementManagement = () => {
       // Get form values
       const name = e.target.name.value;
       const description = e.target.description.value;
-      const points = parseInt(e.target.points.value, 10);
+      const pointsRequired = parseInt(e.target.pointsRequired.value, 10);
       const icon = e.target.icon.value;
-      const triggerValue = parseInt(e.target.triggerValue.value, 10);
       const isActive = e.target.isActive.value === "true";
       const badgeFile = e.target.badgeImage.files[0];
       
@@ -537,9 +525,8 @@ const AchievementManagement = () => {
       const achievementData = {
         name,
         description,
-        points,
+        pointsRequired,
         icon,
-        triggerValue,
         isActive,
         badgeFile
       };
@@ -660,7 +647,7 @@ const AchievementManagement = () => {
         </td>
         <td>{achievement.name}</td>
         <td className="achievement-description">{achievement.description}</td>
-        <td className="achievement-points">{achievement.points} pts</td>
+        <td className="achievement-points">{achievement.pointsRequired} pts</td>
         <td>{new Date(achievement.createdDate).toLocaleDateString()}</td>
         <td className="action-buttons-cell">
           <button
@@ -748,7 +735,7 @@ const AchievementManagement = () => {
                   <th>Icon</th>
                   <th>Name</th>
                   <th>Description</th>
-                  <th>Points</th>
+                  <th>Points Required</th>
                   <th>Created Date</th>
                   <th>Actions</th>
                 </tr>

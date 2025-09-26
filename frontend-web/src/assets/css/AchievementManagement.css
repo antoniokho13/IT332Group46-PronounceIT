@@ -186,3 +186,12 @@
   object-fit: cover;
   border-radius: 50%;
 }
+
+/* Field hint styling */
+.field-hint {
+  display: block;
+  font-size: 12px;
+  color: #6b7280;
+  margin-top: 4px;
+  font-style: italic;
+}
