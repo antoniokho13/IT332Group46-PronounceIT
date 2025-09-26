@@ -56,17 +56,17 @@ public class UserEntity implements UserDetails {
     @JsonIgnore
     private List<WordEntity> words;
 
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private StreakEntity streak;
+
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
-        name = "user_achievements",
-        joinColumns = @JoinColumn(name = "user_id"),
-        inverseJoinColumns = @JoinColumn(name = "achievement_id")
+            name = "user_achievements",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "achievement_id")
     )
     @JsonIgnore
     private List<AchievementEntity> achievements = new ArrayList<>();
-
-    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private StreakEntity streak;
 
     // ========= UserDetails Implementation ========= //
 
