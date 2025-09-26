@@ -1,160 +1,98 @@
 package com.capstone.group46.pronounceit.service;
 
+import com.capstone.group46.pronounceit.dto.StreakDTO;
 import com.capstone.group46.pronounceit.entity.StreakEntity;
+import com.capstone.group46.pronounceit.entity.UserEntity;
 import com.capstone.group46.pronounceit.repository.StreakRepository;
+import com.capstone.group46.pronounceit.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class StreakService {
-    
     @Autowired
     private StreakRepository streakRepository;
-    
-    public StreakEntity getUserStreak(Long userId) {
-        Optional<StreakEntity> streak = streakRepository.findByUserId(userId);
-        if (streak.isPresent()) {
-            return streak.get();
-        } else {
-            // Create new streak for user
-            StreakEntity newStreak = new StreakEntity(userId);
-            return streakRepository.save(newStreak);
+    @Autowired
+    private UserRepository userRepository;
+
+    public StreakEntity createStreakForUser(Long userId) {
+        Optional<UserEntity> userOpt = userRepository.findById(userId);
+        if (userOpt.isEmpty()) throw new RuntimeException("User not found");
+        UserEntity user = userOpt.get();
+        if (!"STUDENT".equalsIgnoreCase(user.getRole())) {
+            throw new RuntimeException("Only users with the STUDENT role can unlock a streak");
         }
-    }
-    
-    public StreakEntity updateUserActivity(Long userId) {
-        StreakEntity streak = getUserStreak(userId);
-        LocalDate today = LocalDate.now();
-        
-        // If user already did activity today, don't update
-        if (streak.getLastActivityDate() != null && streak.getLastActivityDate().equals(today)) {
-            return streak;
-        }
-        
-        // Check if streak should continue or reset
-        if (streak.getLastActivityDate() == null) {
-            // First time user activity
-            startNewStreak(streak, today);
-        } else {
-            long daysSinceLastActivity = ChronoUnit.DAYS.between(streak.getLastActivityDate(), today);
-            
-            if (daysSinceLastActivity == 1) {
-                // Continue streak - consecutive day
-                continueStreak(streak, today);
-            } else if (daysSinceLastActivity > 1) {
-                // Reset streak - missed days
-                resetAndStartNewStreak(streak, today);
-            }
-            // If daysSinceLastActivity == 0, it means same day - already handled above
-        }
-        
+        if (streakRepository.existsByUser(user)) throw new RuntimeException("Streak already exists for user");
+        StreakEntity streak = new StreakEntity(user);
+        streak.setCurrentStreak(1);
+        streak.setLongestStreak(1);
+        streak.setLastActivityDate(LocalDate.now());
+        streak.setStreakStartDate(LocalDate.now());
+        streak.setTotalActiveDays(1);
         return streakRepository.save(streak);
     }
-    
-    private void startNewStreak(StreakEntity streak, LocalDate today) {
-        streak.setCurrentStreak(1);
-        streak.setLastActivityDate(today);
-        streak.setStreakStartDate(today);
-        streak.setTotalActiveDays(streak.getTotalActiveDays() + 1);
-        
-        // Update longest streak if this is the first streak or if current becomes longest
-        if (streak.getLongestStreak() < 1) {
-            streak.setLongestStreak(1);
-        }
-    }
-    
-    private void continueStreak(StreakEntity streak, LocalDate today) {
-        streak.setCurrentStreak(streak.getCurrentStreak() + 1);
-        streak.setLastActivityDate(today);
-        streak.setTotalActiveDays(streak.getTotalActiveDays() + 1);
-        
-        // Update longest streak if current streak is now the longest
-        if (streak.getCurrentStreak() > streak.getLongestStreak()) {
-            streak.setLongestStreak(streak.getCurrentStreak());
-        }
-    }
-    
-    private void resetAndStartNewStreak(StreakEntity streak, LocalDate today) {
-        streak.setCurrentStreak(1);
-        streak.setLastActivityDate(today);
-        streak.setStreakStartDate(today);
-        streak.setTotalActiveDays(streak.getTotalActiveDays() + 1);
-    }
-    
-    public void resetUserStreak(Long userId) {
-        Optional<StreakEntity> streakOpt = streakRepository.findByUserId(userId);
-        if (streakOpt.isPresent()) {
-            StreakEntity streak = streakOpt.get();
-            streak.setCurrentStreak(0);
-            streak.setStreakStartDate(null);
-            streakRepository.save(streak);
-        }
-    }
-    
-    public List<StreakEntity> getActiveStreaks() {
-        return streakRepository.findActiveStreaksOrderByStreakDesc();
-    }
-    
-    public List<StreakEntity> getTopLongestStreaks() {
-        return streakRepository.findTop10LongestStreaks();
-    }
-    
-    public Double getAverageActiveStreak() {
-        return streakRepository.findAverageActiveStreak();
-    }
-    
-    public Long getUsersWithStreakAtLeast(Integer days) {
-        return streakRepository.countUsersWithStreakAtLeast(days);
-    }
-    
-    // Scheduled task to reset streaks for users who missed days
-    @Scheduled(cron = "0 0 1 * * ?") // Run daily at 1 AM
-    public void resetInactiveStreaks() {
-        LocalDate yesterday = LocalDate.now().minusDays(1);
-        List<StreakEntity> streaksToReset = streakRepository.findStreaksToReset(yesterday);
-        
-        for (StreakEntity streak : streaksToReset) {
-            long daysSinceLastActivity = ChronoUnit.DAYS.between(streak.getLastActivityDate(), LocalDate.now());
-            
-            if (daysSinceLastActivity > 1) {
-                streak.setCurrentStreak(0);
-                streak.setStreakStartDate(null);
-                streakRepository.save(streak);
-            }
-        }
-    }
-    
-    public boolean isStreakActive(Long userId) {
-        StreakEntity streak = getUserStreak(userId);
-        if (streak.getLastActivityDate() == null || streak.getCurrentStreak() == 0) {
-            return false;
-        }
-        
-        long daysSinceLastActivity = ChronoUnit.DAYS.between(streak.getLastActivityDate(), LocalDate.now());
-        return daysSinceLastActivity <= 1; // Active if did activity today or yesterday
-    }
-    
-    public int getDaysUntilStreakReset(Long userId) {
-        StreakEntity streak = getUserStreak(userId);
-        if (streak.getLastActivityDate() == null) {
-            return 0;
-        }
-        
+
+    public StreakEntity updateStreak(Long userId) {
+        Optional<UserEntity> userOpt = userRepository.findById(userId);
+        if (userOpt.isEmpty()) throw new RuntimeException("User not found");
+        UserEntity user = userOpt.get();
+        Optional<StreakEntity> streakOpt = streakRepository.findByUser(user);
+        if (streakOpt.isEmpty()) throw new RuntimeException("Streak not found for user");
+        StreakEntity streak = streakOpt.get();
         LocalDate today = LocalDate.now();
-        long daysSinceLastActivity = ChronoUnit.DAYS.between(streak.getLastActivityDate(), today);
-        
-        if (daysSinceLastActivity == 0) {
-            return 1; // Has until tomorrow
-        } else if (daysSinceLastActivity == 1) {
-            return 0; // Must do activity today or streak resets
-        } else {
-            return -1; // Streak already broken
-        }
+        LocalDate last = streak.getLastActivityDate();
+        if (last == null || last.isBefore(today.minusDays(1))) {
+            // Missed a day, reset streak
+            streak.setCurrentStreak(1);
+            streak.setStreakStartDate(today);
+            streak.setTotalActiveDays(1);
+        } else if (last.isEqual(today.minusDays(1))) {
+            // Consecutive day, increment streak
+            streak.setCurrentStreak(streak.getCurrentStreak() + 1);
+            streak.setTotalActiveDays(streak.getTotalActiveDays() + 1);
+            if (streak.getCurrentStreak() > streak.getLongestStreak()) {
+                streak.setLongestStreak(streak.getCurrentStreak());
+            }
+        } // else if last.isEqual(today), do nothing (already updated today)
+        streak.setLastActivityDate(today);
+        return streakRepository.save(streak);
+    }
+
+    private StreakDTO toDTO(StreakEntity streak) {
+        return new StreakDTO(
+            streak.getUser().getId(),
+            streak.getCurrentStreak(),
+            streak.getLongestStreak(),
+            streak.getLastActivityDate(),
+            streak.getStreakStartDate(),
+            streak.getTotalActiveDays()
+        );
+    }
+
+    public StreakDTO getStreakForUser(Long userId) {
+        Optional<UserEntity> userOpt = userRepository.findById(userId);
+        if (userOpt.isEmpty()) throw new RuntimeException("User not found");
+        UserEntity user = userOpt.get();
+        Optional<StreakEntity> streakOpt = streakRepository.findByUser(user);
+        if (streakOpt.isEmpty()) throw new RuntimeException("Streak not found for user");
+        return toDTO(streakOpt.get());
+    }
+
+    public List<StreakDTO> getTopStreaks(int limit) {
+        List<StreakEntity> topStreaks = streakRepository.findTop10LongestStreaks();
+        return topStreaks.stream().limit(limit).map(this::toDTO).collect(Collectors.toList());
+    }
+
+    public StreakDTO createStreakForUserDTO(Long userId) {
+        return toDTO(createStreakForUser(userId));
+    }
+
+    public StreakDTO updateStreakDTO(Long userId) {
+        return toDTO(updateStreak(userId));
     }
 }

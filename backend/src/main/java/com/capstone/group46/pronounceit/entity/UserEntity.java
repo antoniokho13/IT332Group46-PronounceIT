@@ -23,6 +23,8 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.Table;
 
 @Entity
@@ -62,6 +64,9 @@ public class UserEntity implements UserDetails {
     )
     @JsonIgnore
     private List<AchievementEntity> achievements = new ArrayList<>();
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private StreakEntity streak;
 
     // ========= UserDetails Implementation ========= //
 
