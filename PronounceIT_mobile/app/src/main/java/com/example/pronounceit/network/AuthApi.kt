@@ -17,6 +17,7 @@ import com.example.pronounceit.network.models.ScoreRecordEntity
 import com.example.pronounceit.network.models.UpdateUserRequest
 import com.example.pronounceit.network.models.WordEntity
 import com.example.pronounceit.network.models.AchievementEntity
+import com.example.pronounceit.network.models.StreakDTO
 import okhttp3.MultipartBody
 import okhttp3.ResponseBody
 import retrofit2.Response
@@ -184,4 +185,10 @@ interface AuthApi {
     // Add this endpoint for badge images
     @GET("/api/achievements/{achievementId}/badge")
     suspend fun getAchievementBadge(@Path("achievementId") achievementId: Long): Response<ResponseBody>
+
+    @GET("api/streaks/{userId}")
+    suspend fun getStreak(@Path("userId") userId: Long): Response<StreakDTO>
+
+    @POST("/api/streaks/{userId}")
+    suspend fun createStreak(@Path("userId") userId: Long): Response<StreakDTO>
 }
