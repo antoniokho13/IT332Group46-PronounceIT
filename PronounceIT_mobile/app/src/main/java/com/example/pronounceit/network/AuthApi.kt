@@ -189,6 +189,9 @@ interface AuthApi {
     @GET("api/streaks/{userId}")
     suspend fun getStreak(@Path("userId") userId: Long): Response<StreakDTO>
 
-    @POST("/api/streaks/{userId}")
+    @POST("api/streaks/{userId}")
     suspend fun createStreak(@Path("userId") userId: Long): Response<StreakDTO>
+
+    @PUT("api/streaks/{userId}")
+    suspend fun updateStreak(@Path("userId") userId: Long): Response<StreakDTO>
 }

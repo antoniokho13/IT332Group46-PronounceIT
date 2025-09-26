@@ -4,6 +4,7 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.media.MediaPlayer
 import android.os.Bundle
+import android.os.Handler
 import android.util.Log
 import android.view.animation.AnimationUtils
 import android.widget.ImageView
@@ -16,13 +17,16 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import androidx.appcompat.app.AlertDialog
+import android.view.LayoutInflater
+import android.os.Looper
 
 class HomeActivity : AppCompatActivity() {
+    private var previousStreak = 0
+    private lateinit var sharedPreferences: SharedPreferences
     private lateinit var streakDisplay: TextView
     private lateinit var playButton: ImageView
     private lateinit var logoutButton: ImageView
     private lateinit var settingsButton: ImageView
-    private lateinit var sharedPreferences: SharedPreferences
     private lateinit var buttonSound: MediaPlayer
     private lateinit var backgroundMusic: MediaPlayer
     private var isMusicPlaying = true
@@ -92,8 +96,18 @@ class HomeActivity : AppCompatActivity() {
             }
         }
 
-        // Update streak display
-        loadStreakCount()
+        sharedPreferences = getSharedPreferences("PronounceItPrefs", MODE_PRIVATE)
+        streakDisplay = findViewById(R.id.streakCountText)
+
+        // Check if coming back from completed lesson
+        val lessonCompleted = sharedPreferences.getBoolean("lesson_completed", false)
+        if (lessonCompleted) {
+            updateStreak()
+            // Reset the flag
+            sharedPreferences.edit().putBoolean("lesson_completed", false).apply()
+        } else {
+            loadStreakCount()
+        }
     }
 
     private fun loadStreakCount() {
@@ -102,12 +116,12 @@ class HomeActivity : AppCompatActivity() {
             Log.d("HomeActivity", "Loading streak for user: $userId")
             CoroutineScope(Dispatchers.IO).launch {
                 try {
-                    // Try to create streak first
+                    // First try to create a new streak
                     var response = RetrofitInstance.getApi(this@HomeActivity)
                         .createStreak(userId)
 
+                    // If creation fails (streak might exist), try to get existing streak
                     if (!response.isSuccessful) {
-                        // If creation fails (probably because it exists), try to get existing streak
                         response = RetrofitInstance.getApi(this@HomeActivity)
                             .getStreak(userId)
                     }
@@ -118,14 +132,22 @@ class HomeActivity : AppCompatActivity() {
                                 val streakDTO = response.body()
                                 Log.d("HomeActivity", "Streak data received: $streakDTO")
                                 if (streakDTO != null) {
+                                    previousStreak = streakDTO.currentStreak
                                     updateStreakDisplay(streakDTO.currentStreak)
-                                    Log.d("HomeActivity", "Updated streak display with: ${streakDTO.currentStreak}")
+                                } else {
+                                    Log.e("HomeActivity", "Streak DTO is null")
+                                    updateStreakDisplay(0)
                                 }
+                            }
+                            404 -> {
+                                Log.d("HomeActivity", "No streak found - creating new one")
+                                createNewStreak(userId)
                             }
                             else -> {
                                 val errorBody = response.errorBody()?.string()
                                 Log.e("HomeActivity", "Server error: ${response.code()}, $errorBody")
                                 updateStreakDisplay(0)
+                                showErrorToast("Failed to load streak data")
                             }
                         }
                     }
@@ -133,6 +155,66 @@ class HomeActivity : AppCompatActivity() {
                     Log.e("HomeActivity", "Network error", e)
                     withContext(Dispatchers.Main) {
                         updateStreakDisplay(0)
+                        showErrorToast("Network error: ${e.message}")
+                    }
+                }
+            }
+        }
+    }
+
+    private fun createNewStreak(userId: Long) {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val response = RetrofitInstance.getApi(this@HomeActivity)
+                    .createStreak(userId)
+
+                withContext(Dispatchers.Main) {
+                    if (response.isSuccessful) {
+                        val streakDTO = response.body()
+                        if (streakDTO != null) {
+                            previousStreak = streakDTO.currentStreak
+                            updateStreakDisplay(streakDTO.currentStreak)
+                        }
+                    } else {
+                        Log.e("HomeActivity", "Failed to create streak: ${response.code()}")
+                        updateStreakDisplay(0)
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e("HomeActivity", "Error creating streak", e)
+                withContext(Dispatchers.Main) {
+                    updateStreakDisplay(0)
+                }
+            }
+        }
+    }
+
+    private fun updateStreak() {
+        val userId = sharedPreferences.getLong("userId", -1L)
+        if (userId != -1L) {
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    val response = RetrofitInstance.getApi(this@HomeActivity)
+                        .updateStreak(userId)
+
+                    withContext(Dispatchers.Main) {
+                        if (response.isSuccessful) {
+                            val streakDTO = response.body()
+                            streakDTO?.let {
+                                if (it.currentStreak > previousStreak) {
+                                    showStreakUpdateDialog(it.currentStreak)
+                                }
+                                updateStreakDisplay(it.currentStreak)
+                            }
+                        } else {
+                            Log.e("HomeActivity", "Failed to update streak: ${response.code()}")
+                            showErrorToast("Failed to update streak")
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.e("HomeActivity", "Error updating streak", e)
+                    withContext(Dispatchers.Main) {
+                        showErrorToast("Network error: ${e.message}")
                     }
                 }
             }
@@ -144,18 +226,56 @@ class HomeActivity : AppCompatActivity() {
     }
 
     private fun updateStreakDisplay(days: Int) {
-        // Find the streak display TextView
         val streakDisplay = findViewById<TextView>(R.id.streakCountText)
-        streakDisplay.text = days.toString()
         
-        // Add click listener for streak details
-        streakDisplay.setOnClickListener {
-            AlertDialog.Builder(this)
-                .setTitle("Learning Streak")
-                .setMessage("You've been learning for $days days in a row!")
-                .setPositiveButton("Keep it up!") { dialog, _ -> dialog.dismiss() }
-                .show()
+        if (days > previousStreak && previousStreak > 0) {
+            // Streak increased - show animation and dialog
+            val animation = AnimationUtils.loadAnimation(this, R.anim.streak_increment)
+            streakDisplay.startAnimation(animation)
+            showStreakUpdateDialog(days)
         }
+        
+        streakDisplay.text = days.toString()
+        previousStreak = days
+
+        streakDisplay.setOnClickListener {
+            showStreakDetailsDialog(days)
+        }
+    }
+
+    private fun showStreakUpdateDialog(days: Int) {
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.streak_update_dialog, null)
+        
+        val dialog = AlertDialog.Builder(this, R.style.StreakDialogTheme)
+            .setView(dialogView)
+            .setCancelable(true)
+            .create()
+
+        // Customize dialog content
+        dialogView.apply {
+            findViewById<TextView>(R.id.streakMessage).text = "Streak Increased!"
+            findViewById<TextView>(R.id.streakSubMessage).text = 
+                "You're on fire! $days days of continuous learning"
+        }
+
+        // Add animation to dialog
+        dialog.window?.attributes?.windowAnimations = R.style.DialogAnimation
+        
+        dialog.show()
+
+        // Auto dismiss after 3 seconds
+        Handler(Looper.getMainLooper()).postDelayed({
+            dialog.dismiss()
+        }, 3000)
+    }
+
+    private fun showStreakDetailsDialog(days: Int) {
+        val builder = AlertDialog.Builder(this)
+        builder.setTitle("Your Learning Streak")
+            .setMessage("You've been learning consistently for $days days!\n\n" +
+                    "Keep practicing daily to maintain your streak.")
+            .setPositiveButton("Keep Going!") { dialog, _ -> dialog.dismiss() }
+            .show()
     }
 
     private fun setupBackgroundMusic() {
