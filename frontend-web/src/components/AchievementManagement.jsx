@@ -1,23 +1,14 @@
 import {
   faAward,
-  faCalendar,
-  faCalendarWeek,
   faCheckCircle,
-  faClock,
   faEdit,
   faExclamationCircle,
   faInfoCircle,
-  faMedal,
-  faMicrophone,
   faPlus,
-  faSignInAlt,
   faSignOutAlt,
-  faStar,
   faTimes,
   faTrash,
-  faTrophy,
   faUser,
-  faUserCheck,
   faUsers
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -334,25 +325,6 @@ const AchievementManagement = () => {
             <small className="field-hint">Students will unlock this achievement when they accumulate this many points</small>
           </div>
           <div className="form-group">
-            <label htmlFor="icon">Badge Icon</label>
-            <select
-              id="icon"
-              defaultValue={isEditing ? editingItem.icon : "faAward"}
-              required
-            >
-              <option value="faAward">Award (Default)</option>
-              <option value="faTrophy">Trophy</option>
-              <option value="faStar">Star</option>
-              <option value="faMedal">Medal</option>
-              <option value="faCalendar">Calendar</option>
-              <option value="faCalendarWeek">Weekly Calendar</option>
-              <option value="faMicrophone">Microphone</option>
-              <option value="faClock">Clock</option>
-              <option value="faSignInAlt">Sign In</option>
-              <option value="faUserCheck">User Check</option>
-            </select>
-          </div>
-          <div className="form-group">
             <label htmlFor="isActive">Status</label>
             <select
               id="isActive"
@@ -517,7 +489,6 @@ const AchievementManagement = () => {
       const name = e.target.name.value;
       const description = e.target.description.value;
       const pointsRequired = parseInt(e.target.pointsRequired.value, 10);
-      const icon = e.target.icon.value;
       const isActive = e.target.isActive.value === "true";
       const badgeFile = e.target.badgeImage.files[0];
       
@@ -526,7 +497,6 @@ const AchievementManagement = () => {
         name,
         description,
         pointsRequired,
-        icon,
         isActive,
         badgeFile
       };
@@ -585,34 +555,6 @@ const AchievementManagement = () => {
     }
   };
 
-  // Render icon based on string
-  const renderIconComponent = (iconName) => {
-    switch(iconName) {
-      case 'faTrophy':
-        return <FontAwesomeIcon icon={faTrophy} />;
-      case 'faStar':
-        return <FontAwesomeIcon icon={faStar} />;
-      case 'faMedal':
-        return <FontAwesomeIcon icon={faMedal} />;
-      case 'faAward':
-        return <FontAwesomeIcon icon={faAward} />;
-      case 'faCalendar':
-        return <FontAwesomeIcon icon={faCalendar} />;
-      case 'faCalendarWeek':
-        return <FontAwesomeIcon icon={faCalendarWeek} />;
-      case 'faMicrophone':
-        return <FontAwesomeIcon icon={faMicrophone} />;
-      case 'faClock':
-        return <FontAwesomeIcon icon={faClock} />;
-      case 'faSignInAlt':
-        return <FontAwesomeIcon icon={faSignInAlt} />;
-      case 'faUserCheck':
-        return <FontAwesomeIcon icon={faUserCheck} />;
-      default:
-        return <FontAwesomeIcon icon={faAward} />;
-    }
-  };
-
   const renderAchievementsTable = () => {
     if (loading) {
       return (
@@ -639,10 +581,20 @@ const AchievementManagement = () => {
                 src={achievement.badgeUrl} 
                 alt={achievement.name}
                 className="badge-image"
+                onError={(e) => {
+                  console.error('Badge image failed to load:', achievement.badgeUrl);
+                  e.target.style.display = 'none';
+                  e.target.nextSibling.style.display = 'flex';
+                }}
+                onLoad={() => {
+                  console.log('Badge image loaded successfully:', achievement.badgeUrl);
+                }}
               />
-            ) : (
-              renderIconComponent(achievement.icon)
-            )}
+            ) : null}
+            <FontAwesomeIcon 
+              icon={faAward} 
+              style={{ display: achievement.badgeUrl ? 'none' : 'flex' }}
+            />
           </div>
         </td>
         <td>{achievement.name}</td>

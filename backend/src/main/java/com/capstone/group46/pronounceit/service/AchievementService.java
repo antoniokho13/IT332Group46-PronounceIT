@@ -7,8 +7,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -23,8 +24,6 @@ public class AchievementService {
     
     @Autowired
     private AchievementRepository achievementRepository;
-    
-    private static final String BADGE_UPLOAD_DIR = "src/main/resources/images/badges/";
     
     public List<AchievementEntity> getAllAchievements() {
         return achievementRepository.findAll();
@@ -162,23 +161,25 @@ public class AchievementService {
     }
     
     private String saveBadgeImage(MultipartFile file) throws IOException {
-        // Create badges directory if it doesn't exist
-        Path uploadPath = Paths.get(BADGE_UPLOAD_DIR);
-        if (!Files.exists(uploadPath)) {
-            Files.createDirectories(uploadPath);
+        // Define the directory to store badge images (exactly like WordService)
+        Path badgeDirPath = Paths.get("backend", "src", "main", "resources", "images", "badges");
+        File badgeDir = badgeDirPath.toFile();
+
+        // Create the directory if it doesn't exist
+        if (!badgeDir.exists()) {
+            badgeDir.mkdirs();
         }
-        
-        // Generate unique filename
-        String originalFilename = file.getOriginalFilename();
-        String fileExtension = originalFilename != null ? 
-            originalFilename.substring(originalFilename.lastIndexOf(".")) : ".png";
-        String uniqueFilename = UUID.randomUUID().toString() + "_" + 
-            (originalFilename != null ? originalFilename.replaceFirst("[.][^.]+$", "") : "badge") + fileExtension;
-        
-        // Save file
-        Path filePath = uploadPath.resolve(uniqueFilename);
-        Files.copy(file.getInputStream(), filePath);
-        
-        return "images/badges/" + uniqueFilename;
+
+        // Generate a unique file name
+        String fileName = UUID.randomUUID().toString() + "_" + file.getOriginalFilename();
+        Path filePath = badgeDirPath.resolve(fileName);
+
+        // Save the file to the directory
+        try (FileOutputStream fos = new FileOutputStream(filePath.toFile())) {
+            fos.write(file.getBytes());
+        }
+
+        // Return the relative path to access the image
+        return "/images/badges/" + fileName;
     }
 }
