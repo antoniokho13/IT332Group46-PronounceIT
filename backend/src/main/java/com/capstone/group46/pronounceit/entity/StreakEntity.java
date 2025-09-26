@@ -11,18 +11,20 @@ import jakarta.persistence.Id;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.JoinColumn;
 
 @Entity
 @Table(name = "streaks")
 public class StreakEntity {
-    
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    
-    @Column(name = "user_id", nullable = false)
-    private Long userId;
-    
+
+    @OneToOne
+    @JoinColumn(name = "user_id", nullable = false, unique = true)
+    private UserEntity user;
+
     @Column(name = "current_streak", nullable = false)
     private Integer currentStreak = 0;
     
@@ -58,8 +60,8 @@ public class StreakEntity {
     // Constructors
     public StreakEntity() {}
     
-    public StreakEntity(Long userId) {
-        this.userId = userId;
+    public StreakEntity(UserEntity user) {
+        this.user = user;
         this.currentStreak = 0;
         this.longestStreak = 0;
         this.totalActiveDays = 0;
@@ -74,12 +76,12 @@ public class StreakEntity {
         this.id = id;
     }
     
-    public Long getUserId() {
-        return userId;
+    public UserEntity getUser() {
+        return user;
     }
     
-    public void setUserId(Long userId) {
-        this.userId = userId;
+    public void setUser(UserEntity user) {
+        this.user = user;
     }
     
     public Integer getCurrentStreak() {
