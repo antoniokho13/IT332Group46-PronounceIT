@@ -4,8 +4,10 @@ import android.content.Intent
 import android.content.SharedPreferences
 import android.media.MediaPlayer
 import android.os.Bundle
+import android.util.Log
 import android.view.animation.AnimationUtils
 import android.widget.ImageView
+import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.example.pronounceit.network.RetrofitInstance
@@ -13,12 +15,12 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import androidx.appcompat.app.AlertDialog
 
 class HomeActivity : AppCompatActivity() {
-
+    private lateinit var streakDisplay: TextView
     private lateinit var playButton: ImageView
     private lateinit var logoutButton: ImageView
-    private lateinit var musicToggleButton: ImageView
     private lateinit var settingsButton: ImageView
     private lateinit var sharedPreferences: SharedPreferences
     private lateinit var buttonSound: MediaPlayer
@@ -32,17 +34,14 @@ class HomeActivity : AppCompatActivity() {
         // Initialize UI elements
         playButton = findViewById(R.id.playButton)
         logoutButton = findViewById(R.id.logoutButton)
-        musicToggleButton = findViewById(R.id.musicToggleButton)
         settingsButton = findViewById(R.id.settingsButton)
+        streakDisplay = findViewById(R.id.streakCountText) // Changed from musicToggleButton to streakCountText
 
         // Initialize button sound
         buttonSound = MediaPlayer.create(this, R.raw.button_click)
 
         // Initialize background music
         setupBackgroundMusic()
-
-        // Set up music toggle button
-        setupMusicToggleButton()
 
         // Apply bounce animation to the logo
         val logoImageView = findViewById<ImageView>(R.id.logoImageView)
@@ -92,26 +91,70 @@ class HomeActivity : AppCompatActivity() {
                 navigateToLogin()
             }
         }
+
+        // Update streak display
+        loadStreakCount()
     }
 
-    private fun setupMusicToggleButton() {
-        // Initially show the mute button since music is playing
-        musicToggleButton.setImageResource(R.drawable.mutebutton)
+    private fun loadStreakCount() {
+        val userId = sharedPreferences.getLong("userId", -1L)
+        if (userId != -1L) {
+            Log.d("HomeActivity", "Loading streak for user: $userId")
+            CoroutineScope(Dispatchers.IO).launch {
+                try {
+                    // Try to create streak first
+                    var response = RetrofitInstance.getApi(this@HomeActivity)
+                        .createStreak(userId)
 
-        musicToggleButton.setOnClickListener {
-            playButtonSound() // Play click sound
+                    if (!response.isSuccessful) {
+                        // If creation fails (probably because it exists), try to get existing streak
+                        response = RetrofitInstance.getApi(this@HomeActivity)
+                            .getStreak(userId)
+                    }
 
-            if (isMusicPlaying) {
-                // Currently playing, so mute it
-                backgroundMusic.pause()
-                musicToggleButton.setImageResource(R.drawable.mutebutton)
-                isMusicPlaying = false
-            } else {
-                // Currently muted, so play it
-                backgroundMusic.start()
-                musicToggleButton.setImageResource(R.drawable.musicbutton)
-                isMusicPlaying = true
+                    withContext(Dispatchers.Main) {
+                        when (response.code()) {
+                            200 -> {
+                                val streakDTO = response.body()
+                                Log.d("HomeActivity", "Streak data received: $streakDTO")
+                                if (streakDTO != null) {
+                                    updateStreakDisplay(streakDTO.currentStreak)
+                                    Log.d("HomeActivity", "Updated streak display with: ${streakDTO.currentStreak}")
+                                }
+                            }
+                            else -> {
+                                val errorBody = response.errorBody()?.string()
+                                Log.e("HomeActivity", "Server error: ${response.code()}, $errorBody")
+                                updateStreakDisplay(0)
+                            }
+                        }
+                    }
+                } catch (e: Exception) {
+                    Log.e("HomeActivity", "Network error", e)
+                    withContext(Dispatchers.Main) {
+                        updateStreakDisplay(0)
+                    }
+                }
             }
+        }
+    }
+
+    private fun showErrorToast(message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
+    }
+
+    private fun updateStreakDisplay(days: Int) {
+        // Find the streak display TextView
+        val streakDisplay = findViewById<TextView>(R.id.streakCountText)
+        streakDisplay.text = days.toString()
+        
+        // Add click listener for streak details
+        streakDisplay.setOnClickListener {
+            AlertDialog.Builder(this)
+                .setTitle("Learning Streak")
+                .setMessage("You've been learning for $days days in a row!")
+                .setPositiveButton("Keep it up!") { dialog, _ -> dialog.dismiss() }
+                .show()
         }
     }
 
@@ -194,5 +237,14 @@ class HomeActivity : AppCompatActivity() {
     override fun onBackPressed() {
         super.onBackPressed()
         Toast.makeText(this, "Please use the logout button to exit", Toast.LENGTH_SHORT).show()
+    }
+
+    private fun showStreakDetails() {
+        val streakCount = streakDisplay.text.toString().toIntOrNull() ?: 0
+        AlertDialog.Builder(this)
+            .setTitle("Streak Details")
+            .setMessage("Your current learning streak: $streakCount days")
+            .setPositiveButton("Keep it up!") { dialog, _ -> dialog.dismiss() }
+            .show()
     }
 }
