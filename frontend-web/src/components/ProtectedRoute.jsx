@@ -24,7 +24,7 @@ const ProtectedRoute = ({ component: Component, requiredRole = null }) => {
       case 'TEACHER':
         dashboardPath = '/teacher-dashboard';
         break;
-      case 'USER':
+      case 'STUDENT':
         dashboardPath = '/user-dashboard';
         break;
       default:

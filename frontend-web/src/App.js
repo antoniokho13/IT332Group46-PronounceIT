@@ -19,7 +19,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route 
           path="/user-dashboard" 
-          element={<ProtectedRoute component={UserDashboard} requiredRole="USER" />} 
+          element={<ProtectedRoute component={UserDashboard} requiredRole="STUDENT" />} 
         />
         <Route 
           path="/teacher-dashboard" 
