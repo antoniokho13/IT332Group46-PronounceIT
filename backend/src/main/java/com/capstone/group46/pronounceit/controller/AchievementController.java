@@ -1,7 +1,6 @@
 package com.capstone.group46.pronounceit.controller;
 
 import com.capstone.group46.pronounceit.entity.AchievementEntity;
-import com.capstone.group46.pronounceit.entity.AchievementEntity.TriggerType;
 import com.capstone.group46.pronounceit.service.AchievementService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -44,9 +43,7 @@ public class AchievementController {
     public ResponseEntity<?> createAchievement(
             @RequestParam("title") String title,
             @RequestParam("description") String description,
-            @RequestParam("triggerType") TriggerType triggerType,
-            @RequestParam(value = "triggerValue", required = false) Integer triggerValue,
-            @RequestParam(value = "pointsReward", required = false) Integer pointsReward,
+            @RequestParam("pointsRequired") Integer pointsRequired,
             @RequestParam(value = "isActive", defaultValue = "true") Boolean isActive,
             @RequestParam(value = "badgeFile", required = false) MultipartFile badgeFile) {
         
@@ -54,9 +51,7 @@ public class AchievementController {
             AchievementEntity achievement = new AchievementEntity();
             achievement.setTitle(title);
             achievement.setDescription(description);
-            achievement.setTriggerType(triggerType);
-            achievement.setTriggerValue(triggerValue);
-            achievement.setPointsReward(pointsReward);
+            achievement.setPointsRequired(pointsRequired);
             achievement.setIsActive(isActive);
             
             AchievementEntity createdAchievement = achievementService.createAchievementWithBadge(achievement, badgeFile);
@@ -85,9 +80,7 @@ public class AchievementController {
             @PathVariable Long id,
             @RequestParam("title") String title,
             @RequestParam("description") String description,
-            @RequestParam("triggerType") TriggerType triggerType,
-            @RequestParam(value = "triggerValue", required = false) Integer triggerValue,
-            @RequestParam(value = "pointsReward", required = false) Integer pointsReward,
+            @RequestParam("pointsRequired") Integer pointsRequired,
             @RequestParam(value = "isActive", defaultValue = "true") Boolean isActive,
             @RequestParam(value = "badgeFile", required = false) MultipartFile badgeFile) {
         
@@ -95,9 +88,7 @@ public class AchievementController {
             AchievementEntity achievement = new AchievementEntity();
             achievement.setTitle(title);
             achievement.setDescription(description);
-            achievement.setTriggerType(triggerType);
-            achievement.setTriggerValue(triggerValue);
-            achievement.setPointsReward(pointsReward);
+            achievement.setPointsRequired(pointsRequired);
             achievement.setIsActive(isActive);
             
             AchievementEntity updatedAchievement = achievementService.updateAchievementWithBadge(id, achievement, badgeFile);
@@ -141,9 +132,15 @@ public class AchievementController {
         }
     }
     
-    @GetMapping("/trigger/{triggerType}")
-    public ResponseEntity<List<AchievementEntity>> getAchievementsByTriggerType(@PathVariable TriggerType triggerType) {
-        List<AchievementEntity> achievements = achievementService.getAchievementsByTriggerType(triggerType);
+    @GetMapping("/eligible/{userPoints}")
+    public ResponseEntity<List<AchievementEntity>> getEligibleAchievements(@PathVariable Integer userPoints) {
+        List<AchievementEntity> achievements = achievementService.getEligibleAchievements(userPoints);
+        return ResponseEntity.ok(achievements);
+    }
+    
+    @GetMapping("/ordered-by-points")
+    public ResponseEntity<List<AchievementEntity>> getAchievementsOrderedByPoints() {
+        List<AchievementEntity> achievements = achievementService.getAchievementsOrderedByPoints();
         return ResponseEntity.ok(achievements);
     }
     
@@ -151,10 +148,5 @@ public class AchievementController {
     public ResponseEntity<List<AchievementEntity>> searchAchievements(@RequestParam String title) {
         List<AchievementEntity> achievements = achievementService.searchAchievementsByTitle(title);
         return ResponseEntity.ok(achievements);
-    }
-    
-    @GetMapping("/trigger-types")
-    public ResponseEntity<TriggerType[]> getAllTriggerTypes() {
-        return ResponseEntity.ok(TriggerType.values());
     }
 }

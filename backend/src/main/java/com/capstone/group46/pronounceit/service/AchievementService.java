@@ -1,7 +1,7 @@
 package com.capstone.group46.pronounceit.service;
 
 import com.capstone.group46.pronounceit.entity.AchievementEntity;
-import com.capstone.group46.pronounceit.entity.AchievementEntity.TriggerType;
+import com.capstone.group46.pronounceit.entity.UserEntity;
 import com.capstone.group46.pronounceit.repository.AchievementRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -11,9 +11,12 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class AchievementService {
@@ -61,9 +64,7 @@ public class AchievementService {
             AchievementEntity achievement = existingAchievement.get();
             achievement.setTitle(updatedAchievement.getTitle());
             achievement.setDescription(updatedAchievement.getDescription());
-            achievement.setTriggerType(updatedAchievement.getTriggerType());
-            achievement.setTriggerValue(updatedAchievement.getTriggerValue());
-            achievement.setPointsReward(updatedAchievement.getPointsReward());
+            achievement.setPointsRequired(updatedAchievement.getPointsRequired());
             achievement.setIsActive(updatedAchievement.getIsActive());
             
             if (updatedAchievement.getBadgeImagePath() != null) {
@@ -81,9 +82,7 @@ public class AchievementService {
             AchievementEntity achievement = existingAchievement.get();
             achievement.setTitle(updatedAchievement.getTitle());
             achievement.setDescription(updatedAchievement.getDescription());
-            achievement.setTriggerType(updatedAchievement.getTriggerType());
-            achievement.setTriggerValue(updatedAchievement.getTriggerValue());
-            achievement.setPointsReward(updatedAchievement.getPointsReward());
+            achievement.setPointsRequired(updatedAchievement.getPointsRequired());
             achievement.setIsActive(updatedAchievement.getIsActive());
             
             if (badgeFile != null && !badgeFile.isEmpty()) {
@@ -115,17 +114,51 @@ public class AchievementService {
         }
     }
     
-    public List<AchievementEntity> getAchievementsByTriggerType(TriggerType triggerType) {
-        return achievementRepository.findByTriggerTypeAndIsActiveTrue(triggerType);
-    }
-    
     public List<AchievementEntity> searchAchievementsByTitle(String title) {
         return achievementRepository.findByTitleContaining(title);
     }
     
-    // Method to check if user is eligible for achievements (will be used later with trigger logic)
-    public List<AchievementEntity> getEligibleAchievements(TriggerType triggerType, Integer value) {
-        return achievementRepository.findEligibleAchievements(triggerType, value);
+    // Method to get achievements that a user can unlock based on their accumulated points
+    public List<AchievementEntity> getEligibleAchievements(Integer userPoints) {
+        return achievementRepository.findEligibleAchievementsByPoints(userPoints);
+    }
+    
+    // Method to get achievements ordered by points required (ascending)
+    public List<AchievementEntity> getAchievementsOrderedByPoints() {
+        return achievementRepository.findAllByOrderByPointsRequiredAsc();
+    }
+
+    // Method to check and unlock achievements for a user based on their points
+    public List<AchievementEntity> checkAndUnlockAchievements(UserEntity user) {
+        List<AchievementEntity> newlyUnlocked = new ArrayList<>();
+        List<AchievementEntity> eligibleAchievements = getEligibleAchievements(user.getAccumulatedPoints());
+        
+        for (AchievementEntity achievement : eligibleAchievements) {
+            // Check if user doesn't already have this achievement
+            if (!user.getAchievements().contains(achievement)) {
+                user.getAchievements().add(achievement);
+                newlyUnlocked.add(achievement);
+            }
+        }
+        
+        return newlyUnlocked;
+    }
+
+    // Method to get achievements not yet unlocked by a specific user
+    public List<AchievementEntity> getAvailableAchievements(UserEntity user) {
+        List<AchievementEntity> allActiveAchievements = getActiveAchievements();
+        List<AchievementEntity> userAchievements = user.getAchievements();
+        
+        return allActiveAchievements.stream()
+            .filter(achievement -> !userAchievements.contains(achievement))
+            .collect(Collectors.toList());
+    }
+
+    // Method to get next achievement user can work towards
+    public Optional<AchievementEntity> getNextAchievement(UserEntity user) {
+        return getAvailableAchievements(user).stream()
+            .filter(achievement -> achievement.getPointsRequired() > user.getAccumulatedPoints())
+            .min(Comparator.comparing(AchievementEntity::getPointsRequired));
     }
     
     private String saveBadgeImage(MultipartFile file) throws IOException {

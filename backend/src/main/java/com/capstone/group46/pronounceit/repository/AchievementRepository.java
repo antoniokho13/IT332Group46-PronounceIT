@@ -1,7 +1,6 @@
 package com.capstone.group46.pronounceit.repository;
 
 import com.capstone.group46.pronounceit.entity.AchievementEntity;
-import com.capstone.group46.pronounceit.entity.AchievementEntity.TriggerType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -14,12 +13,10 @@ public interface AchievementRepository extends JpaRepository<AchievementEntity, 
     
     List<AchievementEntity> findByIsActiveTrue();
     
-    List<AchievementEntity> findByTriggerType(TriggerType triggerType);
+    @Query("SELECT a FROM AchievementEntity a WHERE a.pointsRequired <= :userPoints AND a.isActive = true")
+    List<AchievementEntity> findEligibleAchievementsByPoints(@Param("userPoints") Integer userPoints);
     
-    List<AchievementEntity> findByTriggerTypeAndIsActiveTrue(TriggerType triggerType);
-    
-    @Query("SELECT a FROM AchievementEntity a WHERE a.triggerType = :triggerType AND a.triggerValue <= :value AND a.isActive = true")
-    List<AchievementEntity> findEligibleAchievements(@Param("triggerType") TriggerType triggerType, @Param("value") Integer value);
+    List<AchievementEntity> findAllByOrderByPointsRequiredAsc();
     
     @Query("SELECT a FROM AchievementEntity a WHERE a.title LIKE %:title%")
     List<AchievementEntity> findByTitleContaining(@Param("title") String title);
