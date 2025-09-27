@@ -1,42 +1,55 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
+<androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/rootLayout"
-    android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="16dp"
-    android:background="@drawable/background4">
+    android:background="@drawable/testbackground">
 
     <ImageView
         android:id="@+id/progressImage"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:adjustViewBounds="true"
         android:scaleType="fitCenter"
         android:src="@drawable/progress"
         android:contentDescription="Progress Image"
-        android:layout_gravity="center_horizontal"
-        android:layout_marginTop="16dp"
-        android:layout_marginBottom="16dp"/>
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginBottom="16dp" />
 
-    <!-- Buttons for navigation -->
+    <!-- Buttons for navigation with pushable button styling -->
     <Button
         android:id="@+id/achievementsButton"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="16dp"
         android:layout_marginBottom="8dp"
         android:text="Achievements"
-        style="@style/Widget.AppCompat.Button" />
+        android:textSize="18sp"
+        android:textColor="#FFFFFF"
+        android:background="@drawable/pushable_button"
+        android:padding="16dp"
+        app:layout_constraintTop_toBottomOf="@id/progressImage"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
     <Button
         android:id="@+id/viewScoresButton"
-        android:layout_width="match_parent"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="16dp"
+        android:layout_marginTop="16dp"
         android:text="View Scores"
-        style="@style/Widget.AppCompat.Button" />
+        android:textSize="18sp"
+        android:textColor="#FFFFFF"
+        android:background="@drawable/pushable_button_teal"
+        android:padding="16dp"
+        app:layout_constraintTop_toBottomOf="@id/achievementsButton"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
-</LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

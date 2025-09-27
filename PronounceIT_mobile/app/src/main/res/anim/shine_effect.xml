@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<set xmlns:android="http://schemas.android.com/apk/res/android"
+    android:fillAfter="false">
+
+    <!-- Shiny effect animation -->
+    <alpha
+        android:fromAlpha="0.0"
+        android:toAlpha="0.3"
+        android:duration="300" />
+
+    <alpha
+        android:fromAlpha="0.3"
+        android:toAlpha="0.0"
+        android:startOffset="300"
+        android:duration="300" />
+
+    <!-- Slight scale effect for emphasis -->
+    <scale
+        android:fromXScale="1.0"
+        android:toXScale="1.05"
+        android:fromYScale="1.0"
+        android:toYScale="1.05"
+        android:pivotX="50%"
+        android:pivotY="50%"
+        android:duration="300" />
+
+    <scale
+        android:fromXScale="1.05"
+        android:toXScale="1.0"
+        android:fromYScale="1.05"
+        android:toYScale="1.0"
+        android:pivotX="50%"
+        android:pivotY="50%"
+        android:startOffset="300"
+        android:duration="300" />
+</set>

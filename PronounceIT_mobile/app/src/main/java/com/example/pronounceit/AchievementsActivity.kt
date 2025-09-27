@@ -1,9 +1,6 @@
 package com.example.pronounceit
 
-import android.animation.ArgbEvaluator
-import android.animation.ValueAnimator
 import android.graphics.Color
-import android.graphics.drawable.GradientDrawable
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -13,7 +10,6 @@ import android.view.animation.AnimationUtils
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
@@ -27,8 +23,6 @@ import kotlinx.coroutines.withContext
 class AchievementsActivity : AppCompatActivity() {
     private lateinit var recyclerView: RecyclerView
     private var achievements: List<AchievementEntity> = emptyList()
-    private lateinit var backgroundGradient: GradientDrawable
-    private lateinit var colorAnimator: ValueAnimator
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -55,44 +49,13 @@ class AchievementsActivity : AppCompatActivity() {
     }
 
     private fun setupGradientBackground() {
-        // Create gradient drawable with dark blue to light sky blue
-        backgroundGradient = GradientDrawable(
-            GradientDrawable.Orientation.TOP_BOTTOM,
-            intArrayOf(
-                ContextCompat.getColor(this, android.R.color.holo_blue_dark),
-                ContextCompat.getColor(this, android.R.color.holo_blue_light)
-            )
-        )
-
-        // Set the background of the root layout
-        findViewById<View>(android.R.id.content).rootView.background = backgroundGradient
-
-        // Create color animation from dark blue to black and back
-        val darkBlue = ContextCompat.getColor(this, android.R.color.holo_blue_dark)
-        val skyBlue = ContextCompat.getColor(this, android.R.color.holo_blue_light)
-        val black = ContextCompat.getColor(this, android.R.color.black)
-
-        colorAnimator = ValueAnimator.ofObject(
-            ArgbEvaluator(),
-            darkBlue, skyBlue, black, skyBlue, darkBlue
-        )
-
-        colorAnimator.duration = 4000 // 4 seconds for complete cycle (1 second per transition)
-        colorAnimator.repeatCount = ValueAnimator.INFINITE
-        colorAnimator.addUpdateListener { animator ->
-            val color = animator.animatedValue as Int
-            backgroundGradient.colors = intArrayOf(color, skyBlue)
-            findViewById<View>(android.R.id.content).rootView.invalidate()
-        }
-
-        colorAnimator.start()
+        // Use the rainbow gradient background drawable instead of creating a new one
+        findViewById<View>(android.R.id.content).rootView.setBackgroundResource(R.drawable.rainbow_gradient_background)
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        if (::colorAnimator.isInitialized) {
-            colorAnimator.cancel()
-        }
+        // No need to cancel colorAnimator since we're not using it anymore
     }
 
     private fun restartAllVisibleAnimations() {
@@ -128,12 +91,12 @@ class AchievementsActivity : AppCompatActivity() {
             titleTextView?.text = achievement.title
             descriptionTextView?.text = achievement.description
 
-            // Hide points reward (no longer used in simplified system)
-            pointsTextView?.visibility = View.GONE
-
             // Set points required information
-            pointsRequiredTextView?.visibility = View.VISIBLE
-            pointsRequiredTextView?.text = "Required: ${achievement.pointsRequired} points"
+            pointsTextView?.visibility = View.VISIBLE
+            pointsTextView?.text = "Required: ${achievement.pointsRequired} points"
+
+            // Hide the pointsRequiredTextView since we don't need two similar texts
+            pointsRequiredTextView?.visibility = View.GONE
 
             // Make image view LARGER - now 40% of screen height
             imageView?.layoutParams?.height = (resources.displayMetrics.heightPixels * 0.4).toInt()
@@ -174,9 +137,9 @@ class AchievementsActivity : AppCompatActivity() {
             // Add a semi-transparent overlay for better text readability
             container?.background?.alpha = 180 // Make background a bit more transparent (0-255)
 
-            // Set dialog size - 90% of screen width and wrap content for height
+            // Set dialog size - 95% of screen width and wrap content for height
             val displayMetrics = resources.displayMetrics
-            val width = (displayMetrics.widthPixels * 0.95).toInt() // Increased from 0.9 to 0.95
+            val width = (displayMetrics.widthPixels * 0.95).toInt()
             val height = ViewGroup.LayoutParams.WRAP_CONTENT
 
             // Apply the size
@@ -185,40 +148,36 @@ class AchievementsActivity : AppCompatActivity() {
             // Add animation for appearance
             dialog.window?.attributes?.windowAnimations = android.R.style.Animation_Dialog
 
+            // Apply the bounce animation to the image instead of shine effect
+            val bounceAnimation = AnimationUtils.loadAnimation(this, R.anim.logo_bounce)
+            imageView?.startAnimation(bounceAnimation)
+
             // Make title MUCH BIGGER and more aesthetic
             titleTextView?.apply {
-                textSize = 32f  // Increased from 28f to 32f
+                textSize = 32f
                 setTextColor(Color.WHITE)
                 typeface = android.graphics.Typeface.create("sans-serif-black", android.graphics.Typeface.BOLD)
-                setShadowLayer(8f, 3f, 3f, Color.BLACK)  // Increased shadow
+                setShadowLayer(8f, 3f, 3f, Color.BLACK)
                 letterSpacing = 0.05f
                 gravity = android.view.Gravity.CENTER
-                setPadding(0, 24, 0, 24)  // More padding
-                setLineSpacing(0f, 1.2f) // Add some line spacing if text wraps
+                setPadding(0, 24, 0, 24)
+                setLineSpacing(0f, 1.2f)
             }
 
             // Make description CENTERED and BIGGER
             descriptionTextView?.apply {
-                textSize = 22f  // Increased from 18f to 22f
+                textSize = 22f
                 setTextColor(Color.WHITE)
-                gravity = android.view.Gravity.CENTER  // Center align text
+                gravity = android.view.Gravity.CENTER
                 typeface = android.graphics.Typeface.create("sans-serif-medium", android.graphics.Typeface.NORMAL)
-                setPadding(12, 20, 12, 20)  // Add padding around text
-                setShadowLayer(3f, 1f, 1f, Color.BLACK)  // Slight shadow for readability
+                setPadding(12, 20, 12, 20)
+                setShadowLayer(3f, 1f, 1f, Color.BLACK)
             }
 
             pointsTextView?.apply {
-                textSize = 20f  // Increased from 18f to 20f
+                textSize = 20f
                 setTextColor(Color.WHITE)
-                gravity = android.view.Gravity.CENTER  // Center these too
-                typeface = android.graphics.Typeface.create("sans-serif", android.graphics.Typeface.BOLD)
-                setShadowLayer(2f, 1f, 1f, Color.BLACK)
-            }
-
-            pointsRequiredTextView?.apply {
-                textSize = 20f  // Increased from 18f to 20f
-                setTextColor(Color.WHITE)
-                gravity = android.view.Gravity.CENTER  // Center these too
+                gravity = android.view.Gravity.CENTER
                 typeface = android.graphics.Typeface.create("sans-serif", android.graphics.Typeface.BOLD)
                 setShadowLayer(2f, 1f, 1f, Color.BLACK)
             }
@@ -242,8 +201,8 @@ class AchievementsActivity : AppCompatActivity() {
                 text = "OK"
                 setBackgroundResource(R.drawable.dialog_button_background)
                 setTextColor(Color.WHITE)
-                textSize = 20f  // Increased button text size
-                setPadding(48, 24, 48, 24)  // Larger button
+                textSize = 20f
+                setPadding(48, 24, 48, 24)
                 setOnClickListener { dialog.dismiss() }
             }
             buttonLayout.addView(okButton)
@@ -314,61 +273,8 @@ class AchievementsActivity : AppCompatActivity() {
 
         inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
             val iconView: ImageView = view.findViewById(R.id.achievementIcon)
-            
-            // Create text overlays for title and points
-            val titleTextView: TextView
-            val pointsTextView: TextView
-            
-            init {
-                // Create a LinearLayout to better organize the text views
-                val textContainer = LinearLayout(view.context).apply {
-                    orientation = LinearLayout.VERTICAL
-                    layoutParams = ViewGroup.LayoutParams(
-                        ViewGroup.LayoutParams.MATCH_PARENT,
-                        ViewGroup.LayoutParams.WRAP_CONTENT
-                    )
-                    setPadding(8, 0, 8, 8)
-                    setBackgroundColor(Color.parseColor("#80000000")) // Semi-transparent background
-                }
-                
-                // Create title text view
-                titleTextView = TextView(view.context).apply {
-                    layoutParams = LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT
-                    )
-                    textSize = 11f
-                    setTextColor(Color.WHITE)
-                    gravity = android.view.Gravity.CENTER
-                    setShadowLayer(1f, 0f, 0f, Color.BLACK)
-                    maxLines = 1
-                    setPadding(2, 2, 2, 1)
-                }
-                
-                // Create points text view
-                pointsTextView = TextView(view.context).apply {
-                    layoutParams = LinearLayout.LayoutParams(
-                        LinearLayout.LayoutParams.MATCH_PARENT,
-                        LinearLayout.LayoutParams.WRAP_CONTENT
-                    )
-                    textSize = 9f
-                    setTextColor(Color.YELLOW)
-                    gravity = android.view.Gravity.CENTER
-                    setShadowLayer(1f, 0f, 0f, Color.BLACK)
-                    setPadding(2, 0, 2, 2)
-                }
-                
-                // Add text views to the container
-                textContainer.addView(titleTextView)
-                textContainer.addView(pointsTextView)
-                
-                // Add container to the item view if it's a ViewGroup
-                if (view is ViewGroup) {
-                    view.addView(textContainer)
-                }
-            }
 
-            // Add a function to this ViewHolder to handle animation
+            // Animation function
             fun startAnimation() {
                 startBounceAnimation(iconView)
             }
@@ -384,10 +290,6 @@ class AchievementsActivity : AppCompatActivity() {
 
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
             val achievement = achievements[position]
-
-            // Set achievement text information
-            holder.titleTextView.text = achievement.title
-            holder.pointsTextView.text = "${achievement.pointsRequired} pts needed"
 
             // Make badge wider horizontally by setting its layout params
             val layoutParams = holder.iconView.layoutParams
