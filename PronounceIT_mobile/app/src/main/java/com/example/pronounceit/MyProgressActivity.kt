@@ -6,24 +6,24 @@ import android.os.Bundle
 import android.view.animation.AnimationUtils
 import android.widget.Button
 import android.widget.ImageView
-import android.widget.LinearLayout
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.constraintlayout.widget.ConstraintLayout
 
 class MyProgressActivity : AppCompatActivity() {
-    private lateinit var rootLayout: LinearLayout
+    private lateinit var rootLayout: ConstraintLayout
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_myprogress)
 
-        // Initialize rootLayout
+        // Initialize rootLayout (now a ConstraintLayout)
         rootLayout = findViewById(R.id.rootLayout)
 
-        // Apply bounce animation to the progress image
+        // Apply zoom animation to the progress image (consistent with CategoryActivity)
         val progressImage = findViewById<ImageView>(R.id.progressImage)
-        val bounceAnimation = AnimationUtils.loadAnimation(this, R.anim.logo_bounce)
-        progressImage.startAnimation(bounceAnimation)
+        val zoomAnimation = AnimationUtils.loadAnimation(this, R.anim.category_zoom)
+        progressImage.startAnimation(zoomAnimation)
 
         // Check if user is logged in
         val userId = getSharedPreferences("PronounceItPrefs", Context.MODE_PRIVATE)
