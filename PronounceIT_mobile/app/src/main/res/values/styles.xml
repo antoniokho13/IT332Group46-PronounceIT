@@ -7,4 +7,17 @@
         <item name="android:layout_marginTop">12dp</item>
         <item name="android:textColorHint">@color/gray</item>
     </style>
+
+    <style name="StreakDialogTheme" parent="Theme.AppCompat.Light.Dialog">
+        <item name="android:windowBackground">@android:color/white</item>
+        <item name="android:windowMinWidthMajor">90%</item>
+        <item name="android:windowMinWidthMinor">90%</item>
+        <item name="android:windowElevation">8dp</item>
+        <item name="android:textColorPrimary">@color/black</item>
+    </style>
+
+    <style name="DialogAnimation">
+        <item name="android:windowEnterAnimation">@anim/fade_in</item>
+        <item name="android:windowExitAnimation">@anim/fade_out</item>
+    </style>
 </resources>
