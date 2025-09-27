@@ -131,4 +131,88 @@ public class UserController {
             return ResponseEntity.badRequest().build();
         }
     }
+
+    // ========= Points Management Endpoints ========= //
+
+    @PatchMapping("/{id}/points/add")
+    public ResponseEntity<?> addPoints(@PathVariable Long id, @RequestBody PointsRequest pointsRequest) {
+        try {
+            UserEntity updatedUser = userService.addPoints(id, pointsRequest.getPoints());
+            return ResponseEntity.ok(updatedUser);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PatchMapping("/{id}/points/subtract")
+    public ResponseEntity<?> subtractPoints(@PathVariable Long id, @RequestBody PointsRequest pointsRequest) {
+        try {
+            UserEntity updatedUser = userService.subtractPoints(id, pointsRequest.getPoints());
+            return ResponseEntity.ok(updatedUser);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PatchMapping("/{id}/points/set")
+    public ResponseEntity<?> setPoints(@PathVariable Long id, @RequestBody PointsRequest pointsRequest) {
+        try {
+            UserEntity updatedUser = userService.setPoints(id, pointsRequest.getPoints());
+            return ResponseEntity.ok(updatedUser);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/{id}/points")
+    public ResponseEntity<?> getUserPoints(@PathVariable Long id) {
+        try {
+            Optional<UserEntity> userOpt = userService.getUserById(id);
+            if (userOpt.isPresent()) {
+                return ResponseEntity.ok(new PointsResponse(userOpt.get().getAccumulatedPoints()));
+            } else {
+                return ResponseEntity.notFound().build();
+            }
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    // ========= DTO Classes for Points Management ========= //
+
+    public static class PointsRequest {
+        private Integer points;
+
+        public PointsRequest() {}
+
+        public PointsRequest(Integer points) {
+            this.points = points;
+        }
+
+        public Integer getPoints() {
+            return points;
+        }
+
+        public void setPoints(Integer points) {
+            this.points = points;
+        }
+    }
+
+    public static class PointsResponse {
+        private Integer accumulatedPoints;
+
+        public PointsResponse() {}
+
+        public PointsResponse(Integer accumulatedPoints) {
+            this.accumulatedPoints = accumulatedPoints;
+        }
+
+        public Integer getAccumulatedPoints() {
+            return accumulatedPoints;
+        }
+
+        public void setAccumulatedPoints(Integer accumulatedPoints) {
+            this.accumulatedPoints = accumulatedPoints;
+        }
+    }
 }

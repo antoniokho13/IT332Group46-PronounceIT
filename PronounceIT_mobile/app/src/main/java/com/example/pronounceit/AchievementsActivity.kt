@@ -128,21 +128,12 @@ class AchievementsActivity : AppCompatActivity() {
             titleTextView?.text = achievement.title
             descriptionTextView?.text = achievement.description
 
-            // Set points reward information if available
-            if (achievement.pointsReward != null && achievement.pointsReward > 0) {
-                pointsTextView?.visibility = View.VISIBLE
-                pointsTextView?.text = "Reward: ${achievement.pointsReward} points"
-            } else {
-                pointsTextView?.visibility = View.GONE
-            }
+            // Hide points reward (no longer used in simplified system)
+            pointsTextView?.visibility = View.GONE
 
-            // Set points required information if available
-            if (achievement.triggerValue != null && achievement.triggerValue > 0) {
-                pointsRequiredTextView?.visibility = View.VISIBLE
-                pointsRequiredTextView?.text = "Required: ${achievement.triggerValue} ${achievement.triggerType?.toLowerCase() ?: "points"}"
-            } else {
-                pointsRequiredTextView?.visibility = View.GONE
-            }
+            // Set points required information
+            pointsRequiredTextView?.visibility = View.VISIBLE
+            pointsRequiredTextView?.text = "Required: ${achievement.pointsRequired} points"
 
             // Make image view LARGER - now 40% of screen height
             imageView?.layoutParams?.height = (resources.displayMetrics.heightPixels * 0.4).toInt()
@@ -323,6 +314,59 @@ class AchievementsActivity : AppCompatActivity() {
 
         inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
             val iconView: ImageView = view.findViewById(R.id.achievementIcon)
+            
+            // Create text overlays for title and points
+            val titleTextView: TextView
+            val pointsTextView: TextView
+            
+            init {
+                // Create a LinearLayout to better organize the text views
+                val textContainer = LinearLayout(view.context).apply {
+                    orientation = LinearLayout.VERTICAL
+                    layoutParams = ViewGroup.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.WRAP_CONTENT
+                    )
+                    setPadding(8, 0, 8, 8)
+                    setBackgroundColor(Color.parseColor("#80000000")) // Semi-transparent background
+                }
+                
+                // Create title text view
+                titleTextView = TextView(view.context).apply {
+                    layoutParams = LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                    )
+                    textSize = 11f
+                    setTextColor(Color.WHITE)
+                    gravity = android.view.Gravity.CENTER
+                    setShadowLayer(1f, 0f, 0f, Color.BLACK)
+                    maxLines = 1
+                    setPadding(2, 2, 2, 1)
+                }
+                
+                // Create points text view
+                pointsTextView = TextView(view.context).apply {
+                    layoutParams = LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                    )
+                    textSize = 9f
+                    setTextColor(Color.YELLOW)
+                    gravity = android.view.Gravity.CENTER
+                    setShadowLayer(1f, 0f, 0f, Color.BLACK)
+                    setPadding(2, 0, 2, 2)
+                }
+                
+                // Add text views to the container
+                textContainer.addView(titleTextView)
+                textContainer.addView(pointsTextView)
+                
+                // Add container to the item view if it's a ViewGroup
+                if (view is ViewGroup) {
+                    view.addView(textContainer)
+                }
+            }
 
             // Add a function to this ViewHolder to handle animation
             fun startAnimation() {
@@ -340,6 +384,10 @@ class AchievementsActivity : AppCompatActivity() {
 
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
             val achievement = achievements[position]
+
+            // Set achievement text information
+            holder.titleTextView.text = achievement.title
+            holder.pointsTextView.text = "${achievement.pointsRequired} pts needed"
 
             // Make badge wider horizontally by setting its layout params
             val layoutParams = holder.iconView.layoutParams
