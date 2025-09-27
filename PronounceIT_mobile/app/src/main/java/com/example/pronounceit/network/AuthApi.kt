@@ -183,6 +183,10 @@ interface AuthApi {
     ): Response<PronunciationCheckResponse>
 
     // Add this endpoint for badge images
+
+    @GET("api/achievements")
+    suspend fun getAllAchievements(): Response<List<AchievementEntity>>
+
     @GET("/api/achievements/{achievementId}/badge")
     suspend fun getAchievementBadge(@Path("achievementId") achievementId: Long): Response<ResponseBody>
 

@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:padding="8dp"
+    android:background="@android:color/transparent">
+
+    <ImageView
+        android:id="@+id/achievementIcon"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:adjustViewBounds="true"
+        android:maxHeight="100dp"
+        android:minHeight="70dp"
+        android:scaleType="fitCenter"
+        android:src="@drawable/ic_achievement_default"
+        android:contentDescription="Achievement Badge"
+        android:padding="3dp" />
+
+</FrameLayout>
