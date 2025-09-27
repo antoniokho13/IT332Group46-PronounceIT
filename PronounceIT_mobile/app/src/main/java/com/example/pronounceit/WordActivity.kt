@@ -217,7 +217,7 @@ class WordActivity : AppCompatActivity() {
             // Add this line to update the word counter
             binding.wordCounterTextView.text = "Word: ${currentWordIndex + 1}/$totalWords"
 
-            val baseUrl = "http://192.168.62.234:8080"
+            val baseUrl = "http://192.168.1.20:8080"
             val imageUrl = if (currentWord.imageURL?.startsWith("/") == true) {
                 baseUrl + currentWord.imageURL
             } else {
@@ -532,9 +532,92 @@ class WordActivity : AppCompatActivity() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 val response = RetrofitInstance.getApi(this@WordActivity).createScoreRecord(scoreDTO)
-                // Optionally handle response
+                // After saving score, update accumulated points
+                updateAccumulatedPoints()
             } catch (e: Exception) {
                 Log.e("WordActivity", "Error saving score: ${e.message}", e)
+            }
+        }
+    }
+
+    private fun updateAccumulatedPoints() {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                // Get user ID from SharedPreferences
+                val sharedPrefs = getSharedPreferences("UserPrefs", MODE_PRIVATE)
+                val userId = sharedPrefs.getLong("USER_ID", -1L)
+                
+                if (userId == -1L) {
+                    Log.e("WordActivity", "User ID not found")
+                    return@launch
+                }
+
+                // Calculate points for this lesson: correct words × 10
+                val currentLessonPoints = score * 10
+                
+                // Get the user's best score for this lesson to check if we need to update points
+                val bestScoreResponse = RetrofitInstance.getApi(this@WordActivity)
+                    .getLatestScoreRecord(userId, lessonId)
+                
+                if (bestScoreResponse.isSuccessful && bestScoreResponse.body() != null) {
+                    // Previous score exists, check if current score is better
+                    val bestScore = bestScoreResponse.body()!!
+                    val previousBestPoints = bestScore.correctWords * 10
+                    
+                    // Only update points if current score is better than previous best
+                    if (currentLessonPoints > previousBestPoints) {
+                        val pointsToAdd = currentLessonPoints - previousBestPoints
+                        
+                        // Update accumulated points using the points API
+                        val pointsRequest = mapOf("points" to pointsToAdd)
+                        val updateResponse = RetrofitInstance.getApi(this@WordActivity)
+                            .addPointsToUser(userId, pointsRequest)
+                        
+                        if (updateResponse.isSuccessful) {
+                            Log.d("WordActivity", "Points updated successfully: +$pointsToAdd points")
+                            withContext(Dispatchers.Main) {
+                                // Show points earned message
+                                android.widget.Toast.makeText(
+                                    this@WordActivity, 
+                                    "New best score! Earned $pointsToAdd additional points!", 
+                                    android.widget.Toast.LENGTH_LONG
+                                ).show()
+                            }
+                        } else {
+                            Log.e("WordActivity", "Failed to update points: ${updateResponse.errorBody()?.string()}")
+                        }
+                    } else {
+                        Log.d("WordActivity", "No points update needed. Current: $currentLessonPoints, Best: $previousBestPoints")
+                        withContext(Dispatchers.Main) {
+                            android.widget.Toast.makeText(
+                                this@WordActivity, 
+                                "Lesson completed! (Best score: ${previousBestPoints/10} words)", 
+                                android.widget.Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+                } else {
+                    // This is the first attempt for this lesson, add full points
+                    val pointsRequest = mapOf("points" to currentLessonPoints)
+                    val updateResponse = RetrofitInstance.getApi(this@WordActivity)
+                        .addPointsToUser(userId, pointsRequest)
+                    
+                    if (updateResponse.isSuccessful) {
+                        Log.d("WordActivity", "First attempt points added: $currentLessonPoints")
+                        withContext(Dispatchers.Main) {
+                            android.widget.Toast.makeText(
+                                this@WordActivity, 
+                                "Lesson completed! Earned $currentLessonPoints points!", 
+                                android.widget.Toast.LENGTH_LONG
+                            ).show()
+                        }
+                    } else {
+                        Log.e("WordActivity", "Failed to add points: ${updateResponse.errorBody()?.string()}")
+                    }
+                }
+                
+            } catch (e: Exception) {
+                Log.e("WordActivity", "Error updating accumulated points: ${e.message}", e)
             }
         }
     }

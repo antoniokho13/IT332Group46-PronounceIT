@@ -55,6 +55,25 @@ interface AuthApi {
         @Body request: UpdateUserRequest
     ): Response<UserResponse>
 
+    // Points management endpoints
+    @PATCH("/api/users/{userId}/points/add")
+    suspend fun addPointsToUser(
+        @Path("userId") userId: Long,
+        @Body request: Map<String, Int>
+    ): Response<UserResponse>
+
+    @PATCH("/api/users/{userId}/points/subtract")
+    suspend fun subtractPointsFromUser(
+        @Path("userId") userId: Long,
+        @Body request: Map<String, Int>
+    ): Response<UserResponse>
+
+    @PATCH("/api/users/{userId}/points/set")
+    suspend fun setUserPoints(
+        @Path("userId") userId: Long,
+        @Body request: Map<String, Int>
+    ): Response<UserResponse>
+
     @GET("/api/categories")
     suspend fun getAllCategories(): Response<List<CategoryEntity>>
 
