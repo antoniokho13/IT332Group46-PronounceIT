@@ -84,6 +84,10 @@ public class UserService {
     // ========= Accumulated Points Management ========= //
     
     public UserEntity addPoints(Long userId, Integer points) {
+        if (points == null || points <= 0) {
+            throw new IllegalArgumentException("Points to add must be a positive number");
+        }
+        
         return userRepository.findById(userId).map(user -> {
             Integer currentPoints = user.getAccumulatedPoints() != null ? user.getAccumulatedPoints() : 0;
             user.setAccumulatedPoints(currentPoints + points);
@@ -92,6 +96,10 @@ public class UserService {
     }
 
     public UserEntity subtractPoints(Long userId, Integer points) {
+        if (points == null || points <= 0) {
+            throw new IllegalArgumentException("Points to subtract must be a positive number");
+        }
+        
         return userRepository.findById(userId).map(user -> {
             Integer currentPoints = user.getAccumulatedPoints() != null ? user.getAccumulatedPoints() : 0;
             Integer newPoints = Math.max(0, currentPoints - points); // Ensure points don't go below 0
@@ -101,10 +109,20 @@ public class UserService {
     }
 
     public UserEntity setPoints(Long userId, Integer points) {
+        if (points == null || points < 0) {
+            throw new IllegalArgumentException("Points must be a non-negative number");
+        }
+        
         return userRepository.findById(userId).map(user -> {
-            user.setAccumulatedPoints(Math.max(0, points)); // Ensure points are not negative
+            user.setAccumulatedPoints(points);
             return userRepository.save(user);
         }).orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
+    }
+
+    public Integer getUserPoints(Long userId) {
+        return userRepository.findById(userId)
+                .map(user -> user.getAccumulatedPoints() != null ? user.getAccumulatedPoints() : 0)
+                .orElseThrow(() -> new RuntimeException("User not found with ID: " + userId));
     }
 
     // ========= Achievement Management ========= //
