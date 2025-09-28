@@ -50,4 +50,40 @@ public class ScoreRecordService {
         List<ScoreRecordEntity> records = scoreRecordRepository.findTop1ByUser_IdAndLesson_LessonIdOrderByCompletionDateDesc(userId, lessonId);
         return records.isEmpty() ? Optional.empty() : Optional.of(records.get(0));
     }
+
+    /**
+     * Returns the best (highest) score record for a user on a specific lesson, if any.
+     */
+    public Optional<ScoreRecordEntity> findBestByUserAndLesson(Long userId, Long lessonId) {
+        return scoreRecordRepository.findTop1ByUser_IdAndLesson_LessonIdOrderByScoreDesc(userId, lessonId);
+    }
+
+    /**
+     * Returns the best score for the specified user and lesson excluding the provided sessionId.
+     * This helps compute the previous best when updating or creating a record for the same session.
+     */
+    public Optional<ScoreRecordEntity> findBestByUserAndLessonExcludingSession(Long userId, Long lessonId, String sessionId) {
+        // Fetch top 2 records by score. If the top record belongs to the same sessionId, consider the second one as previous best.
+        List<ScoreRecordEntity> topRecords = scoreRecordRepository.findTop2ByUser_IdAndLesson_LessonIdOrderByScoreDesc(userId, lessonId);
+        if (topRecords.isEmpty()) return Optional.empty();
+        if (topRecords.size() == 1) {
+            return topRecords.get(0).getSessionId().equals(sessionId) ? Optional.empty() : Optional.of(topRecords.get(0));
+        }
+        // size >= 2
+        ScoreRecordEntity first = topRecords.get(0);
+        ScoreRecordEntity second = topRecords.get(1);
+        if (!first.getSessionId().equals(sessionId)) {
+            return Optional.of(first);
+        } else if (!second.getSessionId().equals(sessionId)) {
+            return Optional.of(second);
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * Save or update a score record (delegates to repository save). Kept for clarity.
+     */
+    public ScoreRecordEntity save(ScoreRecordEntity scoreRecord) {
+        return scoreRecordRepository.save(scoreRecord);
+    }
 }

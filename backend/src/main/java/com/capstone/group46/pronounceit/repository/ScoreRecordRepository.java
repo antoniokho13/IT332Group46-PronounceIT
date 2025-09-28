@@ -13,4 +13,8 @@ public interface ScoreRecordRepository extends JpaRepository<ScoreRecordEntity, 
     Optional<ScoreRecordEntity> findByUser_IdAndLesson_LessonIdAndSessionId(Long userId, Long lessonId, String sessionId);
 
     List<ScoreRecordEntity> findTop1ByUser_IdAndLesson_LessonIdOrderByCompletionDateDesc(Long userId, Long lessonId);
+    // Returns the highest scoring record for a user on a given lesson (used to compute per-lesson best points)
+    Optional<ScoreRecordEntity> findTop1ByUser_IdAndLesson_LessonIdOrderByScoreDesc(Long userId, Long lessonId);
+    // Return up to two top scoring records for a user and lesson (ordered desc by score)
+    List<ScoreRecordEntity> findTop2ByUser_IdAndLesson_LessonIdOrderByScoreDesc(Long userId, Long lessonId);
 }
