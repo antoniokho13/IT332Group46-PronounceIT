@@ -84,7 +84,26 @@ public class ScoreRecordController {
         scoreRecord.setIncorrectWords(dto.incorrectWords);
         scoreRecord.setSessionId(dto.sessionId);
 
-        return scoreRecordService.createScoreRecord(scoreRecord);
+        // Compute the previous best (excluding this sessionId) BEFORE persisting this session's record
+        Optional<ScoreRecordEntity> previousBestOpt = scoreRecordService.findBestByUserAndLessonExcludingSession(user.getId(), lesson.getLessonId(), dto.sessionId);
+        int previousBestPoints = 0;
+        if (previousBestOpt.isPresent()) {
+            previousBestPoints = (int) Math.round(previousBestOpt.get().getScore() * 10.0);
+        }
+
+        // Persist score record (create or update)
+        ScoreRecordEntity saved = scoreRecordService.save(scoreRecord);
+
+        // Compute points to award: score * 10 (rounded)
+        int newPoints = (int) Math.round(saved.getScore() * 10.0);
+
+        // If this session produces a better per-lesson points, update user's accumulatedPoints accordingly
+        if (newPoints > previousBestPoints) {
+            int delta = newPoints - previousBestPoints;
+            userService.addPoints(user.getId(), delta);
+        }
+
+        return saved;
     }
 
     @GetMapping("/by-session")

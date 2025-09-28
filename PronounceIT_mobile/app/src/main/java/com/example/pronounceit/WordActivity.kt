@@ -49,6 +49,7 @@ class WordActivity : AppCompatActivity() {
     private lateinit var tts: TextToSpeech
     private var mediaRecorder: MediaRecorder? = null
     private var audioFile: File? = null
+    private var isRecording = false
 
     // Animation properties
     private var micAnimation: AnimationDrawable? = null
@@ -112,7 +113,10 @@ class WordActivity : AppCompatActivity() {
         fetchWords(lessonId)
 
         if (checkSelfPermission(android.Manifest.permission.RECORD_AUDIO) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(arrayOf(android.Manifest.permission.RECORD_AUDIO), RECORD_AUDIO_PERMISSION_CODE)
+            requestPermissions(
+                arrayOf(android.Manifest.permission.RECORD_AUDIO),
+                RECORD_AUDIO_PERMISSION_CODE
+            )
         }
 
         // Show and animate the curved "Press Me" text when idle
@@ -125,6 +129,9 @@ class WordActivity : AppCompatActivity() {
             // Hide and stop animation when recording starts
             binding.curvedTextView.visibility = View.GONE
             binding.curvedTextView.stopBlinkAnimation()
+            // Enable stop button while recording
+            binding.stopRecordingButton.isEnabled = true
+            binding.recordPronunciationButton.isEnabled = false
         }
 
         binding.stopRecordingButton.setOnClickListener {
@@ -133,10 +140,124 @@ class WordActivity : AppCompatActivity() {
             // Show and animate again when recording stops
             binding.curvedTextView.visibility = View.VISIBLE
             binding.curvedTextView.startBlinkAnimation()
+            // Toggle record/stop availability
+            binding.stopRecordingButton.isEnabled = false
+            binding.recordPronunciationButton.isEnabled = true
+        }
+
+        // Play audio for current word (either URL or TTS fallback)
+        binding.playAudioButton.setOnClickListener {
+            val current = words.getOrNull(currentWordIndex)
+            if (current != null) {
+                val audioUrl = current.audioURL
+                if (!audioUrl.isNullOrBlank()) {
+                    try {
+                        mediaPlayer?.release()
+                        mediaPlayer = MediaPlayer().apply {
+                            setDataSource(if (audioUrl.startsWith("/")) RetrofitInstance.getBaseUrl() + audioUrl else audioUrl)
+                            prepareAsync()
+                            setOnPreparedListener { it.start() }
+                        }
+                    } catch (e: Exception) {
+                        Log.e("WordActivity", "Error playing remote audio: ${'$'}{e.message}", e)
+                        tts.speak(current.word, TextToSpeech.QUEUE_FLUSH, null, null)
+                    }
+                } else {
+                    tts.speak(current.word, TextToSpeech.QUEUE_FLUSH, null, null)
+                }
+            }
         }
 
         // Generate sessionId ONCE per session
         sessionId = UUID.randomUUID().toString()
+    }
+
+    // Call this when the lesson session is complete (after last word)
+    private fun saveSessionScore() {
+        // Build ScoreRecordDTO expected by backend
+        val attemptsDuration = 0L // If you track start/end time, replace with actual duration
+        val correctWords = wordResults.count { it.correct }
+        val incorrectWords = wordResults.count { !it.correct }
+
+        val scoreDTO = ScoreRecordDTO(
+            lessonId = lessonId,
+            score = if (totalWords > 0) score.toDouble() else 0.0,
+            attemptsDuration = attemptsDuration,
+            correctWords = correctWords,
+            incorrectWords = incorrectWords,
+            sessionId = sessionId
+        )
+
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val api = RetrofitInstance.getApi(this@WordActivity)
+                val response = api.createScoreRecord(scoreDTO)
+                if (response.isSuccessful) {
+                    // After successful save, update accumulated points only by the delta (new best)
+                    updateAccumulatedPoints()
+                } else {
+                    Log.e(
+                        "WordActivity",
+                        "Failed to save score: ${response.code()} ${response.errorBody()?.string()}"
+                    )
+                }
+            } catch (e: Exception) {
+                Log.e("WordActivity", "Error saving score: ${e.message}", e)
+            }
+        }
+    }
+
+    private fun updateAccumulatedPoints() {
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                // Read user id from same prefs used elsewhere in the app
+                val prefs = getSharedPreferences("PronounceItPrefs", Context.MODE_PRIVATE)
+                val userId = prefs.getLong("userId", -1L)
+                if (userId == -1L) {
+                    Log.e("WordActivity", "User ID not found in preferences")
+                    return@launch
+                }
+
+                val currentLessonPoints = score * 10
+
+                // Fetch previous best for this user & lesson
+                val bestResp = RetrofitInstance.getApi(this@WordActivity).getLatestScoreRecord(userId, lessonId)
+                if (bestResp.isSuccessful && bestResp.body() != null) {
+                    val best = bestResp.body()!!
+                    val previousBestPoints = best.correctWords * 10
+                    if (currentLessonPoints > previousBestPoints) {
+                        val pointsToAdd = currentLessonPoints - previousBestPoints
+                        val pointsRequest = mapOf("points" to pointsToAdd)
+                        val updateResp = RetrofitInstance.getApi(this@WordActivity).addPointsToUser(userId, pointsRequest)
+                        if (updateResp.isSuccessful) {
+                            Log.d("WordActivity", "Added $pointsToAdd points for improved lesson score")
+                            withContext(Dispatchers.Main) {
+                                android.widget.Toast.makeText(this@WordActivity, "New best score! +${pointsToAdd} points", android.widget.Toast.LENGTH_LONG).show()
+                            }
+                        } else {
+                            Log.e("WordActivity", "Failed to add points: ${updateResp.errorBody()?.string()}")
+                        }
+                    } else {
+                        Log.d("WordActivity", "No points added; currentLessonPoints=$currentLessonPoints previousBestPoints=$previousBestPoints")
+                    }
+                } else {
+                    // No previous best — award full points
+                    val pointsRequest = mapOf("points" to currentLessonPoints)
+                    val updateResp = RetrofitInstance.getApi(this@WordActivity).addPointsToUser(userId, pointsRequest)
+                    if (updateResp.isSuccessful) {
+                        Log.d("WordActivity", "Awarded first-attempt points: $currentLessonPoints")
+                        withContext(Dispatchers.Main) {
+                            android.widget.Toast.makeText(this@WordActivity, "Lesson completed! Earned ${currentLessonPoints} points!", android.widget.Toast.LENGTH_LONG).show()
+                        }
+                    } else {
+                        Log.e("WordActivity", "Failed to add first-attempt points: ${updateResp.errorBody()?.string()}")
+                    }
+                }
+
+            } catch (e: Exception) {
+                Log.e("WordActivity", "Error updating accumulated points: ${e.message}", e)
+            }
+        }
     }
 
     private fun startRecordingAnimation() {
@@ -170,7 +291,11 @@ class WordActivity : AppCompatActivity() {
         binding.stopRecordingButton.animate().cancel()
     }
 
-    override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
         if (requestCode == RECORD_AUDIO_PERMISSION_CODE) {
             if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
@@ -184,7 +309,8 @@ class WordActivity : AppCompatActivity() {
     private fun fetchWords(lessonId: Long) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val response = RetrofitInstance.getApi(this@WordActivity).getWordsByLessonId(lessonId)
+                val response =
+                    RetrofitInstance.getApi(this@WordActivity).getWordsByLessonId(lessonId)
                 if (response.isSuccessful) {
                     val wordsList = response.body() ?: emptyList()
                     words = wordsList
@@ -214,143 +340,48 @@ class WordActivity : AppCompatActivity() {
             binding.lessonNameTextView.text = "Lesson: ${currentWord.lesson.name}"
             binding.wordTextView.text = currentWord.word.uppercase()
 
-            // Add this line to update the word counter
+            // Update the word counter
             binding.wordCounterTextView.text = "Word: ${currentWordIndex + 1}/$totalWords"
 
-            val baseUrl = "http://192.168.1.20:8080"
-            val imageUrl = if (currentWord.imageURL?.startsWith("/") == true) {
-                baseUrl + currentWord.imageURL
+            val baseUrl = RetrofitInstance.getBaseUrl()
+            val imageUrl = currentWord.imageURL?.let { url ->
+                if (url.startsWith("/")) baseUrl + url else url
+            }
+
+            if (!imageUrl.isNullOrBlank()) {
+                Glide.with(this)
+                    .load(imageUrl)
+                    .centerCrop()
+                    .into(binding.wordImageView)
             } else {
-                baseUrl + "/" + (currentWord.imageURL ?: "")
-            }
-            Log.d("WordActivity", "Loading image: $imageUrl")
-
-            Glide.with(this)
-                .load(imageUrl)
-                .into(binding.wordImageView)
-
-            binding.playAudioButton.setOnClickListener {
-                speakWord(currentWord.word)
+                binding.wordImageView.setImageResource(android.R.drawable.ic_menu_gallery)
             }
 
-            // Reset attempts for new word
+            // Reset per-word UI state: hide next, show play, enable recording, reset attempts
             attemptCount = 0
             wordScored = false
-
-            // Reset button visibility - show play audio, hide next word
             binding.playAudioButton.visibility = View.VISIBLE
             binding.nextWordButton.visibility = View.GONE
-
             binding.recordPronunciationButton.isEnabled = true
-            binding.stopRecordingButton.isEnabled = true
-
-            // Show attempts left
-            binding.attemptCounterTextView.text = "Attempts left: ${maxAttempts - attemptCount}"
-
-            // Save or update score at the start of the session
-            if (currentWordIndex == 0) {
-                sendScoreToBackend()
-            }
+            binding.stopRecordingButton.isEnabled = false
+            // Use updateScoreTracker to keep attempts/score rendering in one place
+            updateScoreTracker()
         } else {
-            showSessionEndDialog()
+            // No words available
+            binding.lessonNameTextView.text = "Lesson: -"
+            binding.wordTextView.text = ""
+            binding.wordCounterTextView.text = "Word: 0/0"
+            binding.nextWordButton.visibility = View.GONE
         }
     }
 
-    private fun playSound(audioUrl: String) {
-        mediaPlayer?.release()
-        mediaPlayer = MediaPlayer()
-        try {
-            mediaPlayer?.setDataSource(audioUrl)
-            mediaPlayer?.prepareAsync()
-            mediaPlayer?.setOnPreparedListener {
-                it.start()
-            }
-            mediaPlayer?.setOnErrorListener { _, what, extra ->
-                Log.e("WordActivity", "Error playing audio: what=$what, extra=$extra")
-                true
-            }
-        } catch (e: IOException) {
-            Log.e("WordActivity", "Error setting data source: ${e.message}", e)
-        }
-    }
-
-    // Method to play the correct sound effect and show confetti
-    private fun playCorrectSound() {
-        try {
-            // Release any previous instance
-            correctSoundEffect?.release()
-
-            // Create and play the sound effect
-            correctSoundEffect = MediaPlayer.create(this, R.raw.correct)
-            correctSoundEffect?.setOnCompletionListener { it.release() }
-            correctSoundEffect?.start()
-
-            // Show confetti animation
-            showConfettiAnimation()
-        } catch (e: Exception) {
-            Log.e("WordActivity", "Error playing correct sound: ${e.message}", e)
-        }
-    }
-
-    // Show confetti animation for correct pronunciation
-    private fun showConfettiAnimation() {
-        konfettiView.build()
-            .addColors(Color.YELLOW, Color.GREEN, Color.MAGENTA, Color.CYAN, Color.RED)
-            .setDirection(0.0, 359.0)
-            .setSpeed(1f, 5f)
-            .setFadeOutEnabled(true)
-            .setTimeToLive(2000L)
-            .addShapes(Shape.Square, Shape.Circle)
-            .addSizes(Size(8), Size(12), Size(16))
-            .setPosition(
-                konfettiView.width / 2f,
-                konfettiView.height / 2f
-            )
-            .burst(300)
-    }
-
-    // Method to play the error sound effect
-    private fun playErrorSound() {
-        try {
-            // Release any previous instance
-            errorSoundEffect?.release()
-
-            // Create and play the sound effect
-            errorSoundEffect = MediaPlayer.create(this, R.raw.error)
-            errorSoundEffect?.setOnCompletionListener { it.release() }
-            errorSoundEffect?.start()
-        } catch (e: Exception) {
-            Log.e("WordActivity", "Error playing error sound: ${e.message}", e)
-        }
-    }
-
-    private fun speakWord(text: String) {
-        tts.speak(text, TextToSpeech.QUEUE_FLUSH, null, null)
-    }
-
-    override fun onDestroy() {
-        super.onDestroy()
-        mediaPlayer?.release()
-        mediaPlayer = null
-        correctSoundEffect?.release()
-        correctSoundEffect = null
-        errorSoundEffect?.release()
-        errorSoundEffect = null
-        if (::tts.isInitialized) {
-            tts.stop()
-            tts.shutdown()
-        }
-        mediaRecorder?.release()
-        mediaRecorder = null
-        micAnimation?.stop()
-    }
-
-    fun nextWord(view: View) {
-        currentWordIndex++
-        // Reset button visibility when moving to next word
-        binding.playAudioButton.visibility = View.VISIBLE
-        binding.nextWordButton.visibility = View.GONE
-        updateUI()
+    // Update score tracker and attempts left on the UI
+    private fun updateScoreTracker() {
+    // Protect against division by zero / empty list
+    val total = if (totalWords > 0) totalWords else 0
+    binding.scoreTrackerTextView.text = "Score: $score/$total"
+    val attemptsLeft = (maxAttempts - attemptCount).coerceAtLeast(0)
+    binding.attemptCounterTextView.text = "Attempts left: " + attemptsLeft
     }
 
     private fun startRecording() {
@@ -367,7 +398,7 @@ class WordActivity : AppCompatActivity() {
             return
         }
         audioFile = File(recordingDir, fileName)
-        Log.d("WordActivity", "Recording to: ${audioFile?.absolutePath}")
+        Log.d("WordActivity", "Recording to: ${'$'}{audioFile?.absolutePath}")
 
         // Set up MediaRecorder for MP4/AAC
         mediaRecorder = MediaRecorder().apply {
@@ -382,10 +413,10 @@ class WordActivity : AppCompatActivity() {
                 start()
                 Log.d("WordActivity", "MediaRecorder prepared and started.")
             } catch (e: IOException) {
-                Log.e("WordActivity", "prepare() failed: ${e.message}", e)
+                Log.e("WordActivity", "prepare() failed: ${'$'}{e.message}", e)
                 stopRecordingAnimation()
             } catch (e: IllegalStateException) {
-                Log.e("WordActivity", "IllegalStateException during recording: ${e.message}", e)
+                Log.e("WordActivity", "IllegalStateException during recording: ${'$'}{e.message}", e)
                 stopRecordingAnimation()
             }
         }
@@ -398,19 +429,19 @@ class WordActivity : AppCompatActivity() {
                 release()
                 Log.d("WordActivity", "MediaRecorder stopped and released.")
             } catch (e: RuntimeException) {
-                Log.e("WordActivity", "Stop/release failed: ${e.message}", e)
+                Log.e("WordActivity", "Stop/release failed: ${'$'}{e.message}", e)
                 audioFile?.delete()
                 return
             }
         }
         mediaRecorder = null
         if (audioFile != null && audioFile!!.exists() && audioFile!!.length() > 1000) { // Ensure file is at least 1KB
-            Log.d("WordActivity", "Audio file size: ${audioFile!!.length()} bytes")
+            Log.d("WordActivity", "Audio file size: ${'$'}{audioFile!!.length()} bytes")
             CoroutineScope(Dispatchers.IO).launch {
                 sendAudioForValidation(audioFile!!)
             }
         } else {
-            Log.e("WordActivity", "Audio file invalid: exists=${audioFile?.exists()}, size=${audioFile?.length()}")
+            Log.e("WordActivity", "Audio file invalid: exists=${'$'}{audioFile?.exists()}, size=${'$'}{audioFile?.length()}")
             audioFile?.delete()
         }
     }
@@ -419,11 +450,11 @@ class WordActivity : AppCompatActivity() {
         try {
             val currentWord = words[currentWordIndex]
             val wordId = currentWord.wordId
-            Log.d("WordActivity", "Sending pronunciation check for wordId: $wordId, word: ${currentWord.word}")
+            Log.d("WordActivity", "Sending pronunciation check for wordId: ${'$'}wordId, word: ${'$'}{currentWord.word}")
 
             val requestFile = audioFile.asRequestBody("audio/mp4".toMediaTypeOrNull())
             val audioPart = MultipartBody.Part.createFormData("audio", audioFile.name, requestFile)
-            Log.d("WordActivity", "Sending audio file: ${audioFile.name}, size: ${audioFile.length()} bytes, type: audio/mp4")
+            Log.d("WordActivity", "Sending audio file: ${'$'}{audioFile.name}, size: ${'$'}{audioFile.length()} bytes, type: audio/mp4")
 
             val response = RetrofitInstance.getApi(this@WordActivity).checkPronunciation(wordId, audioPart)
 
@@ -473,20 +504,20 @@ class WordActivity : AppCompatActivity() {
                         }
                         // Always update the counter after increment
                         val attemptsLeft = (maxAttempts - attemptCount).coerceAtLeast(0)
-                        binding.attemptCounterTextView.text = "Attempts left: $attemptsLeft"
+                        binding.attemptCounterTextView.text = "Attempts left: " + attemptsLeft
 
-                        Log.d("WordActivity", "Transcribed: ${pronunciationCheckResponse.transcribedText}")
+                        Log.d("WordActivity", "Transcribed: ${'$'}{pronunciationCheckResponse.transcribedText}")
                         sendPronunciationAttemptToBackend(pronunciationCheckResponse.correct)
                     }
                 } else {
                     val errorBody = response.errorBody()?.string()
-                    val errorMessage = "Failed to check pronunciation: ${response.code()}, ${response.message()}, Body: $errorBody"
+                    val errorMessage = "Failed to check pronunciation: ${'$'}{response.code()}, ${'$'}{response.message()}, Body: ${'$'}errorBody"
                     Log.e("WordActivity", errorMessage)
                 }
                 audioFile.delete()
             }
         } catch (e: Exception) {
-            Log.e("WordActivity", "Error sending audio: ${e.message}", e)
+            Log.e("WordActivity", "Error sending audio: ${'$'}{e.message}", e)
             audioFile.delete()
         }
     }
@@ -512,10 +543,10 @@ class WordActivity : AppCompatActivity() {
             try {
                 val response = RetrofitInstance.getApi(this@WordActivity).createPronounciationAttempt(attemptDTO)
                 if (!response.isSuccessful) {
-                    Log.e("WordActivity", "Failed to save attempt: ${response.code()}")
+                    Log.e("WordActivity", "Failed to save attempt: ${'$'}{response.code()}")
                 }
             } catch (e: Exception) {
-                Log.e("WordActivity", "Error saving attempt: ${e.message}", e)
+                Log.e("WordActivity", "Error saving attempt: ${'$'}{e.message}", e)
             }
         }
     }
@@ -535,95 +566,51 @@ class WordActivity : AppCompatActivity() {
                 // After saving score, update accumulated points
                 updateAccumulatedPoints()
             } catch (e: Exception) {
-                Log.e("WordActivity", "Error saving score: ${e.message}", e)
+                Log.e("WordActivity", "Error saving score: ${'$'}{e.message}", e)
             }
         }
     }
 
-    private fun updateAccumulatedPoints() {
-        CoroutineScope(Dispatchers.IO).launch {
-            try {
-                // Get user ID from SharedPreferences
-                val sharedPrefs = getSharedPreferences("UserPrefs", MODE_PRIVATE)
-                val userId = sharedPrefs.getLong("USER_ID", -1L)
-                
-                if (userId == -1L) {
-                    Log.e("WordActivity", "User ID not found")
-                    return@launch
+    private fun playCorrectSound() {
+        try {
+            // Prefer app bundled correct.mp3
+            val resId = resources.getIdentifier("correct", "raw", packageName)
+            if (resId != 0) {
+                correctSoundEffect?.release()
+                correctSoundEffect = MediaPlayer.create(this, resId)
+                correctSoundEffect?.start()
+            } else {
+                // Fallback to ToneGenerator
+                val tg = android.media.ToneGenerator(android.media.AudioManager.STREAM_MUSIC, 100)
+                tg.startTone(android.media.ToneGenerator.TONE_PROP_ACK, 150)
+                CoroutineScope(Dispatchers.Main).launch {
+                    kotlinx.coroutines.delay(200)
+                    try { tg.release() } catch (_: Exception) {}
                 }
-
-                // Calculate points for this lesson: correct words × 10
-                val currentLessonPoints = score * 10
-                
-                // Get the user's best score for this lesson to check if we need to update points
-                val bestScoreResponse = RetrofitInstance.getApi(this@WordActivity)
-                    .getLatestScoreRecord(userId, lessonId)
-                
-                if (bestScoreResponse.isSuccessful && bestScoreResponse.body() != null) {
-                    // Previous score exists, check if current score is better
-                    val bestScore = bestScoreResponse.body()!!
-                    val previousBestPoints = bestScore.correctWords * 10
-                    
-                    // Only update points if current score is better than previous best
-                    if (currentLessonPoints > previousBestPoints) {
-                        val pointsToAdd = currentLessonPoints - previousBestPoints
-                        
-                        // Update accumulated points using the points API
-                        val pointsRequest = mapOf("points" to pointsToAdd)
-                        val updateResponse = RetrofitInstance.getApi(this@WordActivity)
-                            .addPointsToUser(userId, pointsRequest)
-                        
-                        if (updateResponse.isSuccessful) {
-                            Log.d("WordActivity", "Points updated successfully: +$pointsToAdd points")
-                            withContext(Dispatchers.Main) {
-                                // Show points earned message
-                                android.widget.Toast.makeText(
-                                    this@WordActivity, 
-                                    "New best score! Earned $pointsToAdd additional points!", 
-                                    android.widget.Toast.LENGTH_LONG
-                                ).show()
-                            }
-                        } else {
-                            Log.e("WordActivity", "Failed to update points: ${updateResponse.errorBody()?.string()}")
-                        }
-                    } else {
-                        Log.d("WordActivity", "No points update needed. Current: $currentLessonPoints, Best: $previousBestPoints")
-                        withContext(Dispatchers.Main) {
-                            android.widget.Toast.makeText(
-                                this@WordActivity, 
-                                "Lesson completed! (Best score: ${previousBestPoints/10} words)", 
-                                android.widget.Toast.LENGTH_SHORT
-                            ).show()
-                        }
-                    }
-                } else {
-                    // This is the first attempt for this lesson, add full points
-                    val pointsRequest = mapOf("points" to currentLessonPoints)
-                    val updateResponse = RetrofitInstance.getApi(this@WordActivity)
-                        .addPointsToUser(userId, pointsRequest)
-                    
-                    if (updateResponse.isSuccessful) {
-                        Log.d("WordActivity", "First attempt points added: $currentLessonPoints")
-                        withContext(Dispatchers.Main) {
-                            android.widget.Toast.makeText(
-                                this@WordActivity, 
-                                "Lesson completed! Earned $currentLessonPoints points!", 
-                                android.widget.Toast.LENGTH_LONG
-                            ).show()
-                        }
-                    } else {
-                        Log.e("WordActivity", "Failed to add points: ${updateResponse.errorBody()?.string()}")
-                    }
-                }
-                
-            } catch (e: Exception) {
-                Log.e("WordActivity", "Error updating accumulated points: ${e.message}", e)
             }
+        } catch (e: Exception) {
+            Log.e("WordActivity", "playCorrectSound failed: ${'$'}{e.message}", e)
         }
     }
 
-    private fun updateScoreTracker() {
-        binding.scoreTrackerTextView.text = "Score: $score/$totalWords"
+    private fun playErrorSound() {
+        try {
+            val resId = resources.getIdentifier("error", "raw", packageName)
+            if (resId != 0) {
+                errorSoundEffect?.release()
+                errorSoundEffect = MediaPlayer.create(this, resId)
+                errorSoundEffect?.start()
+            } else {
+                val tg = android.media.ToneGenerator(android.media.AudioManager.STREAM_MUSIC, 100)
+                tg.startTone(android.media.ToneGenerator.TONE_PROP_NACK, 200)
+                CoroutineScope(Dispatchers.Main).launch {
+                    kotlinx.coroutines.delay(250)
+                    try { tg.release() } catch (_: Exception) {}
+                }
+            }
+        } catch (e: Exception) {
+            Log.e("WordActivity", "playErrorSound failed: ${'$'}{e.message}", e)
+        }
     }
 
     private fun showSessionEndDialog() {
@@ -725,5 +712,25 @@ class WordActivity : AppCompatActivity() {
         sessionId = UUID.randomUUID().toString()
         updateScoreTracker()
         updateUI()
+    }
+
+    // Called by the next button in layout (android:onClick="nextWord")
+    fun nextWord(view: View) {
+        // Advance to next word
+        currentWordIndex++
+
+        // If we've reached the end of the words, show the session end dialog
+        if (currentWordIndex >= totalWords) {
+            // Ensure UI reflects final score
+            updateScoreTracker()
+
+            // Show end-of-session dialog (which will save score)
+            showSessionEndDialog()
+            return
+        }
+
+        // Otherwise update UI for next word
+        updateUI()
+        updateScoreTracker()
     }
 }
