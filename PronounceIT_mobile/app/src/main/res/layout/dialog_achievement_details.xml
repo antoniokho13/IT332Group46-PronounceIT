@@ -16,6 +16,18 @@
         android:gravity="center"
         android:layout_marginBottom="16dp" />
 
+    <!-- Status label shown under the title inside the dialog (Locked / Unlocked) -->
+    <TextView
+        android:id="@+id/achievementStatusDialogLabel"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textSize="14sp"
+        android:textStyle="bold"
+        android:textColor="@android:color/white"
+        android:gravity="center"
+        android:layout_marginBottom="12dp"
+        android:visibility="gone" />
+
     <ImageView
         android:id="@+id/achievementImageView"
         android:layout_width="120dp"

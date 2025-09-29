@@ -23,6 +23,7 @@ import kotlinx.coroutines.withContext
 class AchievementsActivity : AppCompatActivity() {
     private lateinit var recyclerView: RecyclerView
     private var achievements: List<AchievementEntity> = emptyList()
+    private var userAccumulatedPoints: Int = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,6 +47,40 @@ class AchievementsActivity : AppCompatActivity() {
         })
 
         loadAchievements()
+        // Also fetch current user accumulated points if logged in
+        fetchCurrentUserPoints()
+    }
+
+    private fun fetchCurrentUserPoints() {
+        val prefs = getSharedPreferences("PronounceItPrefs", MODE_PRIVATE)
+        val userId = prefs.getLong("userId", -1L)
+        val token = prefs.getString("token", "") ?: ""
+        if (userId == -1L) return
+
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                val response = RetrofitInstance.getApi(this@AchievementsActivity)
+                    .getUserById(userId, "Bearer $token")
+                if (response.isSuccessful) {
+                    val body = response.body()
+                    val acc = body?.accumulatedPoints ?: 0
+                    withContext(Dispatchers.Main) {
+                        userAccumulatedPoints = acc
+                        // update total points label
+                        val totalPointsLabel = findViewById<TextView>(R.id.totalPointsTextView)
+                        totalPointsLabel.text = "Total points: $userAccumulatedPoints"
+                        // refresh UI if achievements already loaded
+                        (recyclerView.adapter as? AchievementAdapter)?.let { adapter ->
+                            adapter.notifyDataSetChanged()
+                        }
+                    }
+                } else {
+                    Log.e("AchievementsActivity", "Failed to load user: ${response.code()}")
+                }
+            } catch (e: Exception) {
+                Log.e("AchievementsActivity", "Error fetching user points", e)
+            }
+        }
     }
 
     private fun setupGradientBackground() {
@@ -134,8 +169,38 @@ class AchievementsActivity : AppCompatActivity() {
             val container = dialogView.findViewById<LinearLayout>(R.id.achievementDetailsContainer)
             container?.setBackgroundResource(R.drawable.rainbow_gradient_background)
 
-            // Add a semi-transparent overlay for better text readability
-            container?.background?.alpha = 180 // Make background a bit more transparent (0-255)
+            // Status label inside dialog
+            val statusDialogLabel = dialogView.findViewById<TextView?>(R.id.achievementStatusDialogLabel)
+
+            // Gray-out dialog content if locked
+            val prefs = getSharedPreferences("PronounceItPrefs", MODE_PRIVATE)
+            val userId = prefs.getLong("userId", -1L)
+            val isLocked = if (userId != -1L) {
+                userAccumulatedPoints < (achievement.pointsRequired ?: 0)
+            } else {
+                true
+            }
+
+            if (isLocked) {
+                // Show locked status inside the dialog and give a solid gray background
+                statusDialogLabel?.visibility = View.VISIBLE
+                statusDialogLabel?.text = "Locked"
+                statusDialogLabel?.setTextColor(Color.LTGRAY)
+                // Apply a solid gray background to the container for locked state
+                container?.setBackgroundColor(Color.parseColor("#6E6E6E"))
+                // Hide the achievement image when locked so it appears as a plain gray block
+                imageView?.visibility = View.GONE
+            } else {
+                statusDialogLabel?.visibility = View.GONE
+                container?.setBackgroundResource(R.drawable.rainbow_gradient_background)
+            }
+
+            // For unlocked state add a semi-transparent overlay for better text readability
+            if (!isLocked) {
+                container?.background?.alpha = 180 // Make background a bit more transparent (0-255)
+                // Ensure image is visible when unlocked
+                imageView?.visibility = View.VISIBLE
+            }
 
             // Set dialog size - 95% of screen width and wrap content for height
             val displayMetrics = resources.displayMetrics
@@ -291,6 +356,9 @@ class AchievementsActivity : AppCompatActivity() {
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
             val achievement = achievements[position]
 
+            // Title is hidden in the grid; keep it set for accessibility but not visible
+            holder.itemView.findViewById<TextView?>(R.id.achievementTitle)?.text = achievement.title
+
             // Make badge wider horizontally by setting its layout params
             val layoutParams = holder.iconView.layoutParams
             // Calculate width for 2 items per row with padding
@@ -326,7 +394,21 @@ class AchievementsActivity : AppCompatActivity() {
             // Start animation when view becomes visible
             holder.startAnimation()
 
-            // Set click listener for showing achievement details
+            // Determine locked state based on user's accumulated points and achievement requirement
+            val pointsRequired = achievement.pointsRequired ?: 0
+            val isUnlocked = userAccumulatedPoints >= pointsRequired
+
+            // Gray out locked achievements (reduce alpha) and change overlay
+            if (isUnlocked) {
+                holder.itemView.alpha = 1.0f
+                holder.iconView.colorFilter = null
+            } else {
+                holder.itemView.alpha = 0.5f
+                // Apply a gray color filter for locked state
+                holder.iconView.setColorFilter(Color.parseColor("#888888"))
+            }
+
+            // Click behavior: simply open the details dialog (dialog shows Locked/Unlocked internally)
             holder.itemView.setOnClickListener {
                 onItemClick(achievement)
             }
