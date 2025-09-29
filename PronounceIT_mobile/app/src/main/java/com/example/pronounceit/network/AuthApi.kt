@@ -44,7 +44,7 @@ interface AuthApi {
     suspend fun getUserById(
         @Path("id") userId: Long,
         @Header("Authorization") token: String
-    ): Response<UserResponse>
+    ): Response<com.example.pronounceit.network.models.UserResponseWithPoints>
 
     @POST("/api/auth/logout")
     suspend fun logout(@Header("Authorization") token: String): Response<ResponseBody>

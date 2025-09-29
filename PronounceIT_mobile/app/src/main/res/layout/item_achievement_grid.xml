@@ -16,5 +16,22 @@
         android:src="@drawable/ic_achievement_default"
         android:contentDescription="Achievement Badge"
         android:padding="3dp" />
+    <!-- Title shown under the icon -->
+    <!-- Title hidden in grid per design (kept for accessibility if needed) -->
+    <TextView
+        android:id="@+id/achievementTitle"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:gravity="center"
+        android:paddingTop="6dp"
+        android:text=""
+        android:textColor="@android:color/white"
+        android:textSize="14sp"
+        android:ellipsize="end"
+        android:maxLines="1"
+        android:visibility="gone" />
+
+    <!-- status label removed; status is shown inside the details dialog instead -->
 
 </FrameLayout>
