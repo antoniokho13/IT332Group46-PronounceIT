@@ -7,6 +7,17 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.animation.AnimationUtils
+import android.content.Intent
+import android.os.Handler
+import android.os.Looper
+import android.view.animation.AccelerateDecelerateInterpolator
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.content.Context
+import android.os.Build
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import android.widget.*
 import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
@@ -56,6 +67,7 @@ class AchievementsActivity : AppCompatActivity() {
         val userId = prefs.getLong("userId", -1L)
         val token = prefs.getString("token", "") ?: ""
         if (userId == -1L) return
+        val lastKnown = getLastKnownPoints()
 
         CoroutineScope(Dispatchers.IO).launch {
             try {
@@ -73,6 +85,17 @@ class AchievementsActivity : AppCompatActivity() {
                         (recyclerView.adapter as? AchievementAdapter)?.let { adapter ->
                             adapter.notifyDataSetChanged()
                         }
+                        // If we already have achievements loaded, check for new unlocks
+                        if (achievements.isNotEmpty()) {
+                            checkForNewUnlocks(lastKnown, userAccumulatedPoints)
+                            setLastKnownPoints(userAccumulatedPoints)
+                            // Also process any unlocked achievements that haven't been seen yet
+                            try {
+                                processUnseenUnlockedAchievements()
+                            } catch (e: Exception) {
+                                Log.w("AchievementsActivity", "Error processing unseen unlocked achievements", e)
+                            }
+                        }
                     }
                 } else {
                     Log.e("AchievementsActivity", "Failed to load user: ${response.code()}")
@@ -81,6 +104,35 @@ class AchievementsActivity : AppCompatActivity() {
                 Log.e("AchievementsActivity", "Error fetching user points", e)
             }
         }
+    }
+
+    // Show popups/notifications for unlocked achievements that haven't been marked as seen yet
+    private fun processUnseenUnlockedAchievements() {
+        val seenSet = getSeenAchievementIds().toMutableSet()
+        val toShow = achievements.filter { ach ->
+            val req = ach.pointsRequired ?: 0
+            userAccumulatedPoints >= req && !seenSet.contains(ach.id.toString())
+        }
+        if (toShow.isEmpty()) {
+            Log.d("AchievementsActivity", "No unseen unlocked achievements to process (userPoints=$userAccumulatedPoints)")
+            return
+        }
+        Log.d("AchievementsActivity", "processUnseenUnlockedAchievements will show ${toShow.size} popups: ${toShow.map { it.id }}")
+        val newSeen = seenSet
+        toShow.forEach { ach ->
+            try {
+                showUnlockPopup(ach)
+            } catch (e: Exception) {
+                Log.w("AchievementsActivity", "Failed to show popup for ach=${ach.id}", e)
+            }
+            try {
+                showUnlockNotification(ach)
+            } catch (e: Exception) {
+                Log.w("AchievementsActivity", "Failed to post notification for ach=${ach.id}", e)
+            }
+            newSeen.add(ach.id.toString())
+        }
+        setSeenAchievementIds(newSeen)
     }
 
     private fun setupGradientBackground() {
@@ -317,6 +369,54 @@ class AchievementsActivity : AppCompatActivity() {
             }
             recyclerView.adapter = adapter
 
+            // After setting achievements, check for any unlocks since last known points
+            val lastKnown = getLastKnownPoints()
+            checkForNewUnlocks(lastKnown, userAccumulatedPoints)
+            // persist the latest seen points
+            setLastKnownPoints(userAccumulatedPoints)
+
+            // Also, handle any achievements that are unlocked by points but haven't been "seen" yet.
+            // Relying solely on lastKnownPoints can miss cases (for example if lastKnown was higher due to
+            // earlier runs or data reset). Track seen achievement IDs in prefs and show popups for any
+            // unlocked achievements that are not yet in the seen set.
+            try {
+                val prefs = getSharedPreferences("PronounceItPrefs", MODE_PRIVATE)
+                val seenSet = getSeenAchievementIds().toMutableSet()
+                val newlyUnlockedBySeen = achievements.filter { ach ->
+                    val req = ach.pointsRequired ?: 0
+                    userAccumulatedPoints >= req && !seenSet.contains(ach.id.toString())
+                }
+                if (newlyUnlockedBySeen.isNotEmpty()) {
+                    Log.d("AchievementsActivity", "Found ${newlyUnlockedBySeen.size} unlocked achievements not yet seen: ${newlyUnlockedBySeen.map { it.id }}")
+                    newlyUnlockedBySeen.forEach { ach ->
+                        try {
+                            showUnlockPopup(ach)
+                        } catch (e: Exception) {
+                            Log.w("AchievementsActivity", "Failed to show in-app popup for seen-detection", e)
+                        }
+                        try {
+                            showUnlockNotification(ach)
+                        } catch (e: Exception) {
+                            Log.w("AchievementsActivity", "Failed to post system notification for seen-detection", e)
+                        }
+                        seenSet.add(ach.id.toString())
+                    }
+                    setSeenAchievementIds(seenSet)
+                }
+            } catch (e: Exception) {
+                Log.w("AchievementsActivity", "Error while checking unseen unlocked achievements", e)
+            }
+
+            // If this activity was opened via notification with a target achievement id,
+            // scroll to it now that the adapter is ready.
+            val targetId = intent?.getLongExtra("achievementToScrollId", -1L) ?: -1L
+            if (targetId != -1L) {
+                val idx = achievements.indexOfFirst { it.id == targetId }
+                if (idx >= 0) {
+                    recyclerView.post { recyclerView.smoothScrollToPosition(idx) }
+                }
+            }
+
             // Delay to ensure all views are properly laid out before starting animations
             recyclerView.post {
                 restartAllVisibleAnimations()
@@ -421,5 +521,213 @@ class AchievementsActivity : AppCompatActivity() {
         }
 
         override fun getItemCount() = achievements.size
+    }
+
+    // Persist the last known accumulated points to prefs so we can detect new unlocks
+    private fun getLastKnownPoints(): Int {
+        val prefs = getSharedPreferences("PronounceItPrefs", MODE_PRIVATE)
+        return prefs.getInt("lastKnownPoints", 0)
+    }
+
+    private fun setLastKnownPoints(points: Int) {
+        val prefs = getSharedPreferences("PronounceItPrefs", MODE_PRIVATE)
+        prefs.edit().putInt("lastKnownPoints", points).apply()
+    }
+
+    // Persist a set of seen achievement IDs so we don't repeatedly show the same popup
+    private fun getSeenAchievementIds(): Set<String> {
+        val prefs = getSharedPreferences("PronounceItPrefs", MODE_PRIVATE)
+        return prefs.getStringSet("seenAchievementIds", emptySet()) ?: emptySet()
+    }
+
+    private fun setSeenAchievementIds(ids: Set<String>) {
+        val prefs = getSharedPreferences("PronounceItPrefs", MODE_PRIVATE)
+        prefs.edit().putStringSet("seenAchievementIds", ids).apply()
+    }
+
+    // Check if any achievement thresholds were crossed between lastKnown and currentPoints
+    private fun checkForNewUnlocks(lastKnown: Int, currentPoints: Int) {
+        Log.d("AchievementsActivity", "checkForNewUnlocks lastKnown=$lastKnown currentPoints=$currentPoints achievements=${achievements.size}")
+        if (currentPoints <= lastKnown) {
+            Log.d("AchievementsActivity", "No new points gained (or already handled)")
+            return
+        }
+
+        // find first achievement that was locked before and is now unlocked
+        val newlyUnlocked = achievements.firstOrNull { ach ->
+            val req = ach.pointsRequired ?: 0
+            req in (lastKnown + 1)..currentPoints
+        }
+
+        if (newlyUnlocked != null) {
+            Log.d("AchievementsActivity", "Newly unlocked achievement found: id=${newlyUnlocked.id} title=${newlyUnlocked.title}")
+            // show in-app popup if user is on this screen
+            try {
+                showUnlockPopup(newlyUnlocked)
+            } catch (e: Exception) {
+                Log.e("AchievementsActivity", "Error showing in-app popup", e)
+            }
+
+            // also post a system notification so it appears regardless of the current screen
+            try {
+                showUnlockNotification(newlyUnlocked)
+            } catch (e: Exception) {
+                Log.e("AchievementsActivity", "Error posting system notification", e)
+            }
+        } else {
+            Log.d("AchievementsActivity", "No newly unlocked achievement found in range")
+        }
+    }
+
+    private fun ensureNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val name = "Achievement Unlocks"
+            val descriptionText = "Notifications when achievements unlock"
+            val importance = NotificationManager.IMPORTANCE_DEFAULT
+            val channel = NotificationChannel("ach_unlocks", name, importance).apply {
+                description = descriptionText
+            }
+            val notificationManager: NotificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(channel)
+        }
+    }
+
+    private fun showUnlockNotification(achievement: AchievementEntity) {
+        ensureNotificationChannel()
+        val intent = Intent(this, AchievementsActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
+            putExtra("achievementToScrollId", achievement.id)
+        }
+        val pendingIntent: PendingIntent = PendingIntent.getActivity(
+            this,
+            achievement.id.hashCode(),
+            intent,
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) PendingIntent.FLAG_IMMUTABLE else 0
+        )
+
+        val builder = NotificationCompat.Builder(this, "ach_unlocks")
+            .setSmallIcon(R.drawable.pronounce_logo)
+            .setContentTitle("Achievement unlocked")
+            .setContentText("You unlocked \"${achievement.title}\"")
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setContentIntent(pendingIntent)
+            .setAutoCancel(true)
+
+        with(NotificationManagerCompat.from(this)) {
+            notify(achievement.id.hashCode(), builder.build())
+        }
+    }
+
+    private fun showUnlockPopup(achievement: AchievementEntity) {
+        // Ensure UI work runs on main thread
+        runOnUiThread {
+            Log.d("AchievementsActivity", "showUnlockPopup for id=${achievement.id} title=${achievement.title}")
+            // Inflate popup layout and add it to the activity root
+            val root = findViewById<ViewGroup>(android.R.id.content)
+            if (root == null) {
+                Log.e("AchievementsActivity", "Cannot show popup: root view (android.R.id.content) is null")
+                return@runOnUiThread
+            }
+            val popupView = LayoutInflater.from(this).inflate(R.layout.popup_achievement_unlocked, root, false)
+            // tag the popup so we don't add duplicates
+            val popupTag = "achievement_popup_${achievement.id}"
+            popupView.tag = popupTag
+            // if a popup for this achievement already exists, don't add another
+            val existing = root.findViewWithTag<View>(popupTag)
+            if (existing != null) {
+                Log.d("AchievementsActivity", "Popup for achievement id=${achievement.id} already shown; skipping duplicate")
+                return@runOnUiThread
+            }
+            val popupText = popupView.findViewById<TextView>(R.id.popupText)
+            popupText.text = "You have unlocked \"${achievement.title}\""
+
+            // Click opens AchievementsActivity (we are already in it), but ensure UI scrolls to the unlocked badge
+            popupView.setOnClickListener {
+                val index = achievements.indexOfFirst { it.id == achievement.id }
+                if (index >= 0) {
+                    recyclerView.smoothScrollToPosition(index)
+                }
+                // animate up and remove
+                popupView.animate()
+                    .translationY(-popupView.height.toFloat())
+                    .alpha(0f)
+                    .setDuration(300)
+                    .withEndAction { try { root.removeView(popupView) } catch (_: Exception){} }
+                    .start()
+            }
+
+            // Add popup at top with slide-down animation and elevation so it's visible
+                try {
+                    val params = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
+                    params.topMargin = 24
+                    params.gravity = android.view.Gravity.TOP
+                    popupView.elevation = 20f
+                    val before = root.childCount
+                    root.addView(popupView, params)
+                    Log.d("AchievementsActivity", "Popup added to root: beforeChildren=$before afterChildren=${root.childCount}")
+                } catch (e: Exception) {
+                    // If adding with FrameLayout params failed, fallback to simple addView
+                    Log.w("AchievementsActivity", "Failed to add popup with FrameLayout.LayoutParams, falling back to simple addView", e)
+                    try {
+                        val before = root.childCount
+                        root.addView(popupView)
+                        Log.d("AchievementsActivity", "Popup added to root (fallback): beforeChildren=$before afterChildren=${root.childCount}")
+                    } catch (ex: Exception) {
+                        Log.e("AchievementsActivity", "Failed to add popup view to root", ex)
+                        return@runOnUiThread
+                    }
+                }
+
+            // Start slide-down entrance
+            popupView.translationY = -200f
+            popupView.alpha = 0f
+            popupView.animate()
+                .translationY(0f)
+                .alpha(1f)
+                .setInterpolator(AccelerateDecelerateInterpolator())
+                .setDuration(350)
+                .start()
+
+            // Ensure it's on top and visible; fallback toast to help debugging if popup not visible
+            try {
+                popupView.bringToFront()
+                popupView.invalidate()
+                Log.d("AchievementsActivity", "Popup brought to front for achievement id=${achievement.id}")
+            } catch (e: Exception) {
+                Log.w("AchievementsActivity", "Could not bring popup to front", e)
+            }
+
+            // Debugging fallback - short toast so we can at least see something if the popup isn't rendered
+            try {
+                Toast.makeText(this, "Unlocked: ${achievement.title}", Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                Log.w("AchievementsActivity", "Failed to show fallback toast", e)
+            }
+
+            // Auto-dismiss after a few seconds with fade-out and slide-up
+            Handler(Looper.getMainLooper()).postDelayed({
+                try {
+                    // find the view by tag in case the root was recreated
+                    val tag = popupView.tag
+                    val toRemove = if (tag is String) root.findViewWithTag<View>(tag) else popupView
+                    toRemove?.animate()
+                        ?.translationY(- (toRemove.height.takeIf { it>0 } ?: popupView.height).toFloat())
+                        ?.alpha(0f)
+                        ?.setDuration(300)
+                        ?.withEndAction {
+                            try {
+                                if (toRemove != null && toRemove.parent != null) {
+                                    (toRemove.parent as? ViewGroup)?.removeView(toRemove)
+                                    Log.d("AchievementsActivity", "Popup removed for tag=$tag")
+                                }
+                            } catch (ex: Exception) {
+                                Log.w("AchievementsActivity", "Failed to remove popup view cleanly", ex)
+                            }
+                        }
+                        ?.start()
+                } catch (_: Exception) {
+                }
+            }, 6000)
+        }
     }
 }
