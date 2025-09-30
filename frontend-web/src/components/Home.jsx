@@ -1,12 +1,32 @@
 import { faFacebookF, faInstagram, faTwitter, faYoutube } from '@fortawesome/free-brands-svg-icons';
+import { faBars, faTimes } from '@fortawesome/free-solid-svg-icons';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import '../assets/css/Home.css';
 
-
-
 function Home() {
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const toggleMenu = () => {
+    setMenuOpen(!menuOpen);
+    // When menu is toggled, prevent body scrolling if menu is open
+    document.body.style.overflow = !menuOpen ? 'hidden' : 'auto';
+    // Add or remove a class to body to help with styling
+    if (!menuOpen) {
+      document.body.classList.add('menu-open');
+    } else {
+      document.body.classList.remove('menu-open');
+    }
+  };
+
+  // Close menu when clicking on menu items or overlay
+  const closeMenu = () => {
+    setMenuOpen(false);
+    document.body.style.overflow = 'auto';
+    document.body.classList.remove('menu-open');
+  };
+
   useEffect(() => {
     // Add class to body when component mounts
     document.body.classList.add('home-page');
@@ -30,10 +50,15 @@ function Home() {
             top: offsetPosition,
             behavior: 'smooth'
           });
+          
+          // Close menu if open on mobile
+          if (menuOpen) {
+            closeMenu();
+          }
         }
       }
     };
-  
+
     // Add event listeners for smooth scrolling
     const addSmoothScrollListeners = () => {
       const anchors = document.querySelectorAll('a[href^="#"]');
@@ -93,38 +118,58 @@ function Home() {
     // Clean up function
     return () => {
       document.body.classList.remove('home-page');
+      document.body.classList.remove('menu-open');
       document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         anchor.removeEventListener('click', handleSmoothScroll);
       });
+      document.body.style.overflow = 'auto'; // Ensure scrolling is restored
     };
-  }, []);
+  }, [menuOpen]);
 
   return (
     <>
+      {/* Add overlay div for mobile menu */}
+      <div className={`mobile-menu-overlay ${menuOpen ? 'active' : ''}`} onClick={closeMenu}></div>
+      
       {/* Header */}
       <header>
-      <div className="container">
-        <div className="logo">
+        <div className="container">
+          <div className="logo">
             <img 
-            src={require('../assets/images/logo.png')} 
-            alt="Pronounceit Logo"
+              src={require('../assets/images/logo.png')} 
+              alt="Pronounceit Logo"
             />
-        </div>
-          <nav>
+          </div>
+          
+          <nav className={menuOpen ? 'active' : ''}>
             <ul>
-              <li><a href="#features">Features</a></li>
-              <li><a href="#how-it-works">How It Works</a></li>
-              <li><a href="#team">Developers</a></li>
-              <li><a href="#testimonials">Testimonials</a></li>
-              <li><a href="#faq">FAQ</a></li>
+              <li><a href="#features" onClick={closeMenu}>Features</a></li>
+              <li><a href="#how-it-works" onClick={closeMenu}>How It Works</a></li>
+              <li><a href="#team" onClick={closeMenu}>Developers</a></li>
+              <li><a href="#testimonials" onClick={closeMenu}>Testimonials</a></li>
+              <li><a href="#faq" onClick={closeMenu}>FAQ</a></li>
             </ul>
+            <div className="mobile-buttons">
+              <Link to="/login" className="btn btn-secondary" onClick={closeMenu}>Log In</Link>
+              <Link to="/login?signup=true" className="btn btn-primary" onClick={closeMenu}>Sign Up</Link>
+            </div>
           </nav>
-          <div className="cta-button">
-             <Link to="/login" className="btn btn-secondary" style={{ marginRight: '15px' }}>Log In</Link>
-             <Link to="/login?signup=true" className="btn btn-secondary">Sign Up</Link>
+          
+          <div className="header-right">
+            {/* Desktop buttons - only visible in desktop */}
+            <div className="desktop-buttons">
+              <Link to="/login" className="btn btn-secondary" style={{ marginRight: '15px' }}>Log In</Link>
+              <Link to="/login?signup=true" className="btn btn-secondary">Sign Up</Link>
+            </div>
+            
+            {/* Mobile menu button */}
+            <div className="mobile-menu-button" onClick={toggleMenu}>
+              <FontAwesomeIcon icon={menuOpen ? faTimes : faBars} />
+            </div>
           </div>
         </div>
       </header>
+      
       {/* Hero Section */}
 <section id="hero" className="gradient-background">
   <div className="container">

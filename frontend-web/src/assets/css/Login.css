@@ -745,375 +745,231 @@ header .cta-button .btn {
   }
 }
 
-/* Update these styles in your Login.css file */
+/* Add these mobile menu styles */
 
-/* Fix the login form to use grid properly without conflicting styles */
-.login-form {
-  display: grid !important;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 15px;
-  margin-bottom: 15px;
-  padding: 0;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-/* Ensure the login button stays within the form container */
-.login-button {
-  grid-column: span 2;
-  width: 100%;
-  margin-top: 10px;
-  margin-bottom: 5px; /* Add some bottom margin */
-  background-color: #4361ee;
-  color: white;
-  padding: 10px;
-  border: none;
-  border-radius: 6px;
-  font-weight: 600;
+/* Mobile menu button */
+.mobile-menu-button {
+  display: none;
+  font-size: 1.5rem;
   cursor: pointer;
-  font-size: 14px;
-  transition: all 0.2s;
-  box-shadow: 0 2px 5px rgba(67, 97, 238, 0.2);
+  color: #333;
+  z-index: 101;
+  margin-left: 15px;
 }
 
-/* Make login box have padding at the bottom */
-.login-box {
-  padding-bottom: 30px; /* Add more padding at the bottom */
-}
-
-/* Fix the form group layout */
-.form-group {
-  width: 100%;
-  margin-bottom: 0;
-}
-
-/* Remove conflicting styles */
-.login-form {
-  /* Remove conflicting styles that are causing issues */
-  flex-direction: unset;
-  flex-wrap: unset;
-}
-
-/* Make email and password fields take their proper grid space */
-.form-group.email-field,
-.form-group.password-field {
-  grid-column: span 1;
-}
-
-/* Make sure confirm password spans the full width */
-.form-group.confirm-password-field {
-  grid-column: span 2;
-}
-
-/* Fix role display to span full width */
-.form-group.role-display {
-  grid-column: span 2;
-  margin-bottom: 5px;
-}
-
-/* Make the name row properly span two columns */
-.name-row {
-  grid-column: span 2;
-  display: flex;
-  gap: 15px;
-  width: 100%;
-}
-
-/* Fix for name fields overflowing the border */
-.name-row {
-  grid-column: span 2;
-  display: flex;
-  gap: 10px; /* Reduce gap between first and last name */
-  width: 100%;
-  box-sizing: border-box;
-}
-
-.name-row .form-group {
-  flex: 1;
-  max-width: calc(50% - 5px); /* Ensure each field takes exactly half minus gap */
-  min-width: 0; /* Allow fields to shrink if needed */
-}
-
-.name-row .form-group input {
-  width: 100%;
-  box-sizing: border-box;
-}
-
-/* Fix input width in general to prevent overflow */
-.form-group input {
-  width: 100%;
-  box-sizing: border-box;
-  max-width: 100%;
-}
-
-/* Add more horizontal padding to the login box */
-.login-box {
-  padding-left: 25px;
-  padding-right: 25px;
-  box-sizing: border-box;
-}
-
-/* Ensure proper spacing on smaller screens */
-@media (max-width: 580px) {
-  .login-box {
-    padding-left: 20px;
-    padding-right: 20px;
-  }
-  
-  .name-row {
-    flex-direction: column;
-    gap: 15px;
-  }
-  
-  .name-row .form-group {
-    max-width: 100%;
-  }
-}
-
-/* Notification Modal */
-.notification-overlay {
+/* Mobile menu overlay */
+.mobile-menu-overlay {
+  display: none;
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
   background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-  animation: fadeIn 0.3s ease-out;
+  z-index: 99;
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+.mobile-menu-overlay.active {
+  display: block;
 }
 
-.notification-modal {
-  background-color: white;
-  border-radius: 12px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-  padding: 20px;
-  width: 90%;
-  max-width: 400px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  transform: translateY(0);
-  animation: slideUp 0.3s ease-out;
-}
-
-@keyframes slideUp {
-  from { transform: translateY(30px); opacity: 0; }
-  to { transform: translateY(0); opacity: 1; }
-}
-
-.notification-modal.success {
-  border-top: 5px solid #38b2ac;
-}
-
-.notification-modal.error {
-  border-top: 5px solid #e53e3e;
-}
-
-.notification-modal.info {
-  border-top: 5px solid #4361ee;
-}
-
-.notification-icon {
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 30px;
-  margin-bottom: 15px;
-  color: white;
-}
-
-.notification-modal.success .notification-icon {
-  background-color: #38b2ac;
-}
-
-.notification-modal.error .notification-icon {
-  background-color: #e53e3e;
-}
-
-.notification-modal.info .notification-icon {
-  background-color: #4361ee;
-}
-
-.notification-content {
-  width: 100%;
-}
-
-.notification-content p {
-  color: #4a5568;
-  margin-bottom: 20px;
-  font-size: 16px;
-  line-height: 1.5;
-}
-
-.notification-button {
-  background-color: #4361ee;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  padding: 10px 20px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  width: 100%;
-}
-
-.notification-button:hover {
-  background-color: #3a56d4;
-  transform: translateY(-2px);
-}
-
-.notification-modal.success .notification-button {
-  background-color: #38b2ac;
-}
-
-.notification-modal.success .notification-button:hover {
-  background-color: #319795;
-}
-
-.notification-modal.error .notification-button {
-  background-color: #e53e3e;
-}
-
-.notification-modal.error .notification-button:hover {
-  background-color: #c53030;
-}
-
-/* Responsive adjustments for the notification */
+/* Adjust header for mobile menu */
 @media (max-width: 768px) {
-  .notification-modal {
-    padding: 15px;
+  /* Show mobile menu button */
+  .mobile-menu-button {
+    display: block;
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
   }
   
-  .notification-icon {
-    width: 50px;
-    height: 50px;
-    font-size: 24px;
-  }
-  
-  .notification-content p {
-    font-size: 14px;
-  }
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
+  /* Hide desktop navigation by default */
   header nav {
-    display: none;
-  }
-  
-  header .cta-button {
-    margin-left: auto;
-  }
-  
-  .login-box {
-    padding: 20px 15px;
-    max-width: 100%;
-  }
-  
-  .role-options {
+    position: fixed;
+    top: 0;
+    right: -100%;
+    width: 80%;
+    max-width: 300px;
+    height: 100vh;
+    background-color: white;
+    z-index: 100;
+    padding: 70px 20px 20px;
+    box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+    transition: right 0.3s ease;
+    display: flex;
     flex-direction: column;
-    gap: 10px;
+    align-items: center; /* Center items horizontally */
+    justify-content: flex-start;
+    overflow-y: auto;
   }
   
-  .role-button {
-    min-height: 120px;
-  }
-}
-
-/* Optimize signup form specifically for smaller screens */
-@media (max-height: 700px) {
-  .login-header {
-    margin-bottom: 10px;
-  }
-  
-  .login-form {
-    gap: 8px;
-  }
-  
-  .form-group input {
-    padding: 6px 8px;
-  }
-  
-  .login-button {
-    padding: 8px;
-    font-size: 13px;
-  }
-  
-  .name-row {
-    gap: 6px;
-  }
-  
-  .login-footer {
-    margin-top: 8px;
-    font-size: 12px;
-  }
-  
-  .home-link {
-    margin-top: 6px;
-    font-size: 12px;
-  }
-  
-  .form-group.role-display {
-    margin-bottom: -2px;
-  }
-}
-
-/* Specific optimizations for laptops */
-@media (min-width: 769px) and (max-height: 800px) {
-  .login-box {
-    padding: 14px;
-    max-height: 90vh;
-  }
-  
-  .form-group input {
-    height: 30px;
-    min-height: unset;
-  }
-  
-  .role-display {
-    margin-bottom: 4px !important;
-  }
-}
-
-/* Responsive adjustments for role selection */
-@media (max-height: 700px) {
-  .role-button {
-    min-height: 140px;
-    padding: 12px 8px;
-  }
-  
-  .role-icon {
-    width: 50px;
-    height: 50px;
-    font-size: 28px;
-  }
-}
-
-/* Fix for high-resolution devices */
-@media (min-height: 800px) {
-  .login-container {
-    align-items: center; /* Keep centered */
-    padding-top: 80px; /* Add padding for header */
-  }
-}
-
-/* Additional fix for very small screens */
-@media (max-height: 640px) {
-  .login-container {
+  /* Show navigation when active */
+  header nav.active {
+    right: 0;
+    display: flex !important;
+    flex-direction: column;
     align-items: center;
-    padding-top: 80px;
+  }
+  
+  /* Style navigation items for mobile */
+  header nav ul {
+    flex-direction: column;
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    text-align: center;
+  }
+  
+  header nav ul li {
+    margin: 0;
+    padding: 15px 0;
+    width: 100%;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  }
+  
+  header nav ul li a {
+    display: block;
+    width: 100%;
+    font-size: 16px;
+    text-align: center;
+  }
+  
+  /* Show mobile menu overlay when menu is open */
+  .mobile-menu-overlay {
+    display: block;
+  }
+}
+
+/* Ensure the login container is properly positioned with header */
+@media (max-width: 768px) {
+  .login-container {
+    padding-top: 70px; /* Adjust based on header height */
+  }
+}
+
+/* Update the mobile navigation styling */
+
+/* Improved centered mobile navigation */
+@media (max-width: 768px) {
+  /* Center align navigation items */
+  header nav {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    justify-content: flex-start;
+    padding-top: 80px; /* Increase top padding for better spacing */
+  }
+  
+  header nav ul {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0;
+    margin: 0 0 20px;
+  }
+  
+  header nav ul li {
+    width: 100%;
+    padding: 15px 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    display: flex;
+    justify-content: center;
+  }
+  
+  header nav ul li a {
+    display: block;
+    width: auto;
+    text-align: center;
+    font-size: 16px;
+    font-weight: 600;
+    padding: 0 15px;
+  }
+  
+  /* Mobile buttons styling */
+  .mobile-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    width: 80%;
+    margin-top: 20px;
+  }
+  
+  .mobile-buttons .btn {
+    width: 100%;
+    text-align: center;
+    padding: 12px 20px;
+  }
+}
+
+/* Fix for the mobile menu overlay */
+.mobile-menu-overlay {
+  display: none;
+}
+
+.mobile-menu-overlay.active {
+  display: block;
+}
+
+/* Fix for active menu state */
+header nav.active {
+  right: 0;
+  display: flex !important;
+}
+
+/* Center all content in the menu */
+@media (max-width: 768px) {
+  header nav.active {
+    align-items: center;
+    text-align: center;
+  }
+}
+
+/* Add a highlight effect to the active navigation item */
+header nav ul li a:hover,
+header nav ul li a:active {
+  color: #4361ee;
+}
+
+/* Add these styles for the back button */
+
+.back-button {
+  position: absolute;
+  top: 15px;
+  left: 15px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  color: #4361ee;
+  cursor: pointer;
+  padding: 5px 10px;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+}
+
+.back-button:hover {
+  background-color: rgba(67, 97, 238, 0.1);
+  transform: translateX(-2px);
+}
+
+/* Ensure the login box has proper positioning for the absolute positioned back button */
+.login-box {
+  position: relative;
+  /* ...existing styles remain... */
+}
+
+/* Responsive adjustment for smaller screens */
+@media (max-width: 576px) {
+  .back-button {
+    top: 10px;
+    left: 10px;
+    font-size: 22px;
   }
 }
