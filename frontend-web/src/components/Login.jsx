@@ -1,3 +1,5 @@
+import { faBars, faTimes } from '@fortawesome/free-solid-svg-icons';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import '../assets/css/Login.css';
@@ -9,6 +11,7 @@ const Login = () => {
   const [isLogin, setIsLogin] = useState(true);
   const [showRoleSelection, setShowRoleSelection] = useState(false);
   const [selectedRole, setSelectedRole] = useState(null);
+  const [menuOpen, setMenuOpen] = useState(false); // State for mobile menu
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -26,6 +29,18 @@ const Login = () => {
     redirect: null
   });
 
+  // Toggle mobile menu
+  const toggleMenu = () => {
+    setMenuOpen(!menuOpen);
+    document.body.style.overflow = !menuOpen ? 'hidden' : 'auto';
+  };
+
+  // Close mobile menu
+  const closeMenu = () => {
+    setMenuOpen(false);
+    document.body.style.overflow = 'auto';
+  };
+
   // Check URL parameters on component mount to determine if we should show signup
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
@@ -33,6 +48,11 @@ const Login = () => {
       setIsLogin(false);
       setShowRoleSelection(true);
     }
+    
+    // Cleanup function to ensure body scrolling is restored
+    return () => {
+      document.body.style.overflow = 'auto';
+    };
   }, [location]);
 
   const handleChange = (e) => {
@@ -163,34 +183,52 @@ const Login = () => {
     setNotification(prev => ({ ...prev, show: false }));
   };
 
+  // Updated header with mobile menu for both role selection and login screens
+  const renderHeader = () => (
+    <header>
+      <div className="container">
+        <div className="logo">
+          <Link to="/">
+            <img 
+              src={require('../assets/images/logo.png')} 
+              alt="Pronounceit Logo"
+            />
+          </Link>
+        </div>
+        
+        <nav className={menuOpen ? 'active' : ''}>
+          <ul>
+            <li><a href="/#features" onClick={closeMenu}>Features</a></li>
+            <li><a href="/#how-it-works" onClick={closeMenu}>How It Works</a></li>
+            <li><a href="/#team" onClick={closeMenu}>Developers</a></li>
+            <li><a href="/#testimonials" onClick={closeMenu}>Testimonials</a></li>
+            <li><a href="/#faq" onClick={closeMenu}>FAQ</a></li>
+          </ul>
+          {/* Add mobile buttons similar to Home.jsx for consistency */}
+          <div className="mobile-buttons">
+            <Link to="/login" className={`btn ${isLogin ? 'btn-primary' : 'btn-secondary'}`} onClick={closeMenu}>Log In</Link>
+            <Link to="/login?signup=true" className={`btn ${!isLogin ? 'btn-primary' : 'btn-secondary'}`} onClick={closeMenu}>Sign Up</Link>
+          </div>
+        </nav>
+        
+        <div className="mobile-menu-button" onClick={toggleMenu}>
+          <FontAwesomeIcon icon={menuOpen ? faTimes : faBars} />
+        </div>
+      </div>
+    </header>
+  );
+  
+  // Mobile menu overlay
+  const renderMobileOverlay = () => (
+    menuOpen && <div className="mobile-menu-overlay" onClick={closeMenu}></div>
+  );
+
   if (showRoleSelection) {
     return (
       <>
-        <header>
-          <div className="container">
-            <div className="logo">
-              <Link to="/">
-                <img 
-                  src={require('../assets/images/logo.png')} 
-                  alt="Pronounceit Logo"
-                />
-              </Link>
-            </div>
-            <nav>
-              <ul>
-                <li><a href="/#features">Features</a></li>
-                <li><a href="/#how-it-works">How It Works</a></li>
-                <li><a href="/#team">Developers</a></li>
-                <li><a href="/#testimonials">Testimonials</a></li>
-                <li><a href="/#faq">FAQ</a></li>
-              </ul>
-            </nav>
-            <div className="cta-button">
-              {/* Login/Signup buttons removed, but container kept for layout */}
-            </div>
-          </div>
-        </header>
-
+        {renderHeader()}
+        {renderMobileOverlay()}
+        
         <div className="login-container">
           <div className="login-box role-selection">
             <div className="login-header">
@@ -236,28 +274,8 @@ const Login = () => {
 
   return (
     <>
-      <header>
-        <div className="container">
-          <div className="logo">
-            <img 
-              src={require('../assets/images/logo.png')} 
-              alt="Pronounceit Logo"
-            />
-          </div>
-          <nav>
-            <ul>
-              <li><a href="/#features">Features</a></li>
-              <li><a href="/#how-it-works">How It Works</a></li>
-              <li><a href="/#team">Developers</a></li>
-              <li><a href="/#testimonials">Testimonials</a></li>
-              <li><a href="/#faq">FAQ</a></li>
-            </ul>
-          </nav>
-          <div className="cta-button">
-            {/* Login/Signup buttons removed, but container kept for layout */}
-          </div>
-        </div>
-      </header>
+      {renderHeader()}
+      {renderMobileOverlay()}
 
       {notification.show && (
         <div className="notification-overlay">
@@ -279,6 +297,17 @@ const Login = () => {
 
       <div className="login-container">
         <div className="login-box">
+          {/* Add back button for non-login screens when a role is selected */}
+          {!isLogin && selectedRole && (
+            <button 
+              className="back-button" 
+              onClick={() => setShowRoleSelection(true)}
+              aria-label="Go back to role selection"
+            >
+              ←
+            </button>
+          )}
+          
           <div className="login-header">
             <h1>{isLogin ? 'Welcome Back!' : `Sign Up as ${selectedRole}`}</h1>
             <p className="login-subtitle">
