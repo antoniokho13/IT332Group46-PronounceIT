@@ -1,17 +1,18 @@
 package com.capstone.group46.pronounceit.service;
 
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
 import com.capstone.group46.pronounceit.dto.StreakDTO;
 import com.capstone.group46.pronounceit.entity.StreakEntity;
 import com.capstone.group46.pronounceit.entity.UserEntity;
 import com.capstone.group46.pronounceit.repository.StreakRepository;
 import com.capstone.group46.pronounceit.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
 public class StreakService {
@@ -29,8 +30,8 @@ public class StreakService {
         }
         if (streakRepository.existsByUser(user)) throw new RuntimeException("Streak already exists for user");
         StreakEntity streak = new StreakEntity(user);
-        streak.setCurrentStreak(1);
-        streak.setLongestStreak(1);
+        streak.setCurrentStreak(0);
+        streak.setLongestStreak(0);
         streak.setLastActivityDate(LocalDate.now());
         streak.setStreakStartDate(LocalDate.now());
         streak.setTotalActiveDays(1);

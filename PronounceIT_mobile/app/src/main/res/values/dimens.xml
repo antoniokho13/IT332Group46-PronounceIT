@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="streak_icon_width">100dp</dimen>
+    <dimen name="streak_icon_height">100dp</dimen>
+    <dimen name="streak_text_bottom_margin">10dp</dimen>
+
+</resources>

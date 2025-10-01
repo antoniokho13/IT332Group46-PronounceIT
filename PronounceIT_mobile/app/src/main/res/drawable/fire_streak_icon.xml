@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Background glow -->
+    <item>
+        <shape android:shape="oval">
+            <gradient
+                android:type="radial"
+                android:centerX="0.5"
+                android:centerY="0.5"
+                android:gradientRadius="60%"
+                android:startColor="#80FF5722"
+                android:endColor="#00FF5722" />
+            <size
+                android:width="64dp"
+                android:height="64dp"/>
+        </shape>
+    </item>
+    <!-- Main circle -->
+    <item
+        android:left="6dp"
+        android:right="6dp"
+        android:top="6dp"
+        android:bottom="6dp">
+        <shape android:shape="oval">
+            <gradient
+                android:type="linear"
+                android:angle="135"
+                android:startColor="#FFA726"
+                android:endColor="#FF7043" />
+        </shape>
+    </item>
+    <!-- Fire icon -->
+    <item
+        android:left="16dp"
+        android:right="16dp"
+        android:top="12dp"
+        android:bottom="20dp">
+        <vector
+            android:width="32dp"
+            android:height="32dp"
+            android:viewportWidth="24"
+            android:viewportHeight="24">
+            <path
+                android:fillColor="#FFFFFF"
+                android:pathData="M13.5,0.67s0.74,2.65 0.74,4.8c0,2.06 -1.35,3.73 -3.41,3.73 -2.07,0 -3.63,-1.67 -3.63,-3.73l0.03,-0.36C5.21,7.51 4,10.62 4,14c0,4.42 3.58,8 8,8s8,-3.58 8,-8C20,8.61 17.41,3.8 13.5,0.67zM11.71,19c-1.78,0 -3.22,-1.4 -3.22,-3.14 0,-1.62 1.05,-2.76 2.81,-3.12 1.47,-0.3 2.98,-0.93 4.03,-1.92 0.28,0.64 0.41,1.36 0.4,2.06 -0.03,2.65 -1.25,6.12 -4.02,6.12z"/>
+        </vector>
+    </item>
+</layer-list>
