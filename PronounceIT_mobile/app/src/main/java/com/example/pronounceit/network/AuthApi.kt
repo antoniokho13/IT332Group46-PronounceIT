@@ -218,4 +218,8 @@ interface AuthApi {
 
     @PUT("api/streaks/{userId}")
     suspend fun updateStreak(@Path("userId") userId: Long): Response<StreakDTO>
+
+    // Mark user activity for streak (optional date query in ISO format YYYY-MM-DD)
+    @POST("/api/streaks/{userId}/activity")
+    suspend fun markStreakActivity(@Path("userId") userId: Long, @Query("date") date: String? = null): Response<StreakDTO>
 }
