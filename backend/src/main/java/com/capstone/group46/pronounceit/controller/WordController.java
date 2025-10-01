@@ -1,8 +1,7 @@
 package com.capstone.group46.pronounceit.controller;
 
-import com.capstone.group46.pronounceit.entity.PronounciationAttemptEntity;
-import com.capstone.group46.pronounceit.entity.UserEntity;
 import com.capstone.group46.pronounceit.entity.WordEntity;
+import com.capstone.group46.pronounceit.service.FfmpegService;
 import com.capstone.group46.pronounceit.service.PronounciationAttemptService;
 import com.capstone.group46.pronounceit.service.SpeechToTextService;
 import com.capstone.group46.pronounceit.service.UserService;
@@ -16,14 +15,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import ws.schild.jave.Encoder;
-import ws.schild.jave.MultimediaObject;
-import ws.schild.jave.encode.AudioAttributes;
-import ws.schild.jave.encode.EncodingAttributes;
 
 import java.io.File;
 import java.io.IOException;
@@ -39,19 +32,22 @@ public class WordController {
     private static final Logger logger = LoggerFactory.getLogger(WordController.class);
     private final WordService wordService;
     private final SpeechToTextService speechToTextService;
+    @SuppressWarnings("unused")
     private final PronounciationAttemptService pronounciationAttemptService;
-    private final UserService userService; // If you have a UserService
+    @SuppressWarnings("unused")
+    private final UserService userService;
+    private final FfmpegService ffmpegService;
 
-    public WordController(
-        WordService wordService,
-        SpeechToTextService speechToTextService,
-        PronounciationAttemptService pronounciationAttemptService,
-        UserService userService // Add this
-    ) {
+    public WordController(WordService wordService,
+                          SpeechToTextService speechToTextService,
+                          PronounciationAttemptService pronounciationAttemptService,
+                          UserService userService,
+                          FfmpegService ffmpegService) {
         this.wordService = wordService;
         this.speechToTextService = speechToTextService;
         this.pronounciationAttemptService = pronounciationAttemptService;
         this.userService = userService;
+        this.ffmpegService = ffmpegService;
     }
 
     @GetMapping("/{wordId}")
@@ -122,9 +118,8 @@ public class WordController {
     }
 
     @PostMapping(consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
-    public ResponseEntity<?> createWord(
-            @RequestPart("word") String wordJson,
-            @RequestPart("image") MultipartFile imageFile) throws IOException {
+    public ResponseEntity<?> createWord(@RequestPart("word") String wordJson,
+                                        @RequestPart("image") MultipartFile imageFile) throws IOException {
         logger.info("Creating word with image upload");
         try {
             ObjectMapper objectMapper = new ObjectMapper();
@@ -156,10 +151,9 @@ public class WordController {
     }
 
     @PutMapping(value = "/{wordId}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<WordEntity> updateWord(
-            @PathVariable Long wordId,
-            @RequestPart("word") String wordJson,
-            @RequestPart(value = "image", required = false) MultipartFile imageFile) {
+    public ResponseEntity<WordEntity> updateWord(@PathVariable Long wordId,
+                                                 @RequestPart("word") String wordJson,
+                                                 @RequestPart(value = "image", required = false) MultipartFile imageFile) {
         logger.info("Updating word with ID: {} and image", wordId);
         try {
             ObjectMapper objectMapper = new ObjectMapper();
@@ -206,7 +200,7 @@ public class WordController {
 
     @PostMapping("/{wordId}/check-pronunciation")
     public ResponseEntity<?> checkPronunciation(@PathVariable Long wordId,
-                                               @RequestParam("audio") MultipartFile audioFile) {
+                                                @RequestParam("audio") MultipartFile audioFile) {
         logger.info("Received pronunciation check request for wordId: {}, audio size: {} bytes", wordId, audioFile.getSize());
 
         // 1. Fetch the correct text of the word
@@ -225,10 +219,10 @@ public class WordController {
         }
 
         try {
-            // 3. Convert audio to PCM WAV
+            // 3. Convert audio to PCM WAV using centralized FfmpegService
             File inputFile = File.createTempFile("audio", ".mp4");
             audioFile.transferTo(inputFile);
-            File outputWavFile = convertToPcmWav(inputFile);
+            File outputWavFile = ffmpegService.convertToPcmWav(inputFile);
             byte[] audioBytes = Files.readAllBytes(outputWavFile.toPath());
             logger.debug("Converted audio to PCM WAV, size: {} bytes", audioBytes.length);
 
@@ -269,22 +263,6 @@ public class WordController {
             logger.error("Error during transcription for wordId {}: {}", wordId, e.getMessage(), e);
             return new ResponseEntity<>("Error during transcription: " + e.getMessage(), HttpStatus.INTERNAL_SERVER_ERROR);
         }
-    }
-
-    private File convertToPcmWav(File inputFile) throws Exception {
-        File outputWavFile = File.createTempFile("converted", ".wav");
-        AudioAttributes audio = new AudioAttributes();
-        audio.setCodec("pcm_s16le");
-        audio.setChannels(1);
-        audio.setSamplingRate(16000);
-
-        EncodingAttributes attrs = new EncodingAttributes();
-        attrs.setOutputFormat("wav");
-        attrs.setAudioAttributes(audio);
-
-        Encoder encoder = new Encoder();
-        encoder.encode(new MultimediaObject(inputFile), outputWavFile, attrs);
-        return outputWavFile;
     }
 
     public static class PronunciationCheckResponse {
