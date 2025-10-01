@@ -24,6 +24,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.example.pronounceit.network.RetrofitInstance
 import com.example.pronounceit.network.models.AchievementEntity
 import kotlinx.coroutines.CoroutineScope
@@ -78,13 +79,16 @@ class AchievementsActivity : AppCompatActivity() {
                     val acc = body?.accumulatedPoints ?: 0
                     withContext(Dispatchers.Main) {
                         userAccumulatedPoints = acc
-                        // update total points label
+
+                        // Hide the total points text view completely
                         val totalPointsLabel = findViewById<TextView>(R.id.totalPointsTextView)
-                        totalPointsLabel.text = "Total points: $userAccumulatedPoints"
+                        totalPointsLabel.visibility = View.GONE
+
                         // refresh UI if achievements already loaded
                         (recyclerView.adapter as? AchievementAdapter)?.let { adapter ->
                             adapter.notifyDataSetChanged()
                         }
+
                         // If we already have achievements loaded, check for new unlocks
                         if (achievements.isNotEmpty()) {
                             checkForNewUnlocks(lastKnown, userAccumulatedPoints)
@@ -182,8 +186,14 @@ class AchievementsActivity : AppCompatActivity() {
             pointsTextView?.visibility = View.VISIBLE
             pointsTextView?.text = "Required: ${achievement.pointsRequired} points"
 
-            // Hide the pointsRequiredTextView since we don't need two similar texts
-            pointsRequiredTextView?.visibility = View.GONE
+            // Add user's current points below the required points
+            pointsRequiredTextView?.visibility = View.VISIBLE
+            pointsRequiredTextView?.text = "My Points: $userAccumulatedPoints"
+            pointsRequiredTextView?.setTextColor(Color.WHITE)
+            pointsRequiredTextView?.textSize = 20f
+            pointsRequiredTextView?.gravity = android.view.Gravity.CENTER
+            pointsRequiredTextView?.typeface = android.graphics.Typeface.create("sans-serif", android.graphics.Typeface.BOLD)
+            pointsRequiredTextView?.setShadowLayer(2f, 1f, 1f, Color.BLACK)
 
             // Make image view LARGER - now 40% of screen height
             imageView?.layoutParams?.height = (resources.displayMetrics.heightPixels * 0.4).toInt()
@@ -234,25 +244,31 @@ class AchievementsActivity : AppCompatActivity() {
             }
 
             if (isLocked) {
-                // Show locked status inside the dialog and give a solid gray background
+                // Show locked status inside the dialog but use the same background as unlocked
                 statusDialogLabel?.visibility = View.VISIBLE
                 statusDialogLabel?.text = "Locked"
-                statusDialogLabel?.setTextColor(Color.LTGRAY)
-                // Apply a solid gray background to the container for locked state
-                container?.setBackgroundColor(Color.parseColor("#6E6E6E"))
-                // Hide the achievement image when locked so it appears as a plain gray block
-                imageView?.visibility = View.GONE
+                statusDialogLabel?.textSize = 28f // Much larger text size
+                statusDialogLabel?.setTextColor(Color.WHITE) // Brighter color for visibility
+                statusDialogLabel?.typeface = android.graphics.Typeface.create("sans-serif-black", android.graphics.Typeface.BOLD)
+                statusDialogLabel?.setShadowLayer(4f, 2f, 2f, Color.BLACK) // Add shadow for better contrast
+                statusDialogLabel?.gravity = android.view.Gravity.CENTER
+
+                // Use the rainbow gradient background even when locked
+                container?.setBackgroundResource(R.drawable.rainbow_gradient_background)
+
+                // Show the image even when locked, but apply a dark filter
+                imageView?.visibility = View.VISIBLE
+                imageView?.setColorFilter(Color.argb(170, 0, 0, 0))
             } else {
                 statusDialogLabel?.visibility = View.GONE
                 container?.setBackgroundResource(R.drawable.rainbow_gradient_background)
+                imageView?.clearColorFilter()
             }
 
-            // For unlocked state add a semi-transparent overlay for better text readability
-            if (!isLocked) {
-                container?.background?.alpha = 180 // Make background a bit more transparent (0-255)
-                // Ensure image is visible when unlocked
-                imageView?.visibility = View.VISIBLE
-            }
+            // For both states add a semi-transparent overlay for better text readability
+            container?.background?.alpha = 180 // Make background a bit more transparent (0-255)
+
+            // Rest of the method continues as before...
 
             // Set dialog size - 95% of screen width and wrap content for height
             val displayMetrics = resources.displayMetrics
@@ -467,9 +483,12 @@ class AchievementsActivity : AppCompatActivity() {
             layoutParams.height = (layoutParams.width * 1.2).toInt()
             holder.iconView.layoutParams = layoutParams
 
-            // Ensure background is transparent
+            // Completely remove any styling that might create borders
             holder.itemView.setBackgroundColor(Color.TRANSPARENT)
-            holder.iconView.setBackgroundColor(Color.TRANSPARENT)
+            holder.iconView.setBackgroundResource(0)  // Remove any background resource
+            holder.iconView.setPadding(0, 0, 0, 0)    // Remove all padding
+            holder.iconView.elevation = 0f            // Remove any elevation
+            holder.iconView.clipToOutline = false     // Disable outline clipping
 
             // Load badge image from backend
             if (!achievement.badgeImagePath.isNullOrEmpty()) {
@@ -486,6 +505,7 @@ class AchievementsActivity : AppCompatActivity() {
                     .load(imageUrl)
                     .placeholder(R.drawable.ic_achievement_default)
                     .error(R.drawable.ic_achievement_default)
+                    .diskCacheStrategy(DiskCacheStrategy.ALL)  // Cache images
                     .into(holder.iconView)
             } else {
                 holder.iconView.setImageResource(R.drawable.ic_achievement_default)
@@ -498,14 +518,24 @@ class AchievementsActivity : AppCompatActivity() {
             val pointsRequired = achievement.pointsRequired ?: 0
             val isUnlocked = userAccumulatedPoints >= pointsRequired
 
-            // Gray out locked achievements (reduce alpha) and change overlay
+            // Instead of graying out completely, use a dark semi-transparent overlay for locked achievements
             if (isUnlocked) {
                 holder.itemView.alpha = 1.0f
-                holder.iconView.colorFilter = null
+                // Clear any color filter when unlocked
+                holder.iconView.clearColorFilter()
             } else {
-                holder.itemView.alpha = 0.5f
-                // Apply a gray color filter for locked state
-                holder.iconView.setColorFilter(Color.parseColor("#888888"))
+                // Still show the image but with darkened overlay - make it 70% opacity
+                holder.itemView.alpha = 0.7f
+
+                // Apply a dark semi-transparent color filter instead of solid gray
+                // This lets the image still show through but darkened
+                holder.iconView.setColorFilter(Color.argb(170, 0, 0, 0))
+
+                // Remove lock icon visibility - hide it completely
+                val lockIcon = holder.itemView.findViewById<ImageView?>(R.id.lockIcon)
+                if (lockIcon != null) {
+                    lockIcon.visibility = View.GONE
+                }
             }
 
             // Click behavior: simply open the details dialog (dialog shows Locked/Unlocked internally)
@@ -622,24 +652,51 @@ class AchievementsActivity : AppCompatActivity() {
         // Ensure UI work runs on main thread
         runOnUiThread {
             Log.d("AchievementsActivity", "showUnlockPopup for id=${achievement.id} title=${achievement.title}")
+
             // Inflate popup layout and add it to the activity root
             val root = findViewById<ViewGroup>(android.R.id.content)
             if (root == null) {
                 Log.e("AchievementsActivity", "Cannot show popup: root view (android.R.id.content) is null")
                 return@runOnUiThread
             }
+
             val popupView = LayoutInflater.from(this).inflate(R.layout.popup_achievement_unlocked, root, false)
-            // tag the popup so we don't add duplicates
+
+            // Tag the popup so we don't add duplicates
             val popupTag = "achievement_popup_${achievement.id}"
             popupView.tag = popupTag
-            // if a popup for this achievement already exists, don't add another
+
+            // If a popup for this achievement already exists, don't add another
             val existing = root.findViewWithTag<View>(popupTag)
             if (existing != null) {
                 Log.d("AchievementsActivity", "Popup for achievement id=${achievement.id} already shown; skipping duplicate")
                 return@runOnUiThread
             }
-            val popupText = popupView.findViewById<TextView>(R.id.popupText)
-            popupText.text = "You have unlocked \"${achievement.title}\""
+
+            // Set up the achievement image in the popup
+            val popupImage = popupView.findViewById<ImageView>(R.id.popupImage)
+
+            // Load the achievement image
+            if (!achievement.badgeImagePath.isNullOrEmpty()) {
+                val baseUrl = RetrofitInstance.getBaseUrl()
+                val imageUrl = if (achievement.badgeImagePath.startsWith("/")) {
+                    baseUrl + achievement.badgeImagePath
+                } else {
+                    baseUrl + "/" + achievement.badgeImagePath
+                }
+
+                Glide.with(this)
+                    .load(imageUrl)
+                    .placeholder(R.drawable.ic_achievement_default)
+                    .error(R.drawable.ic_achievement_default)
+                    .into(popupImage)
+            } else {
+                popupImage.setImageResource(R.drawable.ic_achievement_default)
+            }
+
+            // Add a bounce animation to the image
+            val bounceAnimation = AnimationUtils.loadAnimation(this, R.anim.logo_bounce)
+            popupImage.startAnimation(bounceAnimation)
 
             // Click opens AchievementsActivity (we are already in it), but ensure UI scrolls to the unlocked badge
             popupView.setOnClickListener {
@@ -647,72 +704,55 @@ class AchievementsActivity : AppCompatActivity() {
                 if (index >= 0) {
                     recyclerView.smoothScrollToPosition(index)
                 }
-                // animate up and remove
+                // Animate fade out and remove
                 popupView.animate()
-                    .translationY(-popupView.height.toFloat())
                     .alpha(0f)
+                    .scaleX(1.5f)
+                    .scaleY(1.5f)
                     .setDuration(300)
                     .withEndAction { try { root.removeView(popupView) } catch (_: Exception){} }
                     .start()
             }
 
-            // Add popup at top with slide-down animation and elevation so it's visible
-                try {
-                    val params = FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT)
-                    params.topMargin = 24
-                    params.gravity = android.view.Gravity.TOP
-                    popupView.elevation = 20f
-                    val before = root.childCount
-                    root.addView(popupView, params)
-                    Log.d("AchievementsActivity", "Popup added to root: beforeChildren=$before afterChildren=${root.childCount}")
-                } catch (e: Exception) {
-                    // If adding with FrameLayout params failed, fallback to simple addView
-                    Log.w("AchievementsActivity", "Failed to add popup with FrameLayout.LayoutParams, falling back to simple addView", e)
-                    try {
-                        val before = root.childCount
-                        root.addView(popupView)
-                        Log.d("AchievementsActivity", "Popup added to root (fallback): beforeChildren=$before afterChildren=${root.childCount}")
-                    } catch (ex: Exception) {
-                        Log.e("AchievementsActivity", "Failed to add popup view to root", ex)
-                        return@runOnUiThread
-                    }
-                }
+            // Add popup to center of screen with fade-in and scale animation
+            try {
+                val params = FrameLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WRAP_CONTENT,
+                    ViewGroup.LayoutParams.WRAP_CONTENT
+                )
+                params.gravity = android.view.Gravity.CENTER
+                popupView.elevation = 20f
+                root.addView(popupView, params)
+            } catch (e: Exception) {
+                Log.e("AchievementsActivity", "Failed to add popup view to root", e)
+                return@runOnUiThread
+            }
 
-            // Start slide-down entrance
-            popupView.translationY = -200f
+            // Start entrance animation
             popupView.alpha = 0f
+            popupView.scaleX = 0.5f
+            popupView.scaleY = 0.5f
             popupView.animate()
-                .translationY(0f)
                 .alpha(1f)
+                .scaleX(1f)
+                .scaleY(1f)
                 .setInterpolator(AccelerateDecelerateInterpolator())
-                .setDuration(350)
+                .setDuration(500)
                 .start()
 
-            // Ensure it's on top and visible; fallback toast to help debugging if popup not visible
-            try {
-                popupView.bringToFront()
-                popupView.invalidate()
-                Log.d("AchievementsActivity", "Popup brought to front for achievement id=${achievement.id}")
-            } catch (e: Exception) {
-                Log.w("AchievementsActivity", "Could not bring popup to front", e)
-            }
+            // Ensure it's on top
+            popupView.bringToFront()
 
-            // Debugging fallback - short toast so we can at least see something if the popup isn't rendered
-            try {
-                Toast.makeText(this, "Unlocked: ${achievement.title}", Toast.LENGTH_SHORT).show()
-            } catch (e: Exception) {
-                Log.w("AchievementsActivity", "Failed to show fallback toast", e)
-            }
-
-            // Auto-dismiss after a few seconds with fade-out and slide-up
+            // Auto-dismiss after a few seconds with fade-out and scale animation
             Handler(Looper.getMainLooper()).postDelayed({
                 try {
-                    // find the view by tag in case the root was recreated
+                    // Find the view by tag in case the root was recreated
                     val tag = popupView.tag
                     val toRemove = if (tag is String) root.findViewWithTag<View>(tag) else popupView
                     toRemove?.animate()
-                        ?.translationY(- (toRemove.height.takeIf { it>0 } ?: popupView.height).toFloat())
                         ?.alpha(0f)
+                        ?.scaleX(1.5f)
+                        ?.scaleY(1.5f)
                         ?.setDuration(300)
                         ?.withEndAction {
                             try {
@@ -727,7 +767,7 @@ class AchievementsActivity : AppCompatActivity() {
                         ?.start()
                 } catch (_: Exception) {
                 }
-            }, 6000)
+            }, 5000)  // Show for 5 seconds
         }
     }
 }
