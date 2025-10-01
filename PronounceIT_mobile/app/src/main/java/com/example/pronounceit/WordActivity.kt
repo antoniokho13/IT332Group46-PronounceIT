@@ -195,6 +195,22 @@ class WordActivity : AppCompatActivity() {
                 if (response.isSuccessful) {
                     // After successful save, update accumulated points only by the delta (new best)
                     updateAccumulatedPoints()
+                    // Also notify backend of lesson completion so streak can be updated
+                    try {
+                        val prefs = getSharedPreferences("PronounceItPrefs", Context.MODE_PRIVATE)
+                        val userId = prefs.getLong("userId", -1L)
+                        if (userId != -1L) {
+                            val dateStr = java.time.LocalDate.now().toString()
+                            val streakResp = RetrofitInstance.getApi(this@WordActivity).markStreakActivity(userId, dateStr)
+                            if (streakResp.isSuccessful) {
+                                Log.d("WordActivity", "Streak updated: ${streakResp.body()}")
+                            } else {
+                                Log.e("WordActivity", "Failed to update streak: ${streakResp.code()} ${streakResp.errorBody()?.string()}")
+                            }
+                        }
+                    } catch (e: Exception) {
+                        Log.e("WordActivity", "Error updating streak: ${e.message}", e)
+                    }
                 } else {
                     Log.e(
                         "WordActivity",
@@ -637,6 +653,10 @@ class WordActivity : AppCompatActivity() {
             val set = lessonPrefs.getStringSet(key, emptySet())!!.toMutableSet()
             set.add(lessonId.toString())
             lessonPrefs.edit().putStringSet(key, set).apply()
+
+            // Mark lesson as completed for streak tracking
+            val streakPrefs = getSharedPreferences("PronounceItPrefs", Context.MODE_PRIVATE)
+            streakPrefs.edit().putBoolean("lesson_completed", true).apply()
 
             nextButtonLayout.visibility = View.VISIBLE
         } else {

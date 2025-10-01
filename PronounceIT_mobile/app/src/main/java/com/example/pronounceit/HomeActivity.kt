@@ -19,10 +19,8 @@ import kotlinx.coroutines.withContext
 import androidx.appcompat.app.AlertDialog
 import android.view.LayoutInflater
 import android.os.Looper
-import android.widget.FrameLayout
 import android.graphics.Color
 import android.widget.LinearLayout
-import android.view.animation.AnimationSet
 
 class HomeActivity : AppCompatActivity() {
     private var previousStreak = 0
@@ -106,11 +104,28 @@ class HomeActivity : AppCompatActivity() {
         // Check if coming back from completed lesson
         val lessonCompleted = sharedPreferences.getBoolean("lesson_completed", false)
         if (lessonCompleted) {
-            updateStreak()
+            Log.d("HomeActivity", "Lesson completed flag detected, updating streak")
+            updateStreakAfterLesson()
             // Reset the flag
             sharedPreferences.edit().putBoolean("lesson_completed", false).apply()
         } else {
+            // Just load streak count without updating it
             loadStreakCount()
+        }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        if (::backgroundMusic.isInitialized && !backgroundMusic.isPlaying && isMusicPlaying) {
+            backgroundMusic.start()
+        }
+
+        // If a lesson was just completed while away from HomeActivity, ensure streak is refreshed
+        val lessonCompleted = sharedPreferences.getBoolean("lesson_completed", false)
+        if (lessonCompleted) {
+            Log.d("HomeActivity", "Lesson completed detected on resume, updating streak")
+            updateStreakAfterLesson()
+            sharedPreferences.edit().putBoolean("lesson_completed", false).apply()
         }
     }
 
@@ -121,88 +136,120 @@ class HomeActivity : AppCompatActivity() {
             CoroutineScope(Dispatchers.IO).launch {
                 try {
                     // Try to get existing streak
-                    var response = RetrofitInstance.getApi(this@HomeActivity)
+                    val response = RetrofitInstance.getApi(this@HomeActivity)
                         .getStreak(userId)
 
-                    if (response.code() == 404) {
-                        // If streak doesn't exist, create a new one
-                        response = RetrofitInstance.getApi(this@HomeActivity)
-                            .createStreak(userId)
-                    }
+                    Log.d("HomeActivity", "Get streak response code: ${response.code()}")
 
-                    withContext(Dispatchers.Main) {
-                        if (response.isSuccessful) {
-                            val streakDTO = response.body()
-                            Log.d("HomeActivity", "Streak data received: $streakDTO")
-                            if (streakDTO != null) {
-                                previousStreak = streakDTO.currentStreak
-                                updateStreakDisplay(streakDTO.currentStreak)
-                            } else {
-                                Log.e("HomeActivity", "Streak DTO is null")
-                                updateStreakDisplay(0)
+                    if (response.isSuccessful) {
+                        val streakDTO = response.body()
+                        withContext(Dispatchers.Main) {
+                            streakDTO?.let {
+                                updateStreakDisplay(it.currentStreak)
                             }
-                        } else {
-                            Log.e("HomeActivity", "Failed to load/create streak: ${response.code()}")
-                            updateStreakDisplay(0)
-                            showErrorToast("Failed to load streak data")
+                        }
+                    } else if (response.code() == 404) {
+                        // Streak not found, try to create one
+                        Log.d("HomeActivity", "No streak found for user, creating new streak")
+                        val createResponse = RetrofitInstance.getApi(this@HomeActivity)
+                            .createStreak(userId)
+
+                        Log.d("HomeActivity", "Create streak response code: ${createResponse.code()}")
+
+                        if (!createResponse.isSuccessful) {
+                            Log.e("HomeActivity", "Create streak error body: ${createResponse.errorBody()?.string()}")
+                        }
+
+                        withContext(Dispatchers.Main) {
+                            if (createResponse.isSuccessful) {
+                                val streakDTO = createResponse.body()
+                                Log.d("HomeActivity", "New streak created: $streakDTO")
+
+                                streakDTO?.let {
+                                    updateStreakDisplay(it.currentStreak)
+                                }
+                            } else {
+                                Log.e("HomeActivity", "Failed to create streak: ${createResponse.code()}")
+                                showErrorToast("Failed to create streak")
+                            }
+                        }
+                    } else {
+                        Log.e("HomeActivity", "Failed to load streak: ${response.code()}")
+                        Log.e("HomeActivity", "Error body: ${response.errorBody()?.string()}")
+
+                        withContext(Dispatchers.Main) {
+                            showErrorToast("Error loading streak data")
                         }
                     }
                 } catch (e: Exception) {
-                    Log.e("HomeActivity", "Network error", e)
+                    Log.e("HomeActivity", "Network error loading streak", e)
                     withContext(Dispatchers.Main) {
-                        updateStreakDisplay(0)
+                        // Use local backup if available
+                        val localStreak = sharedPreferences.getInt("local_streak", 0)
+                        updateStreakDisplay(localStreak)
                         showErrorToast("Network error: ${e.message}")
                     }
                 }
             }
+        } else {
+            Log.e("HomeActivity", "Cannot load streak: userId is -1")
+            // Don't show error toast here as it's confusing during normal app startup
+            // Just log the error for debugging
         }
     }
 
-    private fun updateStreak() {
+    // Renamed from updateStreak() to updateStreakAfterLesson()
+    private fun updateStreakAfterLesson() {
         val userId = sharedPreferences.getLong("userId", -1L)
         if (userId != -1L) {
+            Log.d("HomeActivity", "Attempting to update streak for userId: $userId")
             CoroutineScope(Dispatchers.IO).launch {
                 try {
+                    // Ensure the server marks activity for today in case WordActivity's call failed
+                    try {
+                        val dateStr = java.time.LocalDate.now().toString()
+                        val markResp = RetrofitInstance.getApi(this@HomeActivity).markStreakActivity(userId, dateStr)
+                        Log.d("HomeActivity", "markStreakActivity response: code=${markResp.code()} success=${markResp.isSuccessful}")
+                        if (!markResp.isSuccessful) {
+                            Log.e("HomeActivity", "markStreakActivity failed: ${markResp.code()} ${markResp.errorBody()?.string()}")
+                        }
+                    } catch (e: Exception) {
+                        Log.e("HomeActivity", "Error calling markStreakActivity: ${e.message}", e)
+                    }
+
                     // First get the current streak to save as previous
                     val currentStreakResponse = RetrofitInstance.getApi(this@HomeActivity)
                         .getStreak(userId)
+
+                    Log.d("HomeActivity", "Current streak response code: ${currentStreakResponse.code()}")
 
                     if (currentStreakResponse.isSuccessful) {
                         // Save the current streak as previous for comparison later
                         val currentStreakDTO = currentStreakResponse.body()
                         previousStreak = currentStreakDTO?.currentStreak ?: 0
+                        Log.d("HomeActivity", "Previous streak value: $previousStreak")
 
-                        // Now update the streak
-                        val updateResponse = RetrofitInstance.getApi(this@HomeActivity)
-                            .updateStreak(userId)
-
+                        // Since lesson completion sets the flag and WordActivity marks activity on the server,
+                        // simply re-fetch the streak (we already have it) and update UI without calling update again
                         withContext(Dispatchers.Main) {
-                            if (updateResponse.isSuccessful) {
-                                val updatedStreakDTO = updateResponse.body()
-                                Log.d("HomeActivity", "Streak updated: $updatedStreakDTO")
-
-                                updatedStreakDTO?.let {
-                                    // Update UI
-                                    updateStreakDisplay(it.currentStreak)
-
-                                    // Check if streak increased and show animation/dialog if it did
-                                    if (it.currentStreak > previousStreak) {
-                                        showStreakUpdateDialog(it.currentStreak)
-
-                                        // Check for milestone achievements
-                                        checkStreakAchievements(it.currentStreak)
-                                    }
+                            currentStreakDTO?.let {
+                                updateStreakDisplay(it.currentStreak)
+                                if (it.currentStreak > previousStreak) {
+                                    showStreakUpdateDialog(it.currentStreak)
+                                    checkStreakAchievements(it.currentStreak)
                                 }
-                            } else {
-                                Log.e("HomeActivity", "Failed to update streak: ${updateResponse.code()}")
-                                showErrorToast("Failed to update streak")
-                                loadStreakCount() // Try to at least display current streak
                             }
                         }
                     } else if (currentStreakResponse.code() == 404) {
+                        Log.d("HomeActivity", "Streak not found for user, creating new one")
                         // If streak doesn't exist, create a new one
                         val createResponse = RetrofitInstance.getApi(this@HomeActivity)
                             .createStreak(userId)
+
+                        Log.d("HomeActivity", "Create streak response code: ${createResponse.code()}")
+                        if (!createResponse.isSuccessful) {
+                            Log.e("HomeActivity", "Create streak error body: ${createResponse.errorBody()?.string()}")
+                        }
 
                         withContext(Dispatchers.Main) {
                             if (createResponse.isSuccessful) {
@@ -218,6 +265,13 @@ class HomeActivity : AppCompatActivity() {
                                 showErrorToast("Failed to create streak")
                             }
                         }
+                    } else {
+                        Log.e("HomeActivity", "Unexpected response when getting streak: ${currentStreakResponse.code()}")
+                        Log.e("HomeActivity", "Error body: ${currentStreakResponse.errorBody()?.string()}")
+
+                        withContext(Dispatchers.Main) {
+                            showErrorToast("Error retrieving streak data")
+                        }
                     }
                 } catch (e: Exception) {
                     Log.e("HomeActivity", "Error updating streak", e)
@@ -227,6 +281,9 @@ class HomeActivity : AppCompatActivity() {
                     }
                 }
             }
+        } else {
+            Log.e("HomeActivity", "Cannot update streak: userId is -1")
+            showErrorToast("User ID not found")
         }
     }
 
@@ -389,13 +446,6 @@ class HomeActivity : AppCompatActivity() {
         }
     }
 
-    // Resume background music when activity returns to foreground
-    override fun onResume() {
-        super.onResume()
-        if (::backgroundMusic.isInitialized && !backgroundMusic.isPlaying && isMusicPlaying) {
-            backgroundMusic.start()
-        }
-    }
 
     // Clean up MediaPlayer resources when activity is destroyed
     override fun onDestroy() {
