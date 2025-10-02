@@ -23,7 +23,6 @@ public class FfmpegService {
     public File convertToPcmWav(File inputFile) throws Exception {
         File outputWavFile = File.createTempFile("converted", ".wav");
 
-        // Try bundled ffmpeg in resources first; fall back to system ffmpeg
         String ffmpegPath = getFfmpegExecutablePath();
 
         ArrayList<String> command = new ArrayList<>(Arrays.asList(
@@ -58,41 +57,60 @@ public class FfmpegService {
 
     private String getFfmpegExecutablePath() throws IOException {
         String os = System.getProperty("os.name").toLowerCase();
-        String resourcePath;
-        String exeName;
 
         if (os.contains("win")) {
-            resourcePath = "/ffmpeg/win/ffmpeg.exe";
-            exeName = "ffmpeg.exe";
-        } else if (os.contains("mac")) {
-            resourcePath = "/ffmpeg/mac/ffmpeg";
-            exeName = "ffmpeg";
-        } else {
-            resourcePath = "/ffmpeg/linux/ffmpeg";
-            exeName = "ffmpeg";
-        }
-
-        // Try to load bundled ffmpeg from resources
-        InputStream is = getClass().getResourceAsStream(resourcePath);
-        if (is != null) {
-            // Extract to temp file and make executable
-            Path tempDir = Files.createTempDirectory("pronounceit-ffmpeg");
-            File extracted = new File(tempDir.toFile(), exeName);
-            try (FileOutputStream out = new FileOutputStream(extracted)) {
-                byte[] buffer = new byte[8192];
-                int len;
-                while ((len = is.read(buffer)) != -1) {
-                    out.write(buffer, 0, len);
-                }
-            } finally {
-                is.close();
+            // Windows: Check if local ffmpeg.exe exists (for development)
+            File localFfmpeg = new File("src/main/resources/ffmpeg/win/ffmpeg.exe");
+            if (localFfmpeg.exists()) {
+                logger.info("Using local Windows ffmpeg: {}", localFfmpeg.getAbsolutePath());
+                return localFfmpeg.getAbsolutePath();
             }
-            extracted.setExecutable(true);
-            extracted.deleteOnExit();
-            return extracted.getAbsolutePath();
+
+            // Fallback: try to load from classpath resources
+            String resourcePath = "/ffmpeg/win/ffmpeg.exe";
+            InputStream is = getClass().getResourceAsStream(resourcePath);
+            if (is != null) {
+                return extractFfmpegToTemp(is, "ffmpeg.exe");
+            }
+
+            // Last resort: assume ffmpeg is on PATH
+            logger.warn("Local ffmpeg.exe not found, falling back to system ffmpeg");
+            return "ffmpeg";
+
+        } else if (os.contains("mac")) {
+            // macOS: Try bundled first, then system
+            String resourcePath = "/ffmpeg/mac/ffmpeg";
+            InputStream is = getClass().getResourceAsStream(resourcePath);
+            if (is != null) {
+                return extractFfmpegToTemp(is, "ffmpeg");
+            }
+            return "ffmpeg";
+
+        } else {
+            // Linux (Railway/Docker): Use system ffmpeg installed via Dockerfile
+            logger.info("Linux environment detected, using system ffmpeg");
+            return "ffmpeg";
+        }
+    }
+
+    private String extractFfmpegToTemp(InputStream is, String exeName) throws IOException {
+        Path tempDir = Files.createTempDirectory("pronounceit-ffmpeg");
+        File extracted = new File(tempDir.toFile(), exeName);
+
+        try (FileOutputStream out = new FileOutputStream(extracted)) {
+            byte[] buffer = new byte[8192];
+            int len;
+            while ((len = is.read(buffer)) != -1) {
+                out.write(buffer, 0, len);
+            }
+        } finally {
+            is.close();
         }
 
-        // Fallback to system ffmpeg (must be on PATH)
-        return "ffmpeg";
+        extracted.setExecutable(true);
+        extracted.deleteOnExit();
+
+        logger.info("Extracted ffmpeg to: {}", extracted.getAbsolutePath());
+        return extracted.getAbsolutePath();
     }
 }

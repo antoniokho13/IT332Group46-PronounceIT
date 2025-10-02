@@ -31,3 +31,11 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### FFmpeg binaries (too large for Git) ###
+src/main/resources/ffmpeg/
+
+### Google Cloud credentials (sensitive) ###
+src/main/resources/**/pronounceit-*.json
+*.json
+!pom.json
