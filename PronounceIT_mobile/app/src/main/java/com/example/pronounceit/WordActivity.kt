@@ -159,7 +159,7 @@ class WordActivity : AppCompatActivity() {
                             setOnPreparedListener { it.start() }
                         }
                     } catch (e: Exception) {
-                        Log.e("WordActivity", "Error playing remote audio: ${'$'}{e.message}", e)
+                        Log.e("WordActivity", "Error playing remote audio: ${e.message}", e)
                         tts.speak(current.word, TextToSpeech.QUEUE_FLUSH, null, null)
                     }
                 } else {
@@ -393,11 +393,11 @@ class WordActivity : AppCompatActivity() {
 
     // Update score tracker and attempts left on the UI
     private fun updateScoreTracker() {
-    // Protect against division by zero / empty list
-    val total = if (totalWords > 0) totalWords else 0
-    binding.scoreTrackerTextView.text = "Score: $score/$total"
-    val attemptsLeft = (maxAttempts - attemptCount).coerceAtLeast(0)
-    binding.attemptCounterTextView.text = "Attempts left: " + attemptsLeft
+        // Protect against division by zero / empty list
+        val total = if (totalWords > 0) totalWords else 0
+        binding.scoreTrackerTextView.text = "Score: $score/$total"
+        val attemptsLeft = (maxAttempts - attemptCount).coerceAtLeast(0)
+        binding.attemptCounterTextView.text = "Attempts left: " + attemptsLeft
     }
 
     private fun startRecording() {
@@ -414,7 +414,7 @@ class WordActivity : AppCompatActivity() {
             return
         }
         audioFile = File(recordingDir, fileName)
-        Log.d("WordActivity", "Recording to: ${'$'}{audioFile?.absolutePath}")
+        Log.d("WordActivity", "Recording to: ${audioFile?.absolutePath}")
 
         // Set up MediaRecorder for MP4/AAC
         mediaRecorder = MediaRecorder().apply {
@@ -429,10 +429,10 @@ class WordActivity : AppCompatActivity() {
                 start()
                 Log.d("WordActivity", "MediaRecorder prepared and started.")
             } catch (e: IOException) {
-                Log.e("WordActivity", "prepare() failed: ${'$'}{e.message}", e)
+                Log.e("WordActivity", "prepare() failed: ${e.message}", e)
                 stopRecordingAnimation()
             } catch (e: IllegalStateException) {
-                Log.e("WordActivity", "IllegalStateException during recording: ${'$'}{e.message}", e)
+                Log.e("WordActivity", "IllegalStateException during recording: ${e.message}", e)
                 stopRecordingAnimation()
             }
         }
@@ -445,32 +445,49 @@ class WordActivity : AppCompatActivity() {
                 release()
                 Log.d("WordActivity", "MediaRecorder stopped and released.")
             } catch (e: RuntimeException) {
-                Log.e("WordActivity", "Stop/release failed: ${'$'}{e.message}", e)
+                Log.e("WordActivity", "Stop/release failed: ${e.message}", e)
                 audioFile?.delete()
                 return
             }
         }
         mediaRecorder = null
         if (audioFile != null && audioFile!!.exists() && audioFile!!.length() > 1000) { // Ensure file is at least 1KB
-            Log.d("WordActivity", "Audio file size: ${'$'}{audioFile!!.length()} bytes")
+            Log.d("WordActivity", "Audio file size: ${audioFile!!.length()} bytes")
             CoroutineScope(Dispatchers.IO).launch {
                 sendAudioForValidation(audioFile!!)
             }
         } else {
-            Log.e("WordActivity", "Audio file invalid: exists=${'$'}{audioFile?.exists()}, size=${'$'}{audioFile?.length()}")
+            Log.e("WordActivity", "Audio file invalid: exists=${audioFile?.exists()}, size=${audioFile?.length()}")
             audioFile?.delete()
         }
+    }
+
+    private fun showCorrectPronunciationCelebration() {
+        // Play the correct sound
+        playCorrectSound()
+
+        // Display confetti effect
+        konfettiView.build()
+            .addColors(Color.YELLOW, Color.GREEN, Color.MAGENTA, Color.CYAN)
+            .setDirection(0.0, 359.0)
+            .setSpeed(1f, 5f)
+            .setFadeOutEnabled(true)
+            .setTimeToLive(1500L)
+            .addShapes(Shape.Square, Shape.Circle)
+            .addSizes(Size(8), Size(12))
+            .setPosition(konfettiView.width / 2f, konfettiView.height / 2f)
+            .burst(200)
     }
 
     private suspend fun sendAudioForValidation(audioFile: File) {
         try {
             val currentWord = words[currentWordIndex]
             val wordId = currentWord.wordId
-            Log.d("WordActivity", "Sending pronunciation check for wordId: ${'$'}wordId, word: ${'$'}{currentWord.word}")
+            Log.d("WordActivity", "Sending pronunciation check for wordId: $wordId, word: ${currentWord.word}")
 
             val requestFile = audioFile.asRequestBody("audio/mp4".toMediaTypeOrNull())
             val audioPart = MultipartBody.Part.createFormData("audio", audioFile.name, requestFile)
-            Log.d("WordActivity", "Sending audio file: ${'$'}{audioFile.name}, size: ${'$'}{audioFile.length()} bytes, type: audio/mp4")
+            Log.d("WordActivity", "Sending audio file: ${audioFile.name}, size: ${audioFile.length()} bytes, type: audio/mp4")
 
             val response = RetrofitInstance.getApi(this@WordActivity).checkPronunciation(wordId, audioPart)
 
@@ -494,8 +511,8 @@ class WordActivity : AppCompatActivity() {
                                 updateScoreTracker()
                             }
 
-                            // Play the correct sound effect
-                            playCorrectSound()
+                            // Show confetti celebration for correct pronunciation
+                            showCorrectPronunciationCelebration()
 
                             // Switch from play button to next button
                             binding.playAudioButton.visibility = View.GONE
@@ -522,18 +539,18 @@ class WordActivity : AppCompatActivity() {
                         val attemptsLeft = (maxAttempts - attemptCount).coerceAtLeast(0)
                         binding.attemptCounterTextView.text = "Attempts left: " + attemptsLeft
 
-                        Log.d("WordActivity", "Transcribed: ${'$'}{pronunciationCheckResponse.transcribedText}")
+                        Log.d("WordActivity", "Transcribed: ${pronunciationCheckResponse.transcribedText}")
                         sendPronunciationAttemptToBackend(pronunciationCheckResponse.correct)
                     }
                 } else {
                     val errorBody = response.errorBody()?.string()
-                    val errorMessage = "Failed to check pronunciation: ${'$'}{response.code()}, ${'$'}{response.message()}, Body: ${'$'}errorBody"
+                    val errorMessage = "Failed to check pronunciation: ${response.code()}, ${response.message()}, Body: $errorBody"
                     Log.e("WordActivity", errorMessage)
                 }
                 audioFile.delete()
             }
         } catch (e: Exception) {
-            Log.e("WordActivity", "Error sending audio: ${'$'}{e.message}", e)
+            Log.e("WordActivity", "Error sending audio: ${e.message}", e)
             audioFile.delete()
         }
     }
@@ -559,10 +576,10 @@ class WordActivity : AppCompatActivity() {
             try {
                 val response = RetrofitInstance.getApi(this@WordActivity).createPronounciationAttempt(attemptDTO)
                 if (!response.isSuccessful) {
-                    Log.e("WordActivity", "Failed to save attempt: ${'$'}{response.code()}")
+                    Log.e("WordActivity", "Failed to save attempt: ${response.code()}")
                 }
             } catch (e: Exception) {
-                Log.e("WordActivity", "Error saving attempt: ${'$'}{e.message}", e)
+                Log.e("WordActivity", "Error saving attempt: ${e.message}", e)
             }
         }
     }
@@ -582,7 +599,7 @@ class WordActivity : AppCompatActivity() {
                 // After saving score, update accumulated points
                 updateAccumulatedPoints()
             } catch (e: Exception) {
-                Log.e("WordActivity", "Error saving score: ${'$'}{e.message}", e)
+                Log.e("WordActivity", "Error saving score: ${e.message}", e)
             }
         }
     }
@@ -605,7 +622,7 @@ class WordActivity : AppCompatActivity() {
                 }
             }
         } catch (e: Exception) {
-            Log.e("WordActivity", "playCorrectSound failed: ${'$'}{e.message}", e)
+            Log.e("WordActivity", "playCorrectSound failed: ${e.message}", e)
         }
     }
 
@@ -625,9 +642,10 @@ class WordActivity : AppCompatActivity() {
                 }
             }
         } catch (e: Exception) {
-            Log.e("WordActivity", "playErrorSound failed: ${'$'}{e.message}", e)
+            Log.e("WordActivity", "playErrorSound failed: ${e.message}", e)
         }
     }
+
 
     private fun showSessionEndDialog() {
         sendScoreToBackend()
