@@ -33,11 +33,20 @@ import okhttp3.MultipartBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import android.content.pm.PackageManager
 import android.graphics.Color
+import android.os.Handler
+import android.os.Looper
+import android.view.animation.AnimationUtils
 import com.example.pronounceit.network.models.PronounciationAttemptPostDTO
 import com.example.pronounceit.network.models.ScoreRecordDTO
 import nl.dionsegijn.konfetti.KonfettiView
 import nl.dionsegijn.konfetti.models.Shape
 import nl.dionsegijn.konfetti.models.Size
+import android.view.LayoutInflater
+import android.widget.ImageView
+import android.widget.TextView
+import androidx.appcompat.app.AlertDialog
+import com.example.pronounceit.network.models.StreakDTO
+
 
 class WordActivity : AppCompatActivity() {
 
@@ -676,6 +685,29 @@ class WordActivity : AppCompatActivity() {
             val streakPrefs = getSharedPreferences("PronounceItPrefs", Context.MODE_PRIVATE)
             streakPrefs.edit().putBoolean("lesson_completed", true).apply()
 
+            // Show streak update animation if streak was incremented
+            if (userId != -1L) {
+                CoroutineScope(Dispatchers.IO).launch {
+                    try {
+                        val api = RetrofitInstance.getApi(this@WordActivity)
+                        // Mark streak activity for today
+                        val response = api.markStreakActivity(userId)
+                        if (response.isSuccessful && response.body() != null) {
+                            val streak = response.body()!!
+                            // Show streak animation after session end dialog
+                            withContext(Dispatchers.Main) {
+                                // Show streak animation after a short delay
+                                Handler(Looper.getMainLooper()).postDelayed({
+                                    showStreakUpdateAnimation(streak)
+                                }, 1000)
+                            }
+                        }
+                    } catch (e: Exception) {
+                        Log.e("WordActivity", "Error updating streak: ${e.message}", e)
+                    }
+                }
+            }
+
             nextButtonLayout.visibility = View.VISIBLE
         } else {
             congratsImage.setImageResource(R.drawable.gameover)
@@ -741,6 +773,69 @@ class WordActivity : AppCompatActivity() {
         viewScoreDetailsButton.contentDescription = "View Score"
 
         dialog.show()
+    }
+
+    private fun showStreakUpdateAnimation(streak: StreakDTO) {
+        val dialogView = LayoutInflater.from(this).inflate(R.layout.streak_details_dialog, null)
+
+        // Get references to views
+        val streakIconView = dialogView.findViewById<ImageView>(R.id.streakIconDialog)
+        val streakCountView = dialogView.findViewById<TextView>(R.id.streakCountDialog)
+        val streakMessageView = dialogView.findViewById<TextView>(R.id.streakMessageDialog)
+
+        // Set initial values
+        streakCountView.text = (streak.currentStreak - 1).toString() // Start from previous count
+        streakMessageView.text = "Days Streak!"
+
+        // Create dialog
+        val dialog = AlertDialog.Builder(this, R.style.TransparentDialog)
+            .setView(dialogView)
+            .setCancelable(true)
+            .create()
+
+        // Make dialog background transparent
+        dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+
+        // Show dialog
+        dialog.show()
+
+        // Start animations
+        // Animate the fire icon with flame pulse animation
+        val flameAnimation = AnimationUtils.loadAnimation(this, R.anim.streak_flame_pulse)
+        streakIconView.startAnimation(flameAnimation)
+
+        // After a short delay, animate the count increment
+        Handler(Looper.getMainLooper()).postDelayed({
+            // Animate count up
+            val startValue = streak.currentStreak - 1
+            val endValue = streak.currentStreak
+
+            // Use ValueAnimator to increment number smoothly
+            val animator = ValueAnimator.ofInt(startValue, endValue)
+            animator.duration = 1000 // 1 second duration
+            animator.addUpdateListener { animation ->
+                streakCountView.text = animation.animatedValue.toString()
+            }
+
+            // Apply scale animation to count when it changes
+            val incrementAnim = AnimationUtils.loadAnimation(this, R.anim.streak_increment)
+            animator.addListener(object : android.animation.AnimatorListenerAdapter() {
+                override fun onAnimationEnd(animation: android.animation.Animator) {
+                    streakCountView.startAnimation(incrementAnim)
+                }
+            })
+
+            animator.start()
+
+            // Auto-dismiss after 3.5 seconds
+            Handler(Looper.getMainLooper()).postDelayed({
+                try {
+                    dialog.dismiss()
+                } catch (e: Exception) {
+                    // Dialog may already be dismissed
+                }
+            }, 3500)
+        }, 500) // Start count animation after 500ms
     }
 
     private fun restartSession() {
