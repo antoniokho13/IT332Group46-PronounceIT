@@ -1,0 +1,32 @@
+# Git files
+.git
+.gitignore
+.gitattributes
+
+# IDE files
+.idea
+.vscode
+*.iml
+*.ipr
+*.iws
+
+# Build artifacts
+target/
+build/
+*.class
+
+# FFmpeg binaries (not needed in Docker, using system ffmpeg)
+src/main/resources/ffmpeg/
+
+# Google credentials (using env vars instead)
+src/main/resources/**/pronounceit-*.json
+
+# Documentation
+README.md
+DEPLOYMENT_README.md
+HELP.md
+*.md
+
+# OS files
+.DS_Store
+Thumbs.db
