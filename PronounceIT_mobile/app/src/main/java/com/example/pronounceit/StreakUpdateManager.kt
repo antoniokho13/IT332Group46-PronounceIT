@@ -12,35 +12,73 @@ import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
 import androidx.core.content.ContextCompat
 import com.example.pronounceit.network.models.StreakDTO
+import java.time.LocalDate
+import java.time.ZoneId
 
 class StreakUpdateManager(private val context: Context) {
 
+    private val prefs by lazy { context.getSharedPreferences("PronounceItPrefs", Context.MODE_PRIVATE) }
+    private val PREF_LAST_STREAK_DATE = "lastStreakPopupDate"
+    private val PREF_LAST_STREAK_VALUE = "lastStreakPopupValue"
+    // Use Manila timezone to stay consistent with other time logging in the app (Retrofit DateDebugInterceptor)
+    private val zoneId: ZoneId = ZoneId.of("Asia/Manila")
+
+    /**
+     * Shows the streak dialog ONLY if:
+     *  - The streak value represents a new increment for the current calendar day (Manila time), AND
+     *  - A popup has not already been shown today.
+     * This prevents multiple lesson completions on the same day from repeatedly showing + animating.
+     * Also handles streak reset (e.g., back to 1) as a valid show event if not already shown today.
+     */
     fun showStreakUpdateDialog(streak: StreakDTO) {
+        if (!shouldShowFor(streak)) return
+
         val dialogView = LayoutInflater.from(context).inflate(R.layout.streak_details_dialog, null)
 
-        // Get references to views
         val streakIconView = dialogView.findViewById<ImageView>(R.id.streakIconDialog)
-                val streakCountView = dialogView.findViewById<TextView>(R.id.streakCountDialog)
-                val streakMessageView = dialogView.findViewById<TextView>(R.id.streakMessageDialog)
+        val streakCountView = dialogView.findViewById<TextView>(R.id.streakCountDialog)
+        val streakMessageView = dialogView.findViewById<TextView>(R.id.streakMessageDialog)
 
-                // Set initial values
-                streakCountView.text = (streak.currentStreak - 1).toString() // Start from previous count
+        // Start from previous count for animation. Guard against going below 0.
+        val previous = (streak.currentStreak - 1).coerceAtLeast(0)
+        streakCountView.text = previous.toString()
         streakMessageView.text = "Days Streak!"
 
-        // Create dialog
         val dialog = AlertDialog.Builder(context, R.style.TransparentDialog)
-                .setView(dialogView)
-                .setCancelable(true)
-                .create()
+            .setView(dialogView)
+            .setCancelable(true)
+            .create()
 
-        // Make dialog background transparent
         dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
-
-        // Show dialog
         dialog.show()
 
-        // Start animations
+        // Persist that we showed it AFTER successful show
+        persistShown(streak)
+
         animateStreakUpdate(streakIconView, streakCountView, streak.currentStreak, dialog)
+    }
+
+    private fun shouldShowFor(streak: StreakDTO): Boolean {
+        val today = LocalDate.now(zoneId).toString()
+        val lastDate = prefs.getString(PREF_LAST_STREAK_DATE, null)
+        val lastValue = prefs.getInt(PREF_LAST_STREAK_VALUE, -1)
+
+        // If already shown today, skip regardless of value.
+        if (lastDate == today) return false
+
+        // Determine if this is a new increment or a reset start.
+        val isIncrement = streak.currentStreak > lastValue
+        val isResetStart = streak.currentStreak == 1 && lastValue > 1 // treat reset as fresh event
+
+        return isIncrement || isResetStart || lastValue == -1
+    }
+
+    private fun persistShown(streak: StreakDTO) {
+        val today = LocalDate.now(zoneId).toString()
+        prefs.edit()
+            .putString(PREF_LAST_STREAK_DATE, today)
+            .putInt(PREF_LAST_STREAK_VALUE, streak.currentStreak)
+            .apply()
     }
 
     private fun animateStreakUpdate(

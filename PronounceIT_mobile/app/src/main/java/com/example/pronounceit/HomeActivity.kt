@@ -24,6 +24,7 @@ import android.widget.LinearLayout
 
 class HomeActivity : AppCompatActivity() {
     private var previousStreak = 0
+    private val streakUpdateManager by lazy { StreakUpdateManager(this) }
     private lateinit var sharedPreferences: SharedPreferences
     private lateinit var streakDisplay: TextView
     private lateinit var playButton: ImageView
@@ -235,7 +236,8 @@ class HomeActivity : AppCompatActivity() {
                             currentStreakDTO?.let {
                                 updateStreakDisplay(it.currentStreak)
                                 if (it.currentStreak > previousStreak) {
-                                    showStreakUpdateDialog(it.currentStreak)
+                                    // Delegate popup gating logic to StreakUpdateManager
+                                    streakUpdateManager.showStreakUpdateDialog(it)
                                     checkStreakAchievements(it.currentStreak)
                                 }
                             }
@@ -258,7 +260,7 @@ class HomeActivity : AppCompatActivity() {
 
                                 streakDTO?.let {
                                     updateStreakDisplay(it.currentStreak)
-                                    showStreakUpdateDialog(it.currentStreak)
+                                    streakUpdateManager.showStreakUpdateDialog(it)
                                 }
                             } else {
                                 Log.e("HomeActivity", "Failed to create streak: ${createResponse.code()}")
@@ -334,39 +336,7 @@ class HomeActivity : AppCompatActivity() {
         }
     }
 
-    private fun showStreakUpdateDialog(days: Int) {
-        val dialogView = LayoutInflater.from(this).inflate(R.layout.streak_update_dialog, null)
-
-        val dialog = AlertDialog.Builder(this, R.style.StreakDialogTheme)
-            .setView(dialogView)
-            .setCancelable(true)
-            .create()
-
-        // Update to use fire icon for streak dialog
-        val streakIcon = dialogView.findViewById<ImageView>(R.id.streakIcon)
-        streakIcon.setImageResource(R.drawable.fire_streak_icon)
-
-        // Customize dialog content
-        dialogView.apply {
-            findViewById<TextView>(R.id.streakMessage).text = "Streak Increased!"
-            findViewById<TextView>(R.id.streakSubMessage).text =
-                "You're on fire! $days days of continuous learning"
-        }
-
-        // Add animation to dialog
-        dialog.window?.attributes?.windowAnimations = R.style.DialogAnimation
-
-        // Add animation to the fire icon in dialog
-        val iconAnimation = AnimationUtils.loadAnimation(this, R.anim.streak_flame_pulse)
-        streakIcon.startAnimation(iconAnimation)
-
-        dialog.show()
-
-        // Auto dismiss after 3 seconds
-        Handler(Looper.getMainLooper()).postDelayed({
-            dialog.dismiss()
-        }, 3000)
-    }
+    // Legacy inline popup method removed; use StreakUpdateManager for unified gating & animation.
 
     private fun showStreakDetailsDialog(days: Int) {
         // Inflate custom dialog layout
