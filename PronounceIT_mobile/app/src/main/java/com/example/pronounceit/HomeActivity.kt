@@ -24,6 +24,7 @@ import android.widget.LinearLayout
 
 class HomeActivity : AppCompatActivity() {
     private var previousStreak = 0
+    private val streakUpdateManager by lazy { StreakUpdateManager(this) }
     private lateinit var sharedPreferences: SharedPreferences
     private lateinit var streakDisplay: TextView
     private lateinit var playButton: ImageView
@@ -205,17 +206,8 @@ class HomeActivity : AppCompatActivity() {
             Log.d("HomeActivity", "Attempting to update streak for userId: $userId")
             CoroutineScope(Dispatchers.IO).launch {
                 try {
-                    // Ensure the server marks activity for today in case WordActivity's call failed
-                    try {
-                        val dateStr = java.time.LocalDate.now().toString()
-                        val markResp = RetrofitInstance.getApi(this@HomeActivity).markStreakActivity(userId, dateStr)
-                        Log.d("HomeActivity", "markStreakActivity response: code=${markResp.code()} success=${markResp.isSuccessful}")
-                        if (!markResp.isSuccessful) {
-                            Log.e("HomeActivity", "markStreakActivity failed: ${markResp.code()} ${markResp.errorBody()?.string()}")
-                        }
-                    } catch (e: Exception) {
-                        Log.e("HomeActivity", "Error calling markStreakActivity: ${e.message}", e)
-                    }
+                    // Removed automatic markStreakActivity here to avoid incrementing streak before lesson completion.
+                    // Streak will now only increment from WordActivity after a successful lesson end.
 
                     // First get the current streak to save as previous
                     val currentStreakResponse = RetrofitInstance.getApi(this@HomeActivity)
@@ -235,7 +227,8 @@ class HomeActivity : AppCompatActivity() {
                             currentStreakDTO?.let {
                                 updateStreakDisplay(it.currentStreak)
                                 if (it.currentStreak > previousStreak) {
-                                    showStreakUpdateDialog(it.currentStreak)
+                                    // Delegate popup gating logic to StreakUpdateManager
+                                    streakUpdateManager.showStreakUpdateDialog(it)
                                     checkStreakAchievements(it.currentStreak)
                                 }
                             }
@@ -258,7 +251,7 @@ class HomeActivity : AppCompatActivity() {
 
                                 streakDTO?.let {
                                     updateStreakDisplay(it.currentStreak)
-                                    showStreakUpdateDialog(it.currentStreak)
+                                    streakUpdateManager.showStreakUpdateDialog(it)
                                 }
                             } else {
                                 Log.e("HomeActivity", "Failed to create streak: ${createResponse.code()}")
@@ -334,39 +327,7 @@ class HomeActivity : AppCompatActivity() {
         }
     }
 
-    private fun showStreakUpdateDialog(days: Int) {
-        val dialogView = LayoutInflater.from(this).inflate(R.layout.streak_update_dialog, null)
-
-        val dialog = AlertDialog.Builder(this, R.style.StreakDialogTheme)
-            .setView(dialogView)
-            .setCancelable(true)
-            .create()
-
-        // Update to use fire icon for streak dialog
-        val streakIcon = dialogView.findViewById<ImageView>(R.id.streakIcon)
-        streakIcon.setImageResource(R.drawable.fire_streak_icon)
-
-        // Customize dialog content
-        dialogView.apply {
-            findViewById<TextView>(R.id.streakMessage).text = "Streak Increased!"
-            findViewById<TextView>(R.id.streakSubMessage).text =
-                "You're on fire! $days days of continuous learning"
-        }
-
-        // Add animation to dialog
-        dialog.window?.attributes?.windowAnimations = R.style.DialogAnimation
-
-        // Add animation to the fire icon in dialog
-        val iconAnimation = AnimationUtils.loadAnimation(this, R.anim.streak_flame_pulse)
-        streakIcon.startAnimation(iconAnimation)
-
-        dialog.show()
-
-        // Auto dismiss after 3 seconds
-        Handler(Looper.getMainLooper()).postDelayed({
-            dialog.dismiss()
-        }, 3000)
-    }
+    // Legacy inline popup method removed; use StreakUpdateManager for unified gating & animation.
 
     private fun showStreakDetailsDialog(days: Int) {
         // Inflate custom dialog layout
@@ -464,8 +425,28 @@ class HomeActivity : AppCompatActivity() {
                 val response = RetrofitInstance.api.logout("Bearer $token")
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful) {
-                        // Clear shared preferences
+                        // Preserve per-user gating keys (streak + achievements) before clearing everything else
+                        val all = sharedPreferences.all
+                        val preserved = HashMap<String, Any?>()
+                        for ((k, v) in all) {
+                            if (k.startsWith("lastStreakPopupDate_u_") ||
+                                k.startsWith("lastStreakPopupValue_u_") ||
+                                k.startsWith("lastKnownPoints_u_") ||
+                                k.startsWith("seenAchievementIds_u_")) {
+                                preserved[k] = v
+                            }
+                        }
                         sharedPreferences.edit().clear().apply()
+                        if (preserved.isNotEmpty()) {
+                            val editor = sharedPreferences.edit()
+                            preserved.forEach { (k, v) ->
+                                when (v) {
+                                    is String -> editor.putString(k, v)
+                                    is Int -> editor.putInt(k, v)
+                                }
+                            }
+                            editor.apply()
+                        }
 
                         // Navigate to LoginActivity
                         navigateToLogin()

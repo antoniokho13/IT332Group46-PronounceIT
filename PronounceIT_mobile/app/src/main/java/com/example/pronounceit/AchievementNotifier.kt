@@ -41,51 +41,63 @@ object AchievementNotifier {
                 val userId = prefs.getLong("userId", -1L)
                 val token = prefs.getString("token", "") ?: ""
                 if (userId == -1L) return@launch
+                val pointsKey = "lastKnownPoints_u_$userId"
+                val seenSetKey = "seenAchievementIds_u_$userId"
 
-                // fetch user points
+                // Migration: If legacy global keys exist and per-user keys don't, migrate.
+                if (!prefs.contains(pointsKey) && prefs.contains("lastKnownPoints")) {
+                    val legacyPoints = prefs.getInt("lastKnownPoints", 0)
+                    prefs.edit().remove("lastKnownPoints").putInt(pointsKey, legacyPoints).apply()
+                }
+                if (!prefs.contains(seenSetKey) && prefs.contains("seenAchievementIds")) {
+                    val legacySet = prefs.getStringSet("seenAchievementIds", mutableSetOf()) ?: mutableSetOf()
+                    prefs.edit().remove("seenAchievementIds").putStringSet(seenSetKey, legacySet).apply()
+                }
+
+                // fetch user points (current)
                 val userResp = RetrofitInstance.getApi(appContext).getUserById(userId, "Bearer $token")
                 val points = if (userResp.isSuccessful) userResp.body()?.accumulatedPoints ?: 0 else 0
 
-                // fetch achievements
+                // fetch achievements (active or all) - using existing endpoint
                 val achievementsResp = RetrofitInstance.getApi(appContext).getAllAchievements()
                 val achievements = if (achievementsResp.isSuccessful) achievementsResp.body() ?: emptyList() else emptyList()
 
-                // simple detection: compare persisted lastKnownPoints with current
-                val last = prefs.getInt("lastKnownPoints", 0)
-                if (points > last) {
-                    // find an achievement unlocked in the range
-                    val newly = achievements.firstOrNull { ach ->
-                        val req = ach.pointsRequired ?: 0
-                        req in (last + 1)..points
-                    }
-                    newly?.let { ach ->
-                        // Show a notification via AchievementsActivity helper (it posts notifications)
+                // Compare per-user lastKnownPoints
+                val last = prefs.getInt(pointsKey, 0)
+                if (points <= last) {
+                    // No new points that cross a threshold
+                    return@launch
+                }
+
+                // Retrieve previously seen achievements for this user
+                val seen = prefs.getStringSet(seenSetKey, mutableSetOf())?.toMutableSet() ?: mutableSetOf()
+
+                // Find the lowest threshold achievement newly crossed that hasn't been seen
+                val newly = achievements
+                    .filter { ach -> ach.pointsRequired in (last + 1)..points }
+                    .sortedBy { it.pointsRequired }
+                    .firstOrNull { !seen.contains(it.id.toString()) }
+
+                if (newly != null) {
+                    try {
+                        NotificationPoster.post(appContext, newly)
                         try {
-                            // Use AchievementsActivity static-like helper by creating a temp activity intent
-                            // But here we'll directly use NotificationUtils: instantiate AchievementsActivity just to call helper isn't ideal.
-                            // Instead, post a simple notification using Android APIs.
-                            NotificationPoster.post(appContext, ach)
-                            // Also try posting an in-app popup on the current foreground activity if any
-                            try {
-                                InAppPopupPoster.postPopupForAchievement(ach.title ?: "Achievement", ach.id)
-                            } catch (e: Exception) {
-                                Log.w("AchievementNotifier", "Failed to post in-app popup", e)
-                            }
-
-                            // Mark this achievement as seen so we don't re-show it
-                            try {
-                                val seen = prefs.getStringSet("seenAchievementIds", mutableSetOf())?.toMutableSet() ?: mutableSetOf()
-                                seen.add(ach.id.toString())
-                                prefs.edit().putStringSet("seenAchievementIds", seen).apply()
-                            } catch (e: Exception) {
-                                Log.w("AchievementNotifier", "Failed to update seenAchievementIds", e)
-                            }
-
-                            prefs.edit().putInt("lastKnownPoints", points).apply()
+                            InAppPopupPoster.postPopupForAchievement(newly.title, newly.id)
                         } catch (e: Exception) {
-                            Log.e("AchievementNotifier", "Failed to post notification", e)
+                            Log.w("AchievementNotifier", "In-app popup failed", e)
                         }
+                        // Mark seen and update last points AFTER successful post
+                        seen.add(newly.id.toString())
+                        prefs.edit()
+                            .putStringSet(seenSetKey, seen)
+                            .putInt(pointsKey, points)
+                            .apply()
+                    } catch (e: Exception) {
+                        Log.e("AchievementNotifier", "Failed to post notification", e)
                     }
+                } else {
+                    // No unseen achievements unlocked; still advance lastKnownPoints so we don't re-scan same range repeatedly
+                    prefs.edit().putInt(pointsKey, points).apply()
                 }
 
             } catch (e: Exception) {
