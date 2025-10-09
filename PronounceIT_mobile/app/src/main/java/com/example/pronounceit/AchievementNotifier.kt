@@ -5,24 +5,62 @@ import android.os.Handler
 import android.os.Looper
 import android.util.Log
 import com.example.pronounceit.network.RetrofitInstance
+import com.example.pronounceit.network.models.AchievementEntity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 object AchievementNotifier {
     private var initialized = false
     private lateinit var appContext: Context
     private val handler = Handler(Looper.getMainLooper())
-    // Polling interval lowered to 10s to reduce perceived delay. Consider using FCM for production.
     private val pollIntervalMs = 10_000L // 10s polling for faster responsiveness
     @Volatile
     private var lastManualCheckTs: Long = 0L
+
+    // Fields to handle suppression
+    private val pendingAchievements = mutableListOf<AchievementEntity>()
+    private var suppressPopups = false
 
     fun initialize(context: Context) {
         if (initialized) return
         appContext = context.applicationContext
         initialized = true
         startPolling()
+    }
+
+    // Methods to suppress/allow popups
+    fun suppressPopups() {
+        suppressPopups = true
+    }
+
+    fun allowPopups() {
+        suppressPopups = false
+        showPendingAchievements()
+    }
+
+    // Show any achievements that were earned while suppressed
+    private fun showPendingAchievements() {
+        if (pendingAchievements.isEmpty()) return
+
+        CoroutineScope(Dispatchers.Main).launch {
+            val toShow = ArrayList(pendingAchievements)
+            pendingAchievements.clear()
+
+            // Show each pending achievement with a delay between them
+            toShow.forEachIndexed { index, achievement ->
+                if (index > 0) {
+                    kotlinx.coroutines.delay(1500) // 1.5s between popups
+                }
+                try {
+                    NotificationPoster.post(appContext, achievement)
+                    InAppPopupPoster.postPopupForAchievement(achievement.title, achievement.id)
+                } catch (e: Exception) {
+                    Log.e("AchievementNotifier", "Error showing pending achievement", e)
+                }
+            }
+        }
     }
 
     private fun startPolling() {
@@ -44,7 +82,7 @@ object AchievementNotifier {
                 val pointsKey = "lastKnownPoints_u_$userId"
                 val seenSetKey = "seenAchievementIds_u_$userId"
 
-                // Migration: If legacy global keys exist and per-user keys don't, migrate.
+                // Migration code remains unchanged
                 if (!prefs.contains(pointsKey) && prefs.contains("lastKnownPoints")) {
                     val legacyPoints = prefs.getInt("lastKnownPoints", 0)
                     prefs.edit().remove("lastKnownPoints").putInt(pointsKey, legacyPoints).apply()
@@ -54,67 +92,63 @@ object AchievementNotifier {
                     prefs.edit().remove("seenAchievementIds").putStringSet(seenSetKey, legacySet).apply()
                 }
 
-                // fetch user points (current)
                 val userResp = RetrofitInstance.getApi(appContext).getUserById(userId, "Bearer $token")
                 val points = if (userResp.isSuccessful) userResp.body()?.accumulatedPoints ?: 0 else 0
 
-                // fetch achievements (active or all) - using existing endpoint
                 val achievementsResp = RetrofitInstance.getApi(appContext).getAllAchievements()
                 val achievements = if (achievementsResp.isSuccessful) achievementsResp.body() ?: emptyList() else emptyList()
 
-                // Compare per-user lastKnownPoints
                 val last = prefs.getInt(pointsKey, 0)
                 if (points <= last) {
-                    // No new points that cross a threshold
                     return@launch
                 }
 
-                // Retrieve previously seen achievements for this user
                 val seen = prefs.getStringSet(seenSetKey, mutableSetOf())?.toMutableSet() ?: mutableSetOf()
 
-                // Find the lowest threshold achievement newly crossed that hasn't been seen
                 val newly = achievements
                     .filter { ach -> ach.pointsRequired in (last + 1)..points }
                     .sortedBy { it.pointsRequired }
                     .firstOrNull { !seen.contains(it.id.toString()) }
 
                 if (newly != null) {
-                    try {
-                        NotificationPoster.post(appContext, newly)
-                        try {
-                            InAppPopupPoster.postPopupForAchievement(newly.title, newly.id)
-                        } catch (e: Exception) {
-                            Log.w("AchievementNotifier", "In-app popup failed", e)
+                    // Mark as seen immediately to prevent duplicates
+                    seen.add(newly.id.toString())
+                    prefs.edit()
+                        .putStringSet(seenSetKey, seen)
+                        .putInt(pointsKey, points)
+                        .apply()
+
+                    // Show popup immediately or store it for later
+                    if (suppressPopups) {
+                        // Store for later display
+                        synchronized(pendingAchievements) {
+                            if (!pendingAchievements.any { it.id == newly.id }) {
+                                pendingAchievements.add(newly)
+                            }
                         }
-                        // Mark seen and update last points AFTER successful post
-                        seen.add(newly.id.toString())
-                        prefs.edit()
-                            .putStringSet(seenSetKey, seen)
-                            .putInt(pointsKey, points)
-                            .apply()
-                    } catch (e: Exception) {
-                        Log.e("AchievementNotifier", "Failed to post notification", e)
+                    } else {
+                        withContext(Dispatchers.Main) {
+                            try {
+                                NotificationPoster.post(appContext, newly)
+                                InAppPopupPoster.postPopupForAchievement(newly.title, newly.id)
+                            } catch (e: Exception) {
+                                Log.e("AchievementNotifier", "Failed to post notification", e)
+                            }
+                        }
                     }
                 } else {
-                    // No unseen achievements unlocked; still advance lastKnownPoints so we don't re-scan same range repeatedly
                     prefs.edit().putInt(pointsKey, points).apply()
                 }
-
             } catch (e: Exception) {
                 Log.e("AchievementNotifier", "Error checking unlocks", e)
             }
         }
     }
 
-    /**
-     * Public helper to request an immediate check from other parts of the app (e.g. activity resume).
-     */
     fun checkNow() {
-        // Debounce manual requests to avoid thundering resumes (2s window)
         val now = System.currentTimeMillis()
         if (now - lastManualCheckTs < 2000L) return
         lastManualCheckTs = now
-        // Run the same check logic immediately
         checkForUnlocks()
     }
 }
