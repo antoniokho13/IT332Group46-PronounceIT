@@ -64,6 +64,11 @@ class StreakUpdateManager(private val context: Context) {
         }
 
         dialog.show()
+        // --- Make the dialog truly full screen ---
+        dialog.window?.setLayout(
+            android.view.ViewGroup.LayoutParams.MATCH_PARENT,
+            android.view.ViewGroup.LayoutParams.MATCH_PARENT
+        )
 
         // Persist that we showed it AFTER successful show
         persistShown(streak)
