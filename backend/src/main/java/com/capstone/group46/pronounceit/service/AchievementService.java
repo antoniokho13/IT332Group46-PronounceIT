@@ -159,13 +159,15 @@ public class AchievementService {
             .filter(achievement -> achievement.getPointsRequired() > user.getAccumulatedPoints())
             .min(Comparator.comparing(AchievementEntity::getPointsRequired));
     }
-    
+
     private String saveBadgeImage(MultipartFile file) throws IOException {
-        // Define the directory to store badge images (exactly like WordService)
-        Path badgeDirPath = Paths.get("backend", "src", "main", "resources", "images", "badges");
+        // ----------------------------------------------------
+        // CHANGE 3: Define the directory to the mounted volume
+        // ----------------------------------------------------
+        Path badgeDirPath = Paths.get("/app/uploads/images/badges");
         File badgeDir = badgeDirPath.toFile();
 
-        // Create the directory if it doesn't exist
+        // Create the directory if it doesn't exist (this creates the subdirs on the volume)
         if (!badgeDir.exists()) {
             badgeDir.mkdirs();
         }
@@ -179,7 +181,7 @@ public class AchievementService {
             fos.write(file.getBytes());
         }
 
-        // Return the relative path to access the image
+        // Return the relative path to access the image (This is correct for static serving)
         return "/images/badges/" + fileName;
     }
 }

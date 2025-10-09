@@ -140,11 +140,13 @@ public class WordService {
     }
 
     private String storeAudio(byte[] audioContent, String word) throws IOException {
-        // Define the directory to store audio files (relative to the backend folder)
-        Path audioDirPath = Paths.get("backend", "src", "main", "resources", "audio");
+        // ----------------------------------------------------
+        // CHANGE 1: Define the directory to the mounted volume
+        // ----------------------------------------------------
+        Path audioDirPath = Paths.get("/app/uploads/audio");
         File audioDir = audioDirPath.toFile();
 
-        // Create the directory if it doesn't exist
+        // Create the directory if it doesn't exist (this creates the 'audio' subdir on the volume)
         if (!audioDir.exists()) {
             audioDir.mkdirs();
         }
@@ -158,7 +160,7 @@ public class WordService {
             fos.write(audioContent);
         }
 
-        // Return the relative path to access the audio
+        // Return the relative path to access the audio (This is correct for static serving)
         return "/audio/" + fileName;
     }
 
@@ -167,11 +169,13 @@ public class WordService {
     }
 
     public String uploadImage(MultipartFile imageFile) throws IOException {
-        // Define the directory to store images (relative to the backend folder)
-        Path imageDirPath = Paths.get("backend", "src", "main", "resources", "images");
+        // ----------------------------------------------------
+        // CHANGE 2: Define the directory to the mounted volume
+        // ----------------------------------------------------
+        Path imageDirPath = Paths.get("/app/uploads/images");
         File imageDir = imageDirPath.toFile();
 
-        // Create the directory if it doesn't exist
+        // Create the directory if it doesn't exist (this creates the 'images' subdir on the volume)
         if (!imageDir.exists()) {
             imageDir.mkdirs();
         }
@@ -185,7 +189,7 @@ public class WordService {
             fos.write(imageFile.getBytes());
         }
 
-        // Return the relative path to access the image
+        // Return the relative path to access the image (This is correct for static serving)
         return "/images/" + fileName;
     }
 
