@@ -5,12 +5,10 @@ import android.content.Context
 import android.os.Handler
 import android.os.Looper
 import android.view.LayoutInflater
-import android.view.View
 import android.view.animation.AnimationUtils
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AlertDialog
-import androidx.core.content.ContextCompat
 import com.example.pronounceit.network.models.StreakDTO
 import java.time.LocalDate
 import java.time.ZoneId
@@ -22,7 +20,7 @@ class StreakUpdateManager(private val context: Context) {
     private val PREF_LAST_STREAK_VALUE = "lastStreakPopupValue"
     private fun dateKey(userId: Long) = "${PREF_LAST_STREAK_DATE}_u_$userId"
     private fun valueKey(userId: Long) = "${PREF_LAST_STREAK_VALUE}_u_$userId"
-    // Use Manila timezone to stay consistent with other time logging in the app (Retrofit DateDebugInterceptor)
+    // Use Manila timezone to stay consistent with other time logging in the app
     private val zoneId: ZoneId = ZoneId.of("Asia/Manila")
 
     /**
@@ -31,9 +29,16 @@ class StreakUpdateManager(private val context: Context) {
      *  - A popup has not already been shown today.
      * This prevents multiple lesson completions on the same day from repeatedly showing + animating.
      * Also handles streak reset (e.g., back to 1) as a valid show event if not already shown today.
+     *
+     * @param streak The streak data to display
+     * @param onDismiss Optional callback that runs when the dialog is dismissed
      */
-    fun showStreakUpdateDialog(streak: StreakDTO) {
-        if (!shouldShowFor(streak)) return
+    fun showStreakUpdateDialog(streak: StreakDTO, onDismiss: (() -> Unit)? = null) {
+        if (!shouldShowFor(streak)) {
+            // If we're not showing the dialog, still invoke the callback immediately
+            onDismiss?.invoke()
+            return
+        }
 
         val dialogView = LayoutInflater.from(context).inflate(R.layout.streak_details_dialog, null)
 
@@ -52,10 +57,16 @@ class StreakUpdateManager(private val context: Context) {
             .create()
 
         dialog.window?.setBackgroundDrawableResource(android.R.color.transparent)
+
+        // Set up dismiss listener to trigger callback
+        dialog.setOnDismissListener {
+            onDismiss?.invoke()
+        }
+
         dialog.show()
 
         // Persist that we showed it AFTER successful show
-    persistShown(streak)
+        persistShown(streak)
 
         animateStreakUpdate(streakIconView, streakCountView, streak.currentStreak, dialog)
     }
@@ -63,6 +74,7 @@ class StreakUpdateManager(private val context: Context) {
     private fun shouldShowFor(streak: StreakDTO): Boolean {
         val today = LocalDate.now(zoneId).toString()
         val userId = streak.userId ?: return false
+
         // Migration: if per-user keys missing but global keys exist, migrate once.
         val perUserDateKey = dateKey(userId)
         val perUserValueKey = valueKey(userId)
@@ -103,10 +115,10 @@ class StreakUpdateManager(private val context: Context) {
     }
 
     private fun animateStreakUpdate(
-            iconView: ImageView,
-            countView: TextView,
-            newStreak: Int,
-            dialog: Dialog
+        iconView: ImageView,
+        countView: TextView,
+        newStreak: Int,
+        dialog: Dialog
     ) {
         // Animate the fire icon with flame pulse animation
         val flameAnimation = AnimationUtils.loadAnimation(context, R.anim.streak_flame_pulse)
@@ -114,34 +126,34 @@ class StreakUpdateManager(private val context: Context) {
 
         // After a short delay, animate the count increment
         Handler(Looper.getMainLooper()).postDelayed({
-                // Animate count up
-                val startValue = newStreak - 1
-                val endValue = newStreak
+            // Animate count up
+            val startValue = newStreak - 1
+            val endValue = newStreak
 
-                // Use ValueAnimator to increment number smoothly
-                val animator = android.animation.ValueAnimator.ofInt(startValue, endValue)
-                animator.duration = 1000 // 1 second duration
-                animator.addUpdateListener { animation ->
+            // Use ValueAnimator to increment number smoothly
+            val animator = android.animation.ValueAnimator.ofInt(startValue, endValue)
+            animator.duration = 1000 // 1 second duration
+            animator.addUpdateListener { animation ->
                 countView.text = animation.animatedValue.toString()
-        }
-
-                // Apply scale animation to count when it changes
-                val incrementAnim = AnimationUtils.loadAnimation(context, R.anim.streak_increment)
-                animator.addListener(object : android.animation.AnimatorListenerAdapter() {
-            override fun onAnimationEnd(animation: android.animation.Animator) {
-                countView.startAnimation(incrementAnim)
             }
-        })
 
-        animator.start()
+            // Apply scale animation to count when it changes
+            val incrementAnim = AnimationUtils.loadAnimation(context, R.anim.streak_increment)
+            animator.addListener(object : android.animation.AnimatorListenerAdapter() {
+                override fun onAnimationEnd(animation: android.animation.Animator) {
+                    countView.startAnimation(incrementAnim)
+                }
+            })
 
-        // Auto-dismiss after 3.5 seconds
-        Handler(Looper.getMainLooper()).postDelayed({
-        try {
-            dialog.dismiss()
-        } catch (e: Exception) {
-            // Dialog may already be dismissed
-        }
+            animator.start()
+
+            // Auto-dismiss after 3.5 seconds
+            Handler(Looper.getMainLooper()).postDelayed({
+                try {
+                    dialog.dismiss()
+                } catch (e: Exception) {
+                    // Dialog may already be dismissed
+                }
             }, 3500)
         }, 500) // Start count animation after 500ms
     }
