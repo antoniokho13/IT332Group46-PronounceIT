@@ -91,6 +91,9 @@ class WordActivity : AppCompatActivity() {
         binding = ActivityWordBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        // Suppress achievement popups during gameplay
+        AchievementNotifier.suppressPopups()
+
         // Initialize konfetti view
         konfettiView = binding.konfettiView
 
@@ -659,6 +662,9 @@ class WordActivity : AppCompatActivity() {
 
 
     private fun showSessionEndDialog() {
+        // Suppress achievement popups during dialog display
+        AchievementNotifier.suppressPopups()
+
         sendScoreToBackend()
 
         val dialogView = layoutInflater.inflate(R.layout.dialog_session_end, null)
@@ -723,6 +729,12 @@ class WordActivity : AppCompatActivity() {
             .setCancelable(false)
             .create()
 
+        // Setup dialog dismiss listener to ensure achievements are allowed when dialog is gone
+        dialog.setOnDismissListener {
+            // Allow achievement popups after dialog is dismissed
+            AchievementNotifier.allowPopups()
+        }
+
         nextLessonButton.setOnClickListener {
             // Find the next lesson by sequence
             CoroutineScope(Dispatchers.IO).launch {
@@ -775,6 +787,9 @@ class WordActivity : AppCompatActivity() {
         viewScoreDetailsButton.contentDescription = "View Score"
 
         dialog.show()
+
+        // Trigger achievement check now that session is complete
+        AchievementNotifier.checkNow()
     }
 
     // Removed inline showStreakUpdateAnimation; now consolidated in StreakUpdateManager to prevent duplicate dialogs & leaks.
@@ -806,5 +821,10 @@ class WordActivity : AppCompatActivity() {
         // Otherwise update UI for next word
         updateUI()
         updateScoreTracker()
+    }
+    override fun onDestroy() {
+        super.onDestroy()
+        // Make sure popups are allowed when exiting
+        AchievementNotifier.allowPopups()
     }
 }
