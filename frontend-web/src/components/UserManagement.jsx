@@ -21,7 +21,7 @@ import "../assets/css/UserManagement.css";
 import logo from "../assets/images/logo.png";
 import { deleteUser, updateUser } from "../services/userService";
 
-const API_BASE_URL = "http://localhost:8080/api/users"; // Base URL for user API
+const API_BASE_URL = "https://it332group46-pronounceit-production.up.railway.app/api/users"; // Base URL for user API
 
 const UserManagement = () => {
   const [showModal, setShowModal] = useState(false);

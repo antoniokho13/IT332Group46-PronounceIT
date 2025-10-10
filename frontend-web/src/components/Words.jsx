@@ -137,7 +137,7 @@ const Words = () => {
   }, [showModal]);
 
   const playAudio = (audioURL) => {
-    const audio = new Audio(`http://localhost:8080${audioURL}`); // Add the base URL
+    const audio = new Audio(`https://it332group46-pronounceit-production.up.railway.app${audioURL}`); // Add the base URL
     audio.play();
   };
 
@@ -212,7 +212,7 @@ const Words = () => {
                   <td>{word.word}</td>
                   <td>
                     <img
-                      src={`http://localhost:8080${word.imageURL}`}
+                      src={`https://it332group46-pronounceit-production.up.railway.app${word.imageURL}`}
                       alt={word.word}
                       style={{ width: "100px", height: "auto", borderRadius: "5px" }}
                     />
