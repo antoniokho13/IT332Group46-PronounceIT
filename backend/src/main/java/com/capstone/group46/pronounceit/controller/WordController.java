@@ -10,8 +10,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.cloud.speech.v1.RecognitionConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.core.io.FileSystemResource;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -21,8 +19,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 
@@ -51,40 +47,12 @@ public class WordController {
     }
 
     @GetMapping("/{wordId}")
-    public ResponseEntity<?> getWordById(@PathVariable Long wordId) {
+    public ResponseEntity<WordEntity> getWordById(@PathVariable Long wordId) {
         logger.info("Fetching word with ID: {}", wordId);
         Optional<WordEntity> wordOptional = wordService.getWordById(wordId);
 
         if (wordOptional.isPresent()) {
-            WordEntity word = wordOptional.get();
-            String audioURL = word.getAudioURL();
-
-            if (audioURL != null && !audioURL.isEmpty()) {
-                try {
-                    // ----------------------------------------------------
-                    // CHANGE: Updated path to use the mounted volume for deployment
-                    // ----------------------------------------------------
-                    Path audioPath = Paths.get("/app/uploads" + audioURL);
-                    FileSystemResource fileSystemResource = new FileSystemResource(audioPath);
-
-                    if (fileSystemResource.exists()) {
-                        HttpHeaders headers = new HttpHeaders();
-                        headers.setContentType(MediaType.parseMediaType("audio/mpeg"));
-                        headers.setContentLength(fileSystemResource.contentLength());
-
-                        return new ResponseEntity<>(fileSystemResource, headers, HttpStatus.OK);
-                    } else {
-                        logger.error("Audio file not found at path: {}", audioPath);
-                        return new ResponseEntity<>("Audio file not found", HttpStatus.NOT_FOUND);
-                    }
-                } catch (IOException e) {
-                    logger.error("Error serving audio file for wordId {}: {}", wordId, e.getMessage(), e);
-                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Error serving audio file");
-                }
-            } else {
-                logger.warn("Audio URL is not set for wordId: {}", wordId);
-                return new ResponseEntity<>("Audio URL is not set for this word", HttpStatus.NOT_FOUND);
-            }
+            return ResponseEntity.ok(wordOptional.get());
         } else {
             logger.warn("Word not found for wordId: {}", wordId);
             return ResponseEntity.notFound().build();
@@ -178,30 +146,6 @@ public class WordController {
         logger.info("Deleting word with ID: {}", wordId);
         wordService.deleteWord(wordId);
         return ResponseEntity.noContent().build();
-    }
-
-    @GetMapping(value = "/audio/{filename}", produces = MediaType.APPLICATION_OCTET_STREAM_VALUE)
-    public ResponseEntity<FileSystemResource> getAudioFile(@PathVariable String filename) throws IOException {
-        logger.info("Fetching audio file: {}", filename);
-        try {
-            // ----------------------------------------------------
-            // CHANGE: Updated path to use the mounted volume for deployment
-            // ----------------------------------------------------
-            Path audioPath = Paths.get("/app/uploads/audio", filename);
-            FileSystemResource fileSystemResource = new FileSystemResource(audioPath);
-
-            if (!fileSystemResource.exists()) {
-                logger.error("Audio file not found: {}", audioPath);
-                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-            }
-
-            return ResponseEntity.ok()
-                    .contentType(MediaType.parseMediaType("audio/mpeg"))
-                    .body(fileSystemResource);
-        } catch (Exception e) {
-            logger.error("Error fetching audio file {}: {}", filename, e.getMessage(), e);
-            return new ResponseEntity<>(HttpStatus.INTERNAL_SERVER_ERROR);
-        }
     }
 
     @PostMapping("/{wordId}/check-pronunciation")
