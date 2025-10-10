@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://localhost:8080/api/words'; // Replace with your backend URL
+const API_URL = 'https://it332group46-pronounceit-production.up.railway.app/api/words'; // Replace with your backend URL
 
 // Helper function to get the Authorization header
 const getAuthHeader = () => {

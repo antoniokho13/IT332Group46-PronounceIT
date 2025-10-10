@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = "http://localhost:8080/api/lessons";
+const API_URL = "https://it332group46-pronounceit-production.up.railway.app/api/lessons";
 
 // Function to get the authorization header with the Bearer token
 const getAuthHeader = () => {
