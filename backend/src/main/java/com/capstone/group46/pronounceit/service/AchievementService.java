@@ -21,42 +21,42 @@ import java.util.stream.Collectors;
 
 @Service
 public class AchievementService {
-    
+
     @Autowired
     private AchievementRepository achievementRepository;
-    
+
     public List<AchievementEntity> getAllAchievements() {
         return achievementRepository.findAll();
     }
-    
+
     public List<AchievementEntity> getActiveAchievements() {
         return achievementRepository.findByIsActiveTrue();
     }
-    
+
     public Optional<AchievementEntity> getAchievementById(Long id) {
         return achievementRepository.findById(id);
     }
-    
+
     public AchievementEntity createAchievement(AchievementEntity achievement) {
         if (achievementRepository.existsByTitle(achievement.getTitle())) {
             throw new RuntimeException("Achievement with this title already exists");
         }
         return achievementRepository.save(achievement);
     }
-    
+
     public AchievementEntity createAchievementWithBadge(AchievementEntity achievement, MultipartFile badgeFile) throws IOException {
         if (achievementRepository.existsByTitle(achievement.getTitle())) {
             throw new RuntimeException("Achievement with this title already exists");
         }
-        
+
         if (badgeFile != null && !badgeFile.isEmpty()) {
             String badgeImagePath = saveBadgeImage(badgeFile);
             achievement.setBadgeImagePath(badgeImagePath);
         }
-        
+
         return achievementRepository.save(achievement);
     }
-    
+
     public AchievementEntity updateAchievement(Long id, AchievementEntity updatedAchievement) {
         Optional<AchievementEntity> existingAchievement = achievementRepository.findById(id);
         if (existingAchievement.isPresent()) {
@@ -65,16 +65,16 @@ public class AchievementService {
             achievement.setDescription(updatedAchievement.getDescription());
             achievement.setPointsRequired(updatedAchievement.getPointsRequired());
             achievement.setIsActive(updatedAchievement.getIsActive());
-            
+
             if (updatedAchievement.getBadgeImagePath() != null) {
                 achievement.setBadgeImagePath(updatedAchievement.getBadgeImagePath());
             }
-            
+
             return achievementRepository.save(achievement);
         }
         throw new RuntimeException("Achievement not found with id: " + id);
     }
-    
+
     public AchievementEntity updateAchievementWithBadge(Long id, AchievementEntity updatedAchievement, MultipartFile badgeFile) throws IOException {
         Optional<AchievementEntity> existingAchievement = achievementRepository.findById(id);
         if (existingAchievement.isPresent()) {
@@ -83,17 +83,17 @@ public class AchievementService {
             achievement.setDescription(updatedAchievement.getDescription());
             achievement.setPointsRequired(updatedAchievement.getPointsRequired());
             achievement.setIsActive(updatedAchievement.getIsActive());
-            
+
             if (badgeFile != null && !badgeFile.isEmpty()) {
                 String badgeImagePath = saveBadgeImage(badgeFile);
                 achievement.setBadgeImagePath(badgeImagePath);
             }
-            
+
             return achievementRepository.save(achievement);
         }
         throw new RuntimeException("Achievement not found with id: " + id);
     }
-    
+
     public void deleteAchievement(Long id) {
         if (achievementRepository.existsById(id)) {
             achievementRepository.deleteById(id);
@@ -101,7 +101,7 @@ public class AchievementService {
             throw new RuntimeException("Achievement not found with id: " + id);
         }
     }
-    
+
     public void toggleAchievementStatus(Long id) {
         Optional<AchievementEntity> achievement = achievementRepository.findById(id);
         if (achievement.isPresent()) {
@@ -112,16 +112,16 @@ public class AchievementService {
             throw new RuntimeException("Achievement not found with id: " + id);
         }
     }
-    
+
     public List<AchievementEntity> searchAchievementsByTitle(String title) {
         return achievementRepository.findByTitleContaining(title);
     }
-    
+
     // Method to get achievements that a user can unlock based on their accumulated points
     public List<AchievementEntity> getEligibleAchievements(Integer userPoints) {
         return achievementRepository.findEligibleAchievementsByPoints(userPoints);
     }
-    
+
     // Method to get achievements ordered by points required (ascending)
     public List<AchievementEntity> getAchievementsOrderedByPoints() {
         return achievementRepository.findAllByOrderByPointsRequiredAsc();
@@ -131,7 +131,7 @@ public class AchievementService {
     public List<AchievementEntity> checkAndUnlockAchievements(UserEntity user) {
         List<AchievementEntity> newlyUnlocked = new ArrayList<>();
         List<AchievementEntity> eligibleAchievements = getEligibleAchievements(user.getAccumulatedPoints());
-        
+
         for (AchievementEntity achievement : eligibleAchievements) {
             // Check if user doesn't already have this achievement
             if (!user.getAchievements().contains(achievement)) {
@@ -139,7 +139,7 @@ public class AchievementService {
                 newlyUnlocked.add(achievement);
             }
         }
-        
+
         return newlyUnlocked;
     }
 
@@ -147,17 +147,17 @@ public class AchievementService {
     public List<AchievementEntity> getAvailableAchievements(UserEntity user) {
         List<AchievementEntity> allActiveAchievements = getActiveAchievements();
         List<AchievementEntity> userAchievements = user.getAchievements();
-        
+
         return allActiveAchievements.stream()
-            .filter(achievement -> !userAchievements.contains(achievement))
-            .collect(Collectors.toList());
+                .filter(achievement -> !userAchievements.contains(achievement))
+                .collect(Collectors.toList());
     }
 
     // Method to get next achievement user can work towards
     public Optional<AchievementEntity> getNextAchievement(UserEntity user) {
         return getAvailableAchievements(user).stream()
-            .filter(achievement -> achievement.getPointsRequired() > user.getAccumulatedPoints())
-            .min(Comparator.comparing(AchievementEntity::getPointsRequired));
+                .filter(achievement -> achievement.getPointsRequired() > user.getAccumulatedPoints())
+                .min(Comparator.comparing(AchievementEntity::getPointsRequired));
     }
 
     private String saveBadgeImage(MultipartFile file) throws IOException {
