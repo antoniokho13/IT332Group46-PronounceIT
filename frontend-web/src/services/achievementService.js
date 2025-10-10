@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = "http://localhost:8080/api/achievements";
+const API_BASE_URL = "https://it332group46-pronounceit-production.up.railway.app/api/achievements";
 
 /**
  * Get auth token from localStorage for authorization headers
@@ -48,7 +48,7 @@ export const createAchievement = async (achievementData) => {
       isActive: response.data.isActive,
       createdDate: response.data.createdAt || new Date().toISOString(),
       badgeUrl: response.data.badgeImagePath ? 
-        `http://localhost:8080${response.data.badgeImagePath}` : null
+        `https://it332group46-pronounceit-production.up.railway.app${response.data.badgeImagePath}` : null
     };
   } catch (error) {
     console.error("Error creating achievement:", error);
@@ -98,7 +98,7 @@ export const updateAchievement = async (id, achievementData) => {
       isActive: response.data.isActive,
       createdDate: response.data.createdAt || new Date().toISOString(),
       badgeUrl: response.data.badgeImagePath ? 
-        `http://localhost:8080${response.data.badgeImagePath}` : null
+        `https://it332group46-pronounceit-production.up.railway.app${response.data.badgeImagePath}` : null
     };
   } catch (error) {
     console.error(`Error updating achievement ${id}:`, error);
@@ -134,7 +134,7 @@ export const getAllAchievements = async () => {
       // Update the URL construction to match the server's resource handler path
       badgeUrl: achievement.badgeImagePath ? 
         (() => {
-          const url = `http://localhost:8080${achievement.badgeImagePath}`;
+          const url = `https://it332group46-pronounceit-production.up.railway.app${achievement.badgeImagePath}`;
           console.log('Generated badge URL:', url, 'from path:', achievement.badgeImagePath);
           return url;
         })() : null
@@ -185,7 +185,7 @@ export const toggleAchievementStatus = async (id) => {
       isActive: response.data.isActive,
       createdDate: response.data.createdAt || new Date().toISOString(),
       badgeUrl: response.data.badgeImagePath ? 
-        `http://localhost:8080${response.data.badgeImagePath}` : null
+        `https://it332group46-pronounceit-production.up.railway.app${response.data.badgeImagePath}` : null
     };
   } catch (error) {
     console.error(`Error toggling achievement status ${id}:`, error);

@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = "http://localhost:8080/api/score-records";
+const API_URL = "https://it332group46-pronounceit-production.up.railway.app/api/score-records";
 
 const getAuthHeader = () => {
   const token = localStorage.getItem("token");

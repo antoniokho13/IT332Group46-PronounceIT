@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = "http://localhost:8080/api/pronounciation-attempts";
+const API_URL = "https://it332group46-pronounceit-production.up.railway.app/api/pronounciation-attempts";
 
 const getAuthHeader = () => {
   const token = localStorage.getItem("token");
