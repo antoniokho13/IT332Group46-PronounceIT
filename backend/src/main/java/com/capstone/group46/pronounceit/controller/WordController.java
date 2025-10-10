@@ -61,7 +61,10 @@ public class WordController {
 
             if (audioURL != null && !audioURL.isEmpty()) {
                 try {
-                    Path audioPath = Paths.get("src", "main", "resources", "audio", audioURL.substring(7));
+                    // ----------------------------------------------------
+                    // CHANGE: Updated path to use the mounted volume for deployment
+                    // ----------------------------------------------------
+                    Path audioPath = Paths.get("/app/uploads" + audioURL);
                     FileSystemResource fileSystemResource = new FileSystemResource(audioPath);
 
                     if (fileSystemResource.exists()) {
@@ -181,7 +184,10 @@ public class WordController {
     public ResponseEntity<FileSystemResource> getAudioFile(@PathVariable String filename) throws IOException {
         logger.info("Fetching audio file: {}", filename);
         try {
-            Path audioPath = Paths.get("src", "main", "resources", "audio", filename);
+            // ----------------------------------------------------
+            // CHANGE: Updated path to use the mounted volume for deployment
+            // ----------------------------------------------------
+            Path audioPath = Paths.get("/app/uploads/audio", filename);
             FileSystemResource fileSystemResource = new FileSystemResource(audioPath);
 
             if (!fileSystemResource.exists()) {
