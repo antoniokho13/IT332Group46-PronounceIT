@@ -18,10 +18,10 @@ import ReactDOM from "react-dom";
 import { Link, useNavigate } from "react-router-dom";
 import "../assets/css/Dashboard.css";
 import logo from "../assets/images/logo.png";
-import { createCategory, deleteCategory, getAllCategories, updateCategory } from "../services/categoryService"; // Import the service functions
+import { createCategory, deleteCategory, getAllCategories, updateCategory } from "../services/categoryService";
 import { createLesson, deleteLesson, getAllLessons, updateLesson } from "../services/lessonService";
 import { getAllScoreRecords } from "../services/scoreService";
-import { getUserById } from "../services/userService"; // Import the service to fetch user data
+import { getUserById } from "../services/userService";
 
 const TeacherDashboard = () => {
   const [user, setUser] = useState({ firstName: "", lastName: "", id: null });
@@ -38,9 +38,8 @@ const TeacherDashboard = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
   const [deleteType, setDeleteType] = useState(""); 
-  
-  // Add notification state
   const [notification, setNotification] = useState({ show: false, message: "", type: "" });
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   
   const dropdownRef = useRef(null);
   const userCardRef = useRef(null);
@@ -49,8 +48,15 @@ const TeacherDashboard = () => {
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    // Static version: Just navigate to login page
     navigate("/login");
+  };
+
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+  };
+
+  const closeSidebar = () => {
+    setSidebarOpen(false);
   };
 
   // Close dropdown when clicking outside
@@ -117,35 +123,31 @@ const TeacherDashboard = () => {
 
   const handleNavClick = (section) => {
     setActiveSection(section);
+    closeSidebar();
   };
 
-  // Function to open modal with specific type
   const openModal = (type, item = null) => {
     setModalType(type);
     setEditingItem(item);
     setShowModal(true);
   };
 
-  // Function to handle row click for editing
   const handleRowClick = (item, type) => {
     openModal(type, item);
   };
   
-  // Function to delete an item (just a placeholder for now)
   const handleDelete = async (category) => {
     setItemToDelete(category);
     setDeleteType("category");
     setShowDeleteModal(true);
   };
 
-  // Updated handleDeleteLesson function
   const handleDeleteLesson = async (lesson) => {
     setItemToDelete(lesson);
     setDeleteType("lesson");
     setShowDeleteModal(true);
   };
 
-  // New function to process deletion after confirmation
   const confirmDelete = async () => {
     try {
       if (deleteType === "lesson" && itemToDelete) {
@@ -170,7 +172,6 @@ const TeacherDashboard = () => {
       setShowDeleteModal(false);
       setItemToDelete(null);
       
-      // Auto-hide notification after 5 seconds
       setTimeout(() => {
         setNotification({ show: false, message: "", type: "" });
       }, 5000);
@@ -182,7 +183,6 @@ const TeacherDashboard = () => {
         type: "error"
       });
       
-      // Auto-hide notification after 5 seconds
       setTimeout(() => {
         setNotification({ show: false, message: "", type: "" });
       }, 5000);
@@ -228,7 +228,6 @@ const TeacherDashboard = () => {
     );
   };
 
-  // Render modal content based on type
   const renderModalContent = () => {
     const isEditing = editingItem !== null;
 
@@ -278,7 +277,7 @@ const TeacherDashboard = () => {
         <>
           <h3>{isEditing ? "Edit Lesson" : "Add New Lesson"}</h3>
           <form className="modal-form" onSubmit={handleAddLesson}>
-            {!isEditing && ( // Only show the category dropdown when not editing
+            {!isEditing && (
               <div className="form-group">
                 <label htmlFor="lessonCategory">Category</label>
                 <select
@@ -345,7 +344,6 @@ const TeacherDashboard = () => {
     return null;
   };
 
-  // Modal component
   const renderModal = () => {
     if (!showModal) return null;
 
@@ -359,7 +357,6 @@ const TeacherDashboard = () => {
     );
   };
 
-  // Add this new function to render delete confirmation modal
   const renderDeleteModal = () => {
     if (!showDeleteModal || !itemToDelete) return null;
     
@@ -406,7 +403,6 @@ const TeacherDashboard = () => {
     );
   };
 
-  // Content sections based on activeSection state
   const renderContent = () => {
     switch(activeSection) {
       case 'lessons':
@@ -499,7 +495,6 @@ const TeacherDashboard = () => {
   };
 
   useEffect(() => {
-    // Fetch categories when the component mounts
     const fetchCategories = async () => {
       try {
         const data = await getAllCategories();
@@ -515,19 +510,18 @@ const TeacherDashboard = () => {
   }, []);
 
   useEffect(() => {
-    // Fetch lessons when the component mounts
     const fetchLessons = async () => {
       try {
         const data = await getAllLessons();
         if (Array.isArray(data)) {
-          setLessons(data); // Only set lessons if data is an array
+          setLessons(data);
         } else {
           console.error("Invalid data format for lessons:", data);
-          setLessons([]); // Fallback to an empty array
+          setLessons([]);
         }
       } catch (error) {
         console.error("Error fetching lessons:", error);
-        setLessons([]); // Fallback to an empty array in case of an error
+        setLessons([]);
       } finally {
         setLoading(false);
       }
@@ -586,62 +580,62 @@ const TeacherDashboard = () => {
   };
 
   const renderLessonsTable = () => {
-  if (loading) {
-    return (
-      <tr>
-        <td colSpan="7">Loading...</td>
-      </tr>
-    );
-  }
+    if (loading) {
+      return (
+        <tr>
+          <td colSpan="7">Loading...</td>
+        </tr>
+      );
+    }
 
-  if (lessons.length === 0) {
-    return (
-      <tr>
-        <td colSpan="7">No lessons found.</td>
-      </tr>
-    );
-  }
+    if (lessons.length === 0) {
+      return (
+        <tr>
+          <td colSpan="7">No lessons found.</td>
+        </tr>
+      );
+    }
 
-  return lessons.map((lesson) => (
-    <tr key={lesson.lessonId}>
-      <td>{lesson.name}</td>
-      <td>{lesson.focus}</td>
-      <td>{lesson.sequence}</td>
-      <td>{lesson.category.name}</td>
-      <td>{`${lesson.createdBy.firstName} ${lesson.createdBy.lastName}`}</td>
-      <td>{new Date(lesson.createdDate).toLocaleDateString()}</td>
-      <td className="lesson-actions-cell">
-        <button
-          className="lesson-action-btn"
-          style={{ backgroundColor: "#4f46e5" }}
-          onClick={(e) => {
-            e.stopPropagation();
-            openModal("lessons", lesson);
-          }}
-        >
-          <FontAwesomeIcon icon={faEdit} /> Edit
-        </button>
-        <button
-          className="lesson-action-btn manage-words-btn"
-          style={{ backgroundColor: "#3b82f6" }}
-          onClick={() => navigate(`/words/${lesson.lessonId}`, { state: { lessonName: lesson.name } })}
-        >
-          <FontAwesomeIcon icon={faFolder} /> Manage Words
-        </button>
-        <button
-          className="lesson-action-btn delete-action-btn"
-          style={{ backgroundColor: "rgba(229, 62, 62, 0.8)", color: "white" }}
-          onClick={(e) => {
-            e.stopPropagation();
-            handleDeleteLesson(lesson);
-          }}
-        >
-          <FontAwesomeIcon icon={faTrash} /> Delete
-        </button>
-      </td>
-    </tr>
-));
-};
+    return lessons.map((lesson) => (
+      <tr key={lesson.lessonId}>
+        <td>{lesson.name}</td>
+        <td>{lesson.focus}</td>
+        <td>{lesson.sequence}</td>
+        <td>{lesson.category.name}</td>
+        <td>{`${lesson.createdBy.firstName} ${lesson.createdBy.lastName}`}</td>
+        <td>{new Date(lesson.createdDate).toLocaleDateString()}</td>
+        <td className="lesson-actions-cell">
+          <button
+            className="lesson-action-btn"
+            style={{ backgroundColor: "#4f46e5" }}
+            onClick={(e) => {
+              e.stopPropagation();
+              openModal("lessons", lesson);
+            }}
+          >
+            <FontAwesomeIcon icon={faEdit} /> Edit
+          </button>
+          <button
+            className="lesson-action-btn manage-words-btn"
+            style={{ backgroundColor: "#3b82f6" }}
+            onClick={() => navigate(`/words/${lesson.lessonId}`, { state: { lessonName: lesson.name } })}
+          >
+            <FontAwesomeIcon icon={faFolder} /> Manage Words
+          </button>
+          <button
+            className="lesson-action-btn delete-action-btn"
+            style={{ backgroundColor: "rgba(229, 62, 62, 0.8)", color: "white" }}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleDeleteLesson(lesson);
+            }}
+          >
+            <FontAwesomeIcon icon={faTrash} /> Delete
+          </button>
+        </td>
+      </tr>
+    ));
+  };
 
   const fetchUserData = async () => {
     try {
@@ -652,7 +646,7 @@ const TeacherDashboard = () => {
         setUser({
           firstName: userData.firstName,
           lastName: userData.lastName,
-          id: userData.id, // Store the user ID
+          id: userData.id,
         });
       } else {
         throw new Error("User not found in localStorage");
@@ -666,28 +660,25 @@ const TeacherDashboard = () => {
   };
 
   useEffect(() => {
-    fetchUserData(); // Fetch user data when the component mounts
+    fetchUserData();
   }, []);
 
   const handleAddCategory = async (e) => {
     e.preventDefault();
 
-    // Get the input values
     const name = e.target.categoryName.value;
     const description = e.target.categoryDescription.value;
 
-    // Prepare the category object
     const newCategory = {
       name,
       description,
-      createdBy: { id: user.id }, // Use the user ID from the state
-      createdDate: new Date().toISOString(), // Automatically set to today's date
-      active: true, // Always set to true
+      createdBy: { id: user.id },
+      createdDate: new Date().toISOString(),
+      active: true,
     };
 
     try {
       if (editingItem) {
-        // Call the updateCategory function if editing
         await updateCategory(editingItem.categoryId, newCategory);
         setNotification({
           show: true,
@@ -695,7 +686,6 @@ const TeacherDashboard = () => {
           type: "success"
         });
       } else {
-        // Call the createCategory function if adding a new category
         await createCategory(newCategory, user.id);
         setNotification({
           show: true,
@@ -704,14 +694,11 @@ const TeacherDashboard = () => {
         });
       }
 
-      // Refresh the categories list
       const updatedCategories = await getAllCategories();
       setCategories(updatedCategories);
 
-      // Close the modal
       setShowModal(false);
       
-      // Auto-hide notification after 5 seconds
       setTimeout(() => {
         setNotification({ show: false, message: "", type: "" });
       }, 5000);
@@ -723,7 +710,6 @@ const TeacherDashboard = () => {
         type: "error"
       });
       
-      // Auto-hide notification after 5 seconds
       setTimeout(() => {
         setNotification({ show: false, message: "", type: "" });
       }, 5000);
@@ -733,32 +719,28 @@ const TeacherDashboard = () => {
   const handleAddLesson = async (e) => {
     e.preventDefault();
 
-    // Determine if we are editing or adding a new lesson
     const isEditing = editingItem !== null;
 
-    // Get the input values
     const categoryId = isEditing
-      ? editingItem.category.categoryId // Use the existing category ID when editing
-      : e.target.lessonCategory?.value; // Get the value from the dropdown when adding
+      ? editingItem.category.categoryId
+      : e.target.lessonCategory?.value;
 
     const name = e.target.lessonTitle.value;
     const focus = e.target.lessonFocus.value;
     const sequence = parseInt(e.target.lessonSequence.value, 10);
 
-    // Prepare the lesson object
     const newLesson = {
-      category: { categoryId: parseInt(categoryId, 10) }, // Use the selected or existing category ID
+      category: { categoryId: parseInt(categoryId, 10) },
       name,
       focus,
       sequence,
-      createdBy: { id: user.id }, // Use the logged-in user's ID
-      createdDate: new Date().toISOString(), // Automatically set to today's date
-      active: true, // Always set to true
+      createdBy: { id: user.id },
+      createdDate: new Date().toISOString(),
+      active: true,
     };
 
     try {
       if (isEditing) {
-        // Call the updateLesson function if editing
         await updateLesson(editingItem.lessonId, newLesson);
         setNotification({
           show: true,
@@ -766,7 +748,6 @@ const TeacherDashboard = () => {
           type: "success"
         });
       } else {
-        // Call the createLesson function if adding a new lesson
         await createLesson(newLesson, user.id);
         setNotification({
           show: true,
@@ -775,14 +756,11 @@ const TeacherDashboard = () => {
         });
       }
 
-      // Refresh the lessons list
       const updatedLessons = await getAllLessons();
       setLessons(updatedLessons);
 
-      // Close the modal
       setShowModal(false);
       
-      // Auto-hide notification after 5 seconds
       setTimeout(() => {
         setNotification({ show: false, message: "", type: "" });
       }, 5000);
@@ -794,7 +772,6 @@ const TeacherDashboard = () => {
         type: "error"
       });
       
-      // Auto-hide notification after 5 seconds
       setTimeout(() => {
         setNotification({ show: false, message: "", type: "" });
       }, 5000);
@@ -806,7 +783,6 @@ const TeacherDashboard = () => {
       const lessons = await getAllLessons();
       const scoreRecords = await getAllScoreRecords();
 
-      // Count attempts per lesson
       const lessonsWithAttempts = lessons.map((lesson) => {
         const attempts = scoreRecords.filter(
           (score) => score.lesson.lessonId === lesson.lessonId
@@ -823,7 +799,7 @@ const TeacherDashboard = () => {
     }
   };
 
-  localStorage.setItem("userId", user.id); // Replace `user.id` with the actual user ID from the login response
+  localStorage.setItem("userId", user.id);
 
   const userId = localStorage.getItem("userId");
   console.log("Retrieved userId:", userId);
@@ -862,7 +838,7 @@ const TeacherDashboard = () => {
                 <td colSpan="3">No lessons found.</td>
               </tr>
             ) : (
-                            filteredLessons.map((lesson) => (
+              filteredLessons.map((lesson) => (
                 <tr key={lesson.lessonId}>
                   <td
                     style={{ color: "blue", cursor: "pointer", textDecoration: "underline" }}
@@ -887,7 +863,6 @@ const TeacherDashboard = () => {
     }
   }, [activeSection]);
 
-  // Add a new function to render notifications
   const renderNotification = () => {
     if (!notification.show) return null;
     
@@ -914,31 +889,52 @@ const TeacherDashboard = () => {
     );
   };
 
+  const renderSidebarOverlay = () => {
+    if (!sidebarOpen) return null;
+
+    return ReactDOM.createPortal(
+      <div 
+        className="sidebar-overlay active"
+        onClick={closeSidebar}
+      />,
+      document.body
+    );
+  };
+
   return (
     <div className="dashboard-container">
       <header className="dashboard-header">
-  <div className="container">
-    <div className="logo">
-      <Link to="/">
-        <img src={logo} alt="Pronounceit Logo" />
-      </Link>
-    </div>
-    <div className="dashboard-title-header">
-      <h1>TEACHER DASHBOARD</h1>
-    </div>
-    <div className="user-card" ref={userCardRef} onClick={toggleDropdown}>
-      <div className="default-avatar">
-        <span>{user.firstName.charAt(0)}</span>
-      </div>
-      <div className="user-info">
-        <p>{`${user.firstName} ${user.lastName}`}</p>
-      </div>
-    </div>
-  </div>
-</header>
+        <div className="container">
+          <button 
+            className={`hamburger-menu ${sidebarOpen ? 'active' : ''}`}
+            onClick={toggleSidebar}
+            aria-label="Toggle menu"
+          >
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
+          <div className="logo">
+            <Link to="/">
+              <img src={logo} alt="Pronounceit Logo" />
+            </Link>
+          </div>
+          <div className="dashboard-title-header">
+            <h1>TEACHER DASHBOARD</h1>
+          </div>
+          <div className="user-card" ref={userCardRef} onClick={toggleDropdown}>
+            <div className="default-avatar">
+              <span>{user.firstName.charAt(0)}</span>
+            </div>
+            <div className="user-info">
+              <p>{`${user.firstName} ${user.lastName}`}</p>
+            </div>
+          </div>
+        </div>
+      </header>
 
       <div className="dashboard single">
-        <aside className="sidebar">
+        <aside className={`sidebar ${sidebarOpen ? 'active' : ''}`}>
           <nav>
             <ul>
               <li 
@@ -971,6 +967,7 @@ const TeacherDashboard = () => {
         </main>
       </div>
 
+      {renderSidebarOverlay()}
       {renderDropdown()}
       {renderModal()}
       {renderDeleteModal()}
@@ -980,4 +977,3 @@ const TeacherDashboard = () => {
 };
 
 export default TeacherDashboard;
-
