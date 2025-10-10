@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_BASE_URL = "http://localhost:8080/api/users"; // Replace with your backend URL
+const API_BASE_URL = "https://it332group46-pronounceit-production.up.railway.app/api/users"; // Replace with your backend URL
 
 // Fetch user by ID
 export const getUserById = async (id) => {
