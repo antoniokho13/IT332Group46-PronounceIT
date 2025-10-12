@@ -1,6 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <network-security-config>
     <domain-config cleartextTrafficPermitted="true">
-        <domain includeSubdomains="true">192.168.1.29</domain>
+        <domain includeSubdomains="true">10.0.2.2</domain>
+    </domain-config>
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+    <domain-config>
+        <domain includeSubdomains="true">it332group46-pronounceit-production.up.railway.app</domain>
     </domain-config>
 </network-security-config>
