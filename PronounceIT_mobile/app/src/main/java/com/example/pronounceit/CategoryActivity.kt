@@ -35,15 +35,20 @@ class CategoryActivity : AppCompatActivity() {
     private fun fetchCategories() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
+                Log.d("CategoryActivity", "Attempting to fetch categories from: ${RetrofitInstance.getBaseUrl()}/api/categories")
                 val response = RetrofitInstance.getApi(this@CategoryActivity).getAllCategories()
+                
                 if (response.isSuccessful) {
                     val categories = response.body() ?: emptyList()
+                    Log.d("CategoryActivity", "Successfully loaded ${categories.size} categories")
                     withContext(Dispatchers.Main) {
                         setupRecyclerView(categories)
                     }
                 } else {
+                    val errorBody = response.errorBody()?.string() ?: "Unknown error"
+                    Log.e("CategoryActivity", "Failed to load categories: $errorBody (${response.code()})")
                     withContext(Dispatchers.Main) {
-                        Toast.makeText(this@CategoryActivity, "Failed to load categories", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@CategoryActivity, "Failed to load categories: ${response.code()}", Toast.LENGTH_SHORT).show()
                     }
                 }
             } catch (e: Exception) {

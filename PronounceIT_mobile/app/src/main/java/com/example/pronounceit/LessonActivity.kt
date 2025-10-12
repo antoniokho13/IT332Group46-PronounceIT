@@ -62,9 +62,12 @@ class LessonActivity : AppCompatActivity() {
     private fun fetchLessons(categoryId: Long) {
         CoroutineScope(IO).launch {
             try {
+                Log.d("LessonActivity", "Attempting to fetch lessons for category $categoryId from: ${RetrofitInstance.getBaseUrl()}/api/categories/$categoryId/lessons")
                 val response = api.getLessonsByCategoryId(categoryId)
+                
                 if (response.isSuccessful) {
                     val lessons = response.body() ?: emptyList()
+                    Log.d("LessonActivity", "Successfully loaded ${lessons.size} lessons for category $categoryId")
                     val completedLessons = getCompletedLessons(this@LessonActivity, userId)
                     val sortedLessons = lessons.sortedBy { it.sequence } // <-- changed here
                     var foundFirstLocked = false

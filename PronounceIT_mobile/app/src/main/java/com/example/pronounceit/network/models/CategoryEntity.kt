@@ -1,13 +1,14 @@
 package com.example.pronounceit.network.models
 
+import com.google.gson.annotations.SerializedName
 import java.time.LocalDateTime
 
 data class CategoryEntity(
-    val categoryId: Long,
-    val name: String,
-    val description: String?,
-    val createdBy: UserEntity,
-    val createdDate: LocalDateTime,
-    val active: Boolean,
-    val lessons: List<LessonEntity>?
+    @SerializedName("categoryId") val categoryId: Long,
+    @SerializedName("name") val name: String,
+    @SerializedName("description") val description: String?,
+    @SerializedName("createdBy") val createdBy: UserEntity,
+    @SerializedName("createdDate") val createdDate: LocalDateTime,
+    @SerializedName("active") val active: Boolean,
+    @SerializedName("lessons") val lessons: List<LessonEntity>? = null
 )

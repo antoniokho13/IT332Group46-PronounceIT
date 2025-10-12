@@ -38,7 +38,7 @@ interface AuthApi {
     suspend fun login(@Body request: LoginRequest): Response<LoginResponse>
 
     @POST("/api/auth/register")
-    suspend fun register(@Body request: RegisterRequest): Response<Void>
+    suspend fun register(@Body request: RegisterRequest): Response<UserResponse>
 
     @GET("/api/users/{id}")
     suspend fun getUserById(
