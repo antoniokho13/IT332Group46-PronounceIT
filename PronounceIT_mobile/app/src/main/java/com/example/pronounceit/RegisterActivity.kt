@@ -75,9 +75,11 @@ class RegisterActivity : AppCompatActivity() {
     private fun register(firstName: String, lastName: String, email: String, password: String) {
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val response = RetrofitInstance.api.register(
-                    RegisterRequest(firstName, lastName, email, password)
-                )
+                // Log the request to debug
+                val registerRequest = RegisterRequest(firstName, lastName, email, password)
+                android.util.Log.d("RegisterActivity", "Sending registration request: $registerRequest")
+                
+                val response = RetrofitInstance.api.register(registerRequest)
                 withContext(Dispatchers.Main) {
                     if (response.isSuccessful) {
                         Toast.makeText(this@RegisterActivity, "Registration successful", Toast.LENGTH_SHORT).show()
@@ -86,12 +88,16 @@ class RegisterActivity : AppCompatActivity() {
                         overridePendingTransition(R.anim.slide_in_left, R.anim.slide_out_right)
                         finish()
                     } else {
-                        Toast.makeText(this@RegisterActivity, "Registration failed", Toast.LENGTH_SHORT).show()
+                        // Get more specific error information from the response
+                        val errorBody = response.errorBody()?.string() ?: "Unknown error"
+                        android.util.Log.e("RegisterActivity", "Registration failed: $errorBody (${response.code()})")
+                        Toast.makeText(this@RegisterActivity, "Registration failed: ${response.code()}", Toast.LENGTH_SHORT).show()
                     }
                 }
             } catch (e: Exception) {
+                android.util.Log.e("RegisterActivity", "Registration exception: ${e.message}", e)
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(this@RegisterActivity, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(this@RegisterActivity, "Error: ${e.message}", Toast.LENGTH_LONG).show()
                 }
             }
         }

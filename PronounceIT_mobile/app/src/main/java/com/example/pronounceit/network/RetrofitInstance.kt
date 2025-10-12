@@ -53,13 +53,15 @@ object RetrofitInstance {
         val client = OkHttpClient.Builder()
             .addInterceptor(AuthInterceptor(context))
             .addInterceptor(logging)
-            .connectTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
-            .readTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
-            .writeTimeout(30, java.util.concurrent.TimeUnit.SECONDS)
+            .connectTimeout(60, java.util.concurrent.TimeUnit.SECONDS)
+            .readTimeout(60, java.util.concurrent.TimeUnit.SECONDS)
+            .writeTimeout(60, java.util.concurrent.TimeUnit.SECONDS)
+            .retryOnConnectionFailure(true)
             .build()
 
         val gson = GsonBuilder()
             .registerTypeAdapter(LocalDateTime::class.java, LocalDateTimeDeserializer())
+            .setLenient() // Handle malformed JSON
             .create()
 
         return Retrofit.Builder()
@@ -82,8 +84,8 @@ object RetrofitInstance {
         // Create Gson instance and register the LocalDateTimeDeserializer
         val gson = GsonBuilder()
             .registerTypeAdapter(LocalDateTime::class.java, LocalDateTimeDeserializer())
+            .setLenient() // Handle malformed JSON
             .create()
-
 
         Retrofit.Builder()
             .baseUrl(BASE_URL)
