@@ -171,7 +171,7 @@ class HomeActivity : AppCompatActivity() {
                                 }
                             } else {
                                 Log.e("HomeActivity", "Failed to create streak: ${createResponse.code()}")
-                                showErrorToast("Failed to create streak")
+                                // Suppress toast on create failure
                             }
                         }
                     } else {
@@ -179,16 +179,15 @@ class HomeActivity : AppCompatActivity() {
                         Log.e("HomeActivity", "Error body: ${response.errorBody()?.string()}")
 
                         withContext(Dispatchers.Main) {
-                            showErrorToast("Error loading streak data")
+                            // Suppress user-facing toast for streak load errors
                         }
                     }
                 } catch (e: Exception) {
                     Log.e("HomeActivity", "Network error loading streak", e)
                     withContext(Dispatchers.Main) {
-                        // Use local backup if available
+                        // Use local backup if available; suppress toast
                         val localStreak = sharedPreferences.getInt("local_streak", 0)
                         updateStreakDisplay(localStreak)
-                        showErrorToast("Network error: ${e.message}")
                     }
                 }
             }
@@ -255,7 +254,7 @@ class HomeActivity : AppCompatActivity() {
                                 }
                             } else {
                                 Log.e("HomeActivity", "Failed to create streak: ${createResponse.code()}")
-                                showErrorToast("Failed to create streak")
+                                // Suppress toast on create failure
                             }
                         }
                     } else {
@@ -263,20 +262,20 @@ class HomeActivity : AppCompatActivity() {
                         Log.e("HomeActivity", "Error body: ${currentStreakResponse.errorBody()?.string()}")
 
                         withContext(Dispatchers.Main) {
-                            showErrorToast("Error retrieving streak data")
+                            // Suppress toast on retrieval error
                         }
                     }
                 } catch (e: Exception) {
                     Log.e("HomeActivity", "Error updating streak", e)
                     withContext(Dispatchers.Main) {
-                        showErrorToast("Network error: ${e.message}")
+                        // Suppress toast on network error; gracefully fall back
                         loadStreakCount() // Fall back to displaying current streak
                     }
                 }
             }
         } else {
             Log.e("HomeActivity", "Cannot update streak: userId is -1")
-            showErrorToast("User ID not found")
+            // Suppress toast: avoid noisy popup when user session is invalid; navigation will handle login state
         }
     }
 

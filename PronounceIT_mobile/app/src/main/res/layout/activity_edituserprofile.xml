@@ -10,6 +10,32 @@
         android:layout_height="wrap_content"
         android:orientation="vertical">
 
+        <!-- Top bar with role label aligned to the right -->
+        <LinearLayout
+            android:id="@+id/roleBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="end"
+            android:paddingTop="8dp"
+            android:paddingEnd="8dp"
+            android:paddingStart="8dp">
+
+            <TextView
+                android:id="@+id/roleTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:paddingTop="6dp"
+                android:paddingBottom="6dp"
+                android:text="Role"
+                android:textAllCaps="false"
+                android:textColor="#000000"
+                android:textStyle="bold"
+                android:background="#80FFFFFF"
+                android:contentDescription="User role label" />
+        </LinearLayout>
+
         <ImageView
             android:id="@+id/profileImage"
             android:layout_width="286dp"
