@@ -155,9 +155,9 @@ class EditUserProfileActivity : AppCompatActivity() {
     private fun setRoleLabel() {
         val rawRole = (sharedPreferences.getString("role", null) ?: "STUDENT").trim().uppercase()
         val displayRole = when (rawRole) {
-            "TEACHER" -> "Teacher"
-            "ADMIN" -> "Admin"
-            else -> "Student"
+            "TEACHER" -> "Teacher 🍎"
+            "ADMIN" -> "Admin ⭐"
+            else -> "Student 🎒"
         }
         roleTextView.text = displayRole
     }
