@@ -7,6 +7,7 @@ import android.os.Bundle
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
+import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
@@ -23,6 +24,7 @@ class EditUserProfileActivity : AppCompatActivity() {
     private lateinit var editProfileButton: Button
     private lateinit var saveProfileButton: Button
     private lateinit var backButton: Button
+    private lateinit var roleTextView: TextView
     private lateinit var oldPasswordEditText: EditText
     private lateinit var newPasswordEditText: EditText
     private lateinit var confirmPasswordEditText: EditText
@@ -43,6 +45,7 @@ class EditUserProfileActivity : AppCompatActivity() {
         oldPasswordEditText = findViewById(R.id.oldPassword)
         newPasswordEditText = findViewById(R.id.newPassword)
         confirmPasswordEditText = findViewById(R.id.confirmPassword)
+    roleTextView = findViewById(R.id.roleTextView)
 
         sharedPreferences = getSharedPreferences("PronounceItPrefs", Context.MODE_PRIVATE)
         userId = sharedPreferences.getLong("userId", -1)
@@ -54,6 +57,7 @@ class EditUserProfileActivity : AppCompatActivity() {
         }
 
         loadUserProfile()
+    setRoleLabel()
 
         editProfileButton.setOnClickListener {
             showEditMode()
@@ -135,6 +139,7 @@ class EditUserProfileActivity : AppCompatActivity() {
 
         // Reload original values
         loadUserProfile()
+    setRoleLabel()
 
         // Switch buttons back
         saveProfileButton.visibility = View.GONE
@@ -145,6 +150,16 @@ class EditUserProfileActivity : AppCompatActivity() {
         oldPasswordEditText.setText("")
         newPasswordEditText.setText("")
         confirmPasswordEditText.setText("")
+    }
+
+    private fun setRoleLabel() {
+        val rawRole = (sharedPreferences.getString("role", null) ?: "STUDENT").trim().uppercase()
+        val displayRole = when (rawRole) {
+            "TEACHER" -> "Teacher 🍎"
+            "ADMIN" -> "Admin ⭐"
+            else -> "Student 🎒"
+        }
+        roleTextView.text = displayRole
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
