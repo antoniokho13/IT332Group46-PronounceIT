@@ -1,0 +1,371 @@
+/* RESPONSIVE STYLES */
+
+/* Tablet View (1024px and below) */
+@media (max-width: 1024px) {
+  .dashboard-title-header {
+    margin-left: 0;
+    justify-content: center;
+    flex-grow: 1;
+  }
+
+  .dashboard-title-header h1 {
+    font-size: 1.2rem;
+  }
+
+  .dashboard.single {
+    display: block;
+    background: transparent !important;
+    min-height: auto;
+    padding-top: 60px;
+  }
+
+  .sidebar {
+    position: fixed !important;
+    top: 60px;
+    left: 0;
+    width: 240px;
+    max-width: 80vw;
+    height: calc(100vh - 60px);
+    background: #ffffff;
+    box-shadow: 4px 0 20px rgba(0, 0, 0, 0.25);
+    border-right: 1px solid #e0e0e0;
+    z-index: 3000 !important;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease-in-out;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 20px 0;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  .sidebar.active {
+    transform: translateX(0);
+  }
+
+  body,
+  html,
+  .dashboard-container {
+    overflow-x: hidden !important;
+  }
+
+  .hamburger-menu {
+    display: flex;
+  }
+
+  .content {
+    position: relative;
+    z-index: 1;
+    margin-left: 0 !important;
+    width: 100%;
+    padding: 20px;
+    background: #f9fafc;
+  }
+
+  .items-table {
+    font-size: 13px;
+  }
+
+  .action-buttons-cell {
+    min-width: 220px;
+  }
+}
+
+/* Mobile View (768px and below) */
+@media (max-width: 768px) {
+  .dashboard-header {
+    height: 60px;
+    padding: 3px 0;
+  }
+
+  .dashboard-header .container {
+    padding: 0 10px;
+  }
+
+  .dashboard-header .logo img {
+    height: 45px;
+  }
+
+  .dashboard-title-header h1 {
+    font-size: 0.9rem;
+    letter-spacing: 0.5px;
+  }
+
+  .dashboard-header .user-card {
+    padding: 4px 8px;
+    gap: 6px;
+  }
+
+  .dashboard-header .user-card .default-avatar {
+    width: 28px;
+    height: 28px;
+    font-size: 14px;
+  }
+
+  .dashboard-header .user-card p {
+    font-size: 11px;
+    display: none;
+  }
+
+  .dashboard.single {
+    padding-top: 60px;
+    background: transparent !important;
+  }
+
+  /* Show hamburger menu on mobile for toggling */
+  .hamburger-menu {
+    display: flex;
+  }
+
+  .sidebar {
+    position: fixed;
+    top: 60px;
+    left: 0;
+    width: 240px; /* Standard width for sliding sidebar */
+    height: calc(100vh - 60px);
+    background: #fff;
+    border-right: 1px solid #e0e0e0;
+    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
+    z-index: 2500;
+    transform: translateX(-100%); /* Hidden by default */
+    transition: transform 0.3s ease-in-out;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    border-top-right-radius: 16px;
+    border-bottom-right-radius: 16px;
+  }
+
+  .sidebar.active {
+    transform: translateX(0); /* Slide in on active */
+  }
+
+  .sidebar nav {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  .sidebar nav ul {
+    width: 100%;
+    padding: 0;
+    margin: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .sidebar nav ul li {
+    width: 100%;
+    padding: 14px 16px;
+    font-size: 16px;
+    border-radius: 0;
+    background: none;
+    color: #333;
+    border-left: 4px solid transparent;
+    transition: background 0.2s, border-color 0.2s;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    margin: 0;
+    text-align: left;
+  }
+
+  .sidebar nav ul li.active,
+  .sidebar nav ul li:hover {
+    background: #f5f7fa;
+    color: #4f46e5;
+    border-left: 4px solid #4f46e5;
+  }
+
+  /* Hide less important columns on mobile */
+  .items-table th:nth-child(5),
+  .items-table td:nth-child(5),
+  .items-table th:nth-child(6),
+  .items-table td:nth-child(6) {
+    display: none;
+  }
+
+  .action-buttons-cell,
+  .lesson-actions-cell {
+    flex-direction: column;
+    gap: 5px;
+    min-width: 110px;
+    max-width: 110px;
+  }
+
+  .action-btn.blue-btn,
+  .lesson-action-btn {
+    width: 100%;
+    padding: 6px 8px;
+    font-size: 11px;
+    min-width: auto;
+  }
+
+  .lesson-action-btn svg {
+    margin-right: 4px;
+    font-size: 10px;
+  }
+
+  /* Modal adjustments for mobile */
+  .modal-overlay {
+    padding: 10px;
+    padding-top: 70px;
+    align-items: flex-start;
+  }
+
+  .modal-container {
+    padding: 20px 15px;
+    width: 100%;
+    max-width: 100%;
+    max-height: calc(100vh - 80px);
+  }
+
+  .modal-container h3 {
+    font-size: 18px;
+    margin-bottom: 15px;
+    padding-bottom: 12px;
+  }
+
+  .modal-form {
+    gap: 15px;
+  }
+
+  .form-group label {
+    font-size: 13px;
+  }
+
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+    padding: 10px;
+    font-size: 14px;
+  }
+
+  .modal-actions {
+    flex-direction: column-reverse;
+    gap: 10px;
+  }
+
+  .submit-btn,
+  .cancel-btn {
+    width: 100%;
+    padding: 12px;
+    text-align: center;
+  }
+
+  /* Notification adjustments */
+  .notification-overlay {
+    top: 70px;
+    right: 10px;
+    left: 10px;
+  }
+
+  .notification-modal {
+    min-width: auto;
+    width: 100%;
+    padding: 12px 15px;
+  }
+
+  .notification-content p {
+    font-size: 13px;
+  }
+}
+
+/* Small Mobile View (576px and below) */
+@media (max-width: 576px) {
+  .dashboard-title-header h1 {
+    font-size: 0.75rem;
+  }
+
+  .dashboard-header .logo img {
+    height: 40px;
+  }
+
+  .hamburger-menu {
+    width: 25px;
+    height: 20px;
+    margin-right: 10px;
+  }
+
+  .hamburger-menu span {
+    height: 2.5px;
+  }
+
+  .sidebar {
+    width: 200px; /* Slightly narrower for small screens */
+    max-width: 90vw;
+  }
+
+  .sidebar nav ul li {
+    font-size: 15px;
+    padding: 12px 16px;
+  }
+}
+
+/* Landscape orientation adjustments */
+@media (max-height: 600px) and (orientation: landscape) {
+  .modal-overlay {
+    padding-top: 20px;
+    padding-bottom: 20px;
+  }
+
+  .modal-container {
+    max-height: calc(100vh - 40px);
+  }
+
+  .sidebar {
+    height: calc(100vh - 60px);
+  }
+}
+
+/* Sidebar overlay for mobile */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 2500;
+  animation: fadeIn 0.3s ease;
+}
+
+.sidebar-overlay.active {
+  display: block;
+}
+
+/* Fade animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Touch improvements */
+@media (hover: none) and (pointer: coarse) {
+  .sidebar nav ul li {
+    padding: 12px 15px;
+    margin-bottom: 10px;
+  }
+
+  .action-btn.blue-btn,
+  .lesson-action-btn {
+    min-height: 40px;
+  }
+
+  .add-button {
+    min-height: 44px;
+  }
+
+  .dashboard-header .user-card {
+    min-height: 44px;
+  }
+}

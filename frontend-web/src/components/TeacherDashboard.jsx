@@ -17,6 +17,7 @@ import { useEffect, useRef, useState } from "react";
 import ReactDOM from "react-dom";
 import { Link, useNavigate } from "react-router-dom";
 import "../assets/css/Dashboard.css";
+import "../assets/css/DashboardResponsive.css";
 import logo from "../assets/images/logo.png";
 import { createCategory, deleteCategory, getAllCategories, updateCategory } from "../services/categoryService";
 import { createLesson, deleteLesson, getAllLessons, updateLesson } from "../services/lessonService";
@@ -51,9 +52,10 @@ const TeacherDashboard = () => {
     navigate("/login");
   };
 
-  const toggleSidebar = () => {
-    setSidebarOpen(!sidebarOpen);
-  };
+ const toggleSidebar = () => {
+  setSidebarOpen(!sidebarOpen);
+  document.body.classList.toggle("sidebar-open", !sidebarOpen);
+};
 
   const closeSidebar = () => {
     setSidebarOpen(false);
