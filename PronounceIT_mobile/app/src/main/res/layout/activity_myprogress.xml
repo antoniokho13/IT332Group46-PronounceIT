@@ -22,32 +22,39 @@
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginBottom="16dp" />
 
-    <!-- Buttons for navigation with pushable button styling -->
+    <!-- Achievements Button with pushable_button background -->
     <Button
         android:id="@+id/achievementsButton"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:layout_height="90dp"
         android:layout_marginTop="16dp"
         android:layout_marginBottom="8dp"
         android:text="Achievements"
-        android:textSize="18sp"
+        android:textSize="24sp"
         android:textColor="#FFFFFF"
+        android:textStyle="bold"
         android:background="@drawable/pushable_button"
-        android:padding="16dp"
+        android:padding="12dp"
+        android:fontFamily="@font/wonderbar"
+        android:stateListAnimator="@null"
         app:layout_constraintTop_toBottomOf="@id/progressImage"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
+    <!-- View Scores Button with pushable_button background -->
     <Button
         android:id="@+id/viewScoresButton"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_width="match_parent"
+        android:layout_height="90dp"
         android:layout_marginTop="16dp"
         android:text="View Scores"
-        android:textSize="18sp"
+        android:textSize="24sp"
         android:textColor="#FFFFFF"
-        android:background="@drawable/pushable_button_teal"
-        android:padding="16dp"
+        android:textStyle="bold"
+        android:background="@drawable/pushable_button"
+        android:padding="12dp"
+        android:fontFamily="@font/wonderbar"
+        android:stateListAnimator="@null"
         app:layout_constraintTop_toBottomOf="@id/achievementsButton"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />

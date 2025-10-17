@@ -4,6 +4,8 @@ import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.view.animation.AnimationUtils
+import android.widget.ImageView
 import android.widget.ListView
 import android.widget.SimpleAdapter
 import android.widget.TextView
@@ -22,6 +24,11 @@ class DetailedScoresActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_detailed_scores)
+
+        // Start zoom animation for myscore.png
+        val myscoreImage = findViewById<ImageView>(R.id.myscoreImage)
+        val zoomAnim = AnimationUtils.loadAnimation(this, R.anim.category_zoom)
+        myscoreImage.startAnimation(zoomAnim)
 
         // Initialize views
         listView = findViewById(R.id.scoresListView)
@@ -64,14 +71,14 @@ class DetailedScoresActivity : AppCompatActivity() {
                 for (lesson in passedLessons) {
                     val scoreResponse = RetrofitInstance.getApi(this@DetailedScoresActivity)
                         .getLatestScoreRecord(userId, lesson.lessonId)
-                    
+
                     val scoreRecord = if (scoreResponse.isSuccessful) scoreResponse.body() else null
-                    
+
                     if (scoreRecord != null) {
                         val correctWords = scoreRecord.correctWords
                         val totalWords = scoreRecord.correctWords + scoreRecord.incorrectWords
                         val score = (correctWords.toDouble() / totalWords.toDouble()) * 100
-                        
+
                         totalScore += score
                         lessonCount++
 
