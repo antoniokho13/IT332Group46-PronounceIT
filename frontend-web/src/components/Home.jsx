@@ -180,7 +180,7 @@ function Home() {
     </div>
     <div className="hero-image">
       <img 
-        src={require('../assets/images/hero1.png')} 
+        src={require('../assets/images/phonemockup.png')} 
         alt="Kids learning with PronounceIT" 
       />
     </div>
