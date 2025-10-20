@@ -1,14 +1,25 @@
 package com.capstone.group46.pronounceit.controller;
 
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.capstone.group46.pronounceit.entity.AchievementEntity;
 import com.capstone.group46.pronounceit.entity.UserEntity;
 import com.capstone.group46.pronounceit.service.AchievementService;
 import com.capstone.group46.pronounceit.service.UserService;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/users")
@@ -22,24 +33,28 @@ public class UserController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<UserEntity> getUserById(@PathVariable Long id) {
+    @PreAuthorize("hasRole('ADMIN') or #id == principal.id")
+    public ResponseEntity<UserEntity> getUserById(@PathVariable Long id, Authentication auth) {
         return userService.getUserById(id)
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @GetMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<List<UserEntity>> getAllUsers() {
         List<UserEntity> users = userService.getAllUsers();
         return ResponseEntity.ok(users);
     }
 
     @PostMapping
+    @PreAuthorize("hasRole('ADMIN')")
     public UserEntity createUser(@RequestBody UserEntity user) {
         return userService.createUser(user);
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN') or #id == principal.id")
     public ResponseEntity<UserEntity> updateUser(@PathVariable Long id, @RequestBody UserEntity updatedUser) {
         return userService.updateUser(id, updatedUser)
                 .map(ResponseEntity::ok)
@@ -47,6 +62,7 @@ public class UserController {
     }
 
     @PatchMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN') or #id == principal.id")
     public ResponseEntity<UserEntity> patchUser(@PathVariable Long id, @RequestBody UserEntity updatedUser) {
         return userService.updateUser(id, updatedUser)
                 .map(ResponseEntity::ok)
@@ -54,6 +70,7 @@ public class UserController {
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ADMIN') or #id == principal.id")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
         userService.deleteUser(id);
         return ResponseEntity.noContent().build();
@@ -62,6 +79,7 @@ public class UserController {
     // ========= Achievement-related endpoints ========= //
 
     @GetMapping("/{id}/achievements")
+    @PreAuthorize("hasRole('ADMIN') or #id == principal.id")
     public ResponseEntity<List<AchievementEntity>> getUserAchievements(@PathVariable Long id) {
         try {
             List<AchievementEntity> achievements = userService.getUserAchievements(id);
@@ -72,6 +90,7 @@ public class UserController {
     }
 
     @PostMapping("/{userId}/achievements/{achievementId}")
+    @PreAuthorize("hasRole('ADMIN') or #userId == principal.id")
     public ResponseEntity<?> unlockAchievement(@PathVariable Long userId, @PathVariable Long achievementId) {
         try {
             Optional<AchievementEntity> achievement = achievementService.getAchievementById(achievementId);
@@ -87,6 +106,7 @@ public class UserController {
     }
 
     @GetMapping("/{id}/achievements/available")
+    @PreAuthorize("hasRole('ADMIN') or #id == principal.id")
     public ResponseEntity<List<AchievementEntity>> getAvailableAchievements(@PathVariable Long id) {
         try {
             Optional<UserEntity> userOpt = userService.getUserById(id);
@@ -102,6 +122,7 @@ public class UserController {
     }
 
     @GetMapping("/{id}/achievements/next")
+    @PreAuthorize("hasRole('ADMIN') or #id == principal.id")
     public ResponseEntity<AchievementEntity> getNextAchievement(@PathVariable Long id) {
         try {
             Optional<UserEntity> userOpt = userService.getUserById(id);
@@ -118,6 +139,7 @@ public class UserController {
     }
 
     @PostMapping("/{id}/check-achievements")
+    @PreAuthorize("hasRole('ADMIN') or #id == principal.id")
     public ResponseEntity<List<AchievementEntity>> checkAndUnlockAchievements(@PathVariable Long id) {
         try {
             Optional<UserEntity> userOpt = userService.getUserById(id);
@@ -135,6 +157,7 @@ public class UserController {
     // ========= Points Management Endpoints ========= //
 
     @PatchMapping("/{id}/points/add")
+    @PreAuthorize("hasRole('ADMIN') or #id == principal.id")
     public ResponseEntity<?> addPoints(@PathVariable Long id, @RequestBody PointsRequest pointsRequest) {
         try {
             UserEntity updatedUser = userService.addPoints(id, pointsRequest.getPoints());
@@ -145,6 +168,7 @@ public class UserController {
     }
 
     @PatchMapping("/{id}/points/subtract")
+    @PreAuthorize("hasRole('ADMIN') or #id == principal.id")
     public ResponseEntity<?> subtractPoints(@PathVariable Long id, @RequestBody PointsRequest pointsRequest) {
         try {
             UserEntity updatedUser = userService.subtractPoints(id, pointsRequest.getPoints());
@@ -155,6 +179,7 @@ public class UserController {
     }
 
     @PatchMapping("/{id}/points/set")
+    @PreAuthorize("hasRole('ADMIN') or #id == principal.id")
     public ResponseEntity<?> setPoints(@PathVariable Long id, @RequestBody PointsRequest pointsRequest) {
         try {
             UserEntity updatedUser = userService.setPoints(id, pointsRequest.getPoints());
@@ -165,6 +190,7 @@ public class UserController {
     }
 
     @GetMapping("/{id}/points")
+    @PreAuthorize("hasRole('ADMIN') or #id == principal.id")
     public ResponseEntity<?> getUserPoints(@PathVariable Long id) {
         try {
             Optional<UserEntity> userOpt = userService.getUserById(id);
