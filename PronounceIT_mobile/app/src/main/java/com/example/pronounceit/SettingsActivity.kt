@@ -28,17 +28,22 @@ class SettingsActivity : AppCompatActivity() {
     }
 
     private fun setupButtonListeners() {
+        val clickSound = MediaPlayer.create(this, R.raw.button_click)
+
         myProgressButton.setOnClickListener {
+            clickSound.start()
             val intent = Intent(this, MyProgressActivity::class.java)
             startActivity(intent)
         }
 
         editUserProfileButton.setOnClickListener {
+            clickSound.start()
             val intent = Intent(this, EditUserProfileActivity::class.java)
             startActivity(intent)
         }
 
         volumeToggleButton.setOnClickListener {
+            clickSound.start()
             if (isMusicPlaying) {
                 backgroundMusic.pause()
                 volumeToggleButton.text = "Music: Off"
