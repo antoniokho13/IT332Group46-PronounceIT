@@ -2,6 +2,7 @@ package com.example.pronounceit
 
 import android.content.Context
 import android.content.Intent
+import android.media.MediaPlayer
 import android.os.Bundle
 import android.view.animation.AnimationUtils
 import android.widget.Button
@@ -39,16 +40,27 @@ class MyProgressActivity : AppCompatActivity() {
     }
 
     private fun setupButtons() {
+        val clickSound = MediaPlayer.create(this, R.raw.button_click)
+
+        fun playClickSound() {
+            if (clickSound.isPlaying) {
+                clickSound.seekTo(0)
+            }
+            clickSound.start()
+        }
+
         val achievementsButton = findViewById<Button>(R.id.achievementsButton)
         val viewScoresButton = findViewById<Button>(R.id.viewScoresButton)
 
         achievementsButton.setOnClickListener {
+            playClickSound()
             val intent = Intent(this, AchievementsActivity::class.java)
             intent.putExtra("userId", getUserId())
             startActivity(intent)
         }
 
         viewScoresButton.setOnClickListener {
+            playClickSound()
             val intent = Intent(this, DetailedScoresActivity::class.java)
             intent.putExtra("userId", getUserId())
             startActivity(intent)
