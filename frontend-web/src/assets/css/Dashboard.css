@@ -138,6 +138,26 @@ body {
   font-size: 13px;
 }
 
+/* Teacher icon styling in header */
+.teacher-avatar-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid white;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Student icon styling in header */
+.student-avatar-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid white;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
 /* Dropdown styling */
 .user-dropdown-portal {
   border: 1px solid #e0e0e0;

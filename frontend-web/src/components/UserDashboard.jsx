@@ -7,8 +7,11 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useEffect, useRef, useState } from "react";
 import ReactDOM from "react-dom";
 import { Link, useNavigate } from "react-router-dom";
-import "../assets/css/AppPromo.css"; // New CSS file for the promotional content
+import "../assets/css/AppPromo.css";
 import "../assets/css/Dashboard.css";
+import logo from "../assets/images/logo.png";
+import qrCode from "../assets/images/PronounceIT.png";
+import studentIcon from "../assets/images/studenticon.png";
 import { logout } from "../services/authService";
 import { getUserById } from "../services/userService";
 
@@ -122,17 +125,15 @@ const UserDashboard = () => {
       <header className="dashboard-header">
         <div className="container">
           <div className="logo">
-            <Link to="/">
+            <a href="/student-dashboard" onClick={(e) => { e.preventDefault(); window.location.reload(); }}>
               <img
-                src={require("../assets/images/logo.png")}
+                src={logo}
                 alt="Pronounceit Logo"
               />
-            </Link>
+            </a>
           </div>
           <div className="user-card" ref={userCardRef} onClick={toggleDropdown}>
-            <div className="default-avatar">
-              <span>{user.firstName.charAt(0)}</span>
-            </div>
+            <img src={studentIcon} alt="Student" className="student-avatar-icon" />
             <div className="user-info">
               <p>{`${user.firstName} ${user.lastName}`}</p>
             </div>
@@ -189,9 +190,9 @@ const UserDashboard = () => {
           </div>
           
           <div className="app-promo-image">
-            <img src={require("../assets/images/logo.png")} alt="PronounceIT App Preview" />
+            <img src={logo} alt="PronounceIT App Preview" />
             <div className="app-qr-code">
-              <img src={require("../assets/images/PronounceIT.png")} alt="QR Code to download app" />
+              <img src={qrCode} alt="QR Code to download app" />
               <p>Scan to download</p>
             </div>
           </div>

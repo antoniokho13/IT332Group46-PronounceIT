@@ -10,9 +10,11 @@ import {
   faUser,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import "../assets/css/UserInformation.css";
+import studentIcon from "../assets/images/studenticon.png";
+import teacherIcon from "../assets/images/teachericon.png";
 import { deleteUser, getUserById, updateUser } from "../services/userService";
 
 const UserInformation = () => {
@@ -96,9 +98,20 @@ const UserInformation = () => {
     setIsEditing(false);
   };
 
+  const getRoleIcon = () => {
+    const role = userData.role;
+    if (role === "USER" || role === "STUDENT") {
+      return studentIcon;
+    }
+    if (role === "ADMIN" || role === "TEACHER") {
+      return teacherIcon;
+    }
+    return null;
+  };
+
   const getRoleDisplayName = (role) => {
-    if (role === "USER") return "Student";
-    if (role === "ADMIN") return "Admin";
+    if (role === "USER" || role === "STUDENT") return "Student";
+    if (role === "ADMIN" || role === "TEACHER") return "Teacher";
     return "Unknown";
   };
 
@@ -123,13 +136,13 @@ const UserInformation = () => {
       <header className="profile-header">
         <div className="container">
           <div className="logo">
-            <Link to="/">
+            <a href="#" onClick={(e) => { e.preventDefault(); window.location.reload(); }}>
               <img
                 src={require("../assets/images/logo.png")}
                 alt="Pronounce-IT Logo"
                 style={{ height: "60px" }}
               />
-            </Link>
+            </a>
           </div>
         </div>
       </header>
@@ -138,11 +151,11 @@ const UserInformation = () => {
         <div className={`profile-card ${isEditing ? "editing" : ""}`}>
           <div className="profile-nav">
             {!isEditing && (
-              <Link 
-                to={userData.role === "ADMIN" ? "/teacher-dashboard" : "/user-dashboard"} 
+              <Link
+                to={userData.role === "ADMIN" ? "/teacher-dashboard" : "/user-dashboard"}
                 className="back-button"
               >
-                <FontAwesomeIcon icon={faArrowLeft} /> Back to Dashboard
+                <FontAwesomeIcon icon={faArrowLeft} />
               </Link>
             )}
 
@@ -174,8 +187,12 @@ const UserInformation = () => {
           </div>
 
           <div className="profile-avatar-section">
-            <div className="profile-avatar">
-              <span>{userData.firstName.charAt(0)}</span>
+            <div className={`profile-avatar ${getRoleIcon() ? 'has-icon' : ''}`}>
+              {getRoleIcon() ? (
+                <img src={getRoleIcon()} alt="Role Icon" className="profile-avatar-img" />
+              ) : (
+                <span>{userData.firstName.charAt(0)}</span>
+              )}
             </div>
           </div>
 

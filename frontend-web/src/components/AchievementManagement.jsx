@@ -16,7 +16,8 @@ import { useEffect, useRef, useState } from "react";
 import ReactDOM from "react-dom";
 import { Link, useNavigate } from "react-router-dom";
 import "../assets/css/AchievementManagement.css";
-import "../assets/css/Dashboard.css";
+import "../assets/css/AchievementResponsive.css";
+import adminIcon from "../assets/images/adminicon.png";
 import logo from "../assets/images/logo.png";
 import {
   createAchievement,
@@ -38,6 +39,7 @@ const AchievementManagement = () => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [user, setUser] = useState({ firstName: "Admin", lastName: "User", id: 1 });
   const [previewImage, setPreviewImage] = useState(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const fileInputRef = useRef(null);
   
   const modalRef = useRef(null);
@@ -135,6 +137,20 @@ const AchievementManagement = () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [deleteModalRef, showDeleteModal]);
+
+  // Close sidebar when clicking outside on mobile
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth > 768 && isSidebarOpen) {
+        setIsSidebarOpen(false);
+      }
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, [isSidebarOpen]);
 
   const toggleDropdown = (e) => {
     e.stopPropagation();
@@ -559,7 +575,7 @@ const AchievementManagement = () => {
     if (loading) {
       return (
         <tr>
-          <td colSpan="6">Loading...</td>
+          <td colSpan="6" style={{ textAlign: 'center', padding: '20px' }}>Loading...</td>
         </tr>
       );
     }
@@ -567,7 +583,7 @@ const AchievementManagement = () => {
     if (achievements.length === 0) {
       return (
         <tr>
-          <td colSpan="6">No achievements found.</td>
+          <td colSpan="6" style={{ textAlign: 'center', padding: '20px' }}>No achievements found.</td>
         </tr>
       );
     }
@@ -627,22 +643,44 @@ const AchievementManagement = () => {
     ));
   };
 
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
+  };
+
+  const closeSidebar = () => {
+    setIsSidebarOpen(false);
+  };
+
   return (
     <div className="dashboard-container">
+      {/* Sidebar overlay for mobile */}
+      <div 
+        className={`sidebar-overlay ${isSidebarOpen ? 'active' : ''}`}
+        onClick={closeSidebar}
+      />
+      
       <header className="dashboard-header">
         <div className="container">
+          {/* Add hamburger button here, visible on mobile */}
+          <button 
+            className={`hamburger-menu ${isSidebarOpen ? 'active' : ''}`} 
+            onClick={toggleSidebar}
+            aria-label="Toggle sidebar"
+          >
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
           <div className="logo">
-            <Link to="/">
+            <a href="/achievement-management" onClick={(e) => { e.preventDefault(); window.location.reload(); }}>
               <img src={logo} alt="Pronounceit Logo" />
-            </Link>
+            </a>
           </div>
           <div className="dashboard-title-header">
             <h1>ADMIN DASHBOARD</h1>
           </div>
           <div className="user-card" ref={userCardRef} onClick={toggleDropdown}>
-            <div className="default-avatar">
-              <span>{user.firstName.charAt(0)}</span>
-            </div>
+            <img src={adminIcon} alt="Admin" className="admin-avatar-icon" />
             <div className="user-info">
               <p>{`${user.firstName} ${user.lastName}`}</p>
             </div>
@@ -651,19 +689,25 @@ const AchievementManagement = () => {
       </header>
 
       <div className="dashboard single">
-        <aside className="sidebar">
+        <aside className={`sidebar ${isSidebarOpen ? 'active' : ''}`}>
           <nav>
             <ul>
               <li 
                 className={activeSection === "users" ? "active" : ""}
-                onClick={() => handleNavClick("users")}
+                onClick={() => {
+                  handleNavClick("users");
+                  closeSidebar();
+                }}
               >
                 <FontAwesomeIcon icon={faUsers} className="sidebar-icon" />
                 Users Management
               </li>
               <li 
                 className={activeSection === "achievements" ? "active" : ""}
-                onClick={() => handleNavClick("achievements")}
+                onClick={() => {
+                  handleNavClick("achievements");
+                  closeSidebar();
+                }}
               >
                 <FontAwesomeIcon icon={faAward} className="sidebar-icon" />
                 Achievements

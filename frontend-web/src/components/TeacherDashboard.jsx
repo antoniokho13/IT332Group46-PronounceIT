@@ -19,6 +19,7 @@ import { Link, useNavigate } from "react-router-dom";
 import "../assets/css/Dashboard.css";
 import "../assets/css/DashboardResponsive.css";
 import logo from "../assets/images/logo.png";
+import teacherIcon from "../assets/images/teachericon.png";
 import { createCategory, deleteCategory, getAllCategories, updateCategory } from "../services/categoryService";
 import { createLesson, deleteLesson, getAllLessons, updateLesson } from "../services/lessonService";
 import { getAllScoreRecords } from "../services/scoreService";
@@ -917,17 +918,15 @@ const TeacherDashboard = () => {
             <span></span>
           </button>
           <div className="logo">
-            <Link to="/">
+            <a href="/teacher-dashboard" onClick={(e) => { e.preventDefault(); window.location.reload(); }}>
               <img src={logo} alt="Pronounceit Logo" />
-            </Link>
+            </a>
           </div>
           <div className="dashboard-title-header">
             <h1>TEACHER DASHBOARD</h1>
           </div>
           <div className="user-card" ref={userCardRef} onClick={toggleDropdown}>
-            <div className="default-avatar">
-              <span>{user.firstName.charAt(0)}</span>
-            </div>
+            <img src={teacherIcon} alt="Teacher" className="teacher-avatar-icon" />
             <div className="user-info">
               <p>{`${user.firstName} ${user.lastName}`}</p>
             </div>
