@@ -19,6 +19,7 @@ import { Link, useNavigate } from "react-router-dom";
 import "../assets/css/Dashboard.css";
 import "../assets/css/UserManagement.css";
 import logo from "../assets/images/logo.png";
+import studentIcon from "../assets/images/studenticon.png";
 import { deleteUser, updateUser } from "../services/userService";
 
 const API_BASE_URL = "https://it332group46-pronounceit-production.up.railway.app/api/users"; // Base URL for user API
@@ -671,17 +672,15 @@ const UserManagement = () => {
       <header className="dashboard-header">
         <div className="container">
           <div className="logo">
-            <Link to="/">
+            <a href="/user-management" onClick={(e) => { e.preventDefault(); window.location.reload(); }}>
               <img src={logo} alt="Pronounceit Logo" />
-            </Link>
+            </a>
           </div>
           <div className="dashboard-title-header">
             <h1>ADMIN DASHBOARD</h1>
           </div>
           <div className="user-card" ref={userCardRef} onClick={toggleDropdown}>
-            <div className="default-avatar">
-              <span>{user.firstName.charAt(0)}</span>
-            </div>
+            <img src={studentIcon} alt="User Icon" className="student-avatar-icon" />
             <div className="user-info">
               <p>{`${user.firstName} ${user.lastName}`}</p>
             </div>

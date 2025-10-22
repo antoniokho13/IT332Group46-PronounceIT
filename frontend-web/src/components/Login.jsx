@@ -3,6 +3,9 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import '../assets/css/Login.css';
+import adminIcon from '../assets/images/adminicon.png';
+import studentIcon from '../assets/images/studenticon.png';
+import teacherIcon from '../assets/images/teachericon.png';
 import { login, register } from '../services/authService';
 
 const Login = () => {
@@ -26,7 +29,8 @@ const Login = () => {
     show: false,
     message: '',
     type: 'success',
-    redirect: null
+    redirect: null,
+    role: null
   });
 
   // Toggle mobile menu
@@ -114,13 +118,15 @@ const Login = () => {
         }
         
         // Set welcome message based on role and firstName
-        const userName = response.role === 'ADMIN' ? 'Admin' : (response.firstName || response.role);
+        const userRole = response.role;
+        const userName = userRole === 'ADMIN' ? 'Admin' : (response.firstName || response.role);
         
         setNotification({
           show: true,
           message: `Welcome back, ${userName}!`,
           type: 'success',
-          redirect: dashboardPath
+          redirect: dashboardPath,
+          role: userRole,
         });
       } else {
         // Ensure only TEACHER or STUDENT roles are sent during registration
@@ -280,10 +286,22 @@ const Login = () => {
       {notification.show && (
         <div className="notification-overlay">
           <div className={`notification-modal ${notification.type}`}>
-            <div className="notification-icon">
-              {notification.type === 'success' && '✓'}
-              {notification.type === 'error' && '✗'}
-              {notification.type === 'info' && 'ℹ'}
+            <div className={`notification-icon ${notification.role ? 'has-image' : ''}`}>
+              {notification.type === 'success' ? (
+                notification.role === 'ADMIN' ? (
+                  <img src={adminIcon} alt="Admin Icon" className="admin-icon-img" />
+                ) : notification.role === 'TEACHER' ? (
+                  <img src={teacherIcon} alt="Teacher Icon" className="admin-icon-img" />
+                ) : notification.role === 'STUDENT' ? (
+                  <img src={studentIcon} alt="Student Icon" className="admin-icon-img" />
+                ) : (
+                  '✓'
+                )
+              ) : notification.type === 'error' ? (
+                '✗'
+              ) : (
+                'ℹ'
+              )}
             </div>
             <div className="notification-content">
               <p>{notification.message}</p>
