@@ -24,17 +24,39 @@ const UserInformation = () => {
   const [passwordError, setPasswordError] = useState("");
   const [saveError, setSaveError] = useState("");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [dataLoaded, setDataLoaded] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchUserData = async () => {
+      // Prevent unnecessary API calls if data is already loaded
+      if (dataLoaded) {
+        return;
+      }
+
       try {
         const token = localStorage.getItem("token");
         const storedUser = JSON.parse(localStorage.getItem("user"));
+        
         if (token && storedUser && storedUser.userId) {
+          // Check if we have complete cached user data
+          if (storedUser.firstName && storedUser.lastName && storedUser.email && storedUser.role) {
+            // Use cached data to avoid API call
+            setUserData(storedUser);
+            setFormData({ ...storedUser, password: "", confirmPassword: "" });
+            setDataLoaded(true);
+            return;
+          }
+          
+          // Only make API call if we don't have complete cached data
           const userData = await getUserById(storedUser.userId, token);
           setUserData(userData);
           setFormData({ ...userData, password: "", confirmPassword: "" });
+          
+          // Cache the complete user data for future use
+          const updatedStoredUser = { ...storedUser, ...userData };
+          localStorage.setItem("user", JSON.stringify(updatedStoredUser));
+          setDataLoaded(true);
         } else {
           throw new Error("User not found in localStorage");
         }
@@ -47,7 +69,7 @@ const UserInformation = () => {
     };
 
     fetchUserData();
-  }, [navigate]);
+  }, [navigate, dataLoaded]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;

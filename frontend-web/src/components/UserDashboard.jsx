@@ -18,18 +18,39 @@ import { getUserById } from "../services/userService";
 const UserDashboard = () => {
   const [user, setUser] = useState({ firstName: "", lastName: "" });
   const [showDropdown, setShowDropdown] = useState(false);
+  const [dataLoaded, setDataLoaded] = useState(false);
   const dropdownRef = useRef(null);
   const userCardRef = useRef(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchUserData = async () => {
+      // Prevent unnecessary API calls if data is already loaded
+      if (dataLoaded) {
+        return;
+      }
+
       try {
         const token = localStorage.getItem("token");
         const storedUser = JSON.parse(localStorage.getItem("user"));
+        
         if (token && storedUser && storedUser.userId) {
+          // Check if we already have cached user data with names
+          if (storedUser.firstName && storedUser.lastName) {
+            // Use cached data to avoid API call
+            setUser({ firstName: storedUser.firstName, lastName: storedUser.lastName });
+            setDataLoaded(true);
+            return;
+          }
+          
+          // Only make API call if we don't have the user names cached
           const userData = await getUserById(storedUser.userId, token);
           setUser({ firstName: userData.firstName, lastName: userData.lastName });
+          
+          // Cache the user data with names for future use
+          const updatedStoredUser = { ...storedUser, firstName: userData.firstName, lastName: userData.lastName };
+          localStorage.setItem("user", JSON.stringify(updatedStoredUser));
+          setDataLoaded(true);
         } else {
           throw new Error("User not found in localStorage");
         }
@@ -42,7 +63,7 @@ const UserDashboard = () => {
     };
 
     fetchUserData();
-  }, [navigate]);
+  }, [navigate, dataLoaded]);
 
   const handleLogout = async () => {
     try {

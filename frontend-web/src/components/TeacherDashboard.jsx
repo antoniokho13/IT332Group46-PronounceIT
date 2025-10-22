@@ -499,6 +499,12 @@ const TeacherDashboard = () => {
 
   useEffect(() => {
     const fetchCategories = async () => {
+      // Only fetch if categories haven't been loaded yet
+      if (categories.length > 0) {
+        setLoading(false);
+        return;
+      }
+
       try {
         const data = await getAllCategories();
         setCategories(data);
@@ -510,10 +516,16 @@ const TeacherDashboard = () => {
     };
 
     fetchCategories();
-  }, []);
+  }, [categories.length]);
 
   useEffect(() => {
     const fetchLessons = async () => {
+      // Only fetch if lessons haven't been loaded yet
+      if (lessons.length > 0) {
+        setLoading(false);
+        return;
+      }
+
       try {
         const data = await getAllLessons();
         if (Array.isArray(data)) {
@@ -531,7 +543,38 @@ const TeacherDashboard = () => {
     };
 
     fetchLessons();
-  }, []);
+  }, [lessons.length]);
+
+  // Force refresh functions for when data is modified
+  const refreshCategories = async () => {
+    try {
+      setLoading(true);
+      const data = await getAllCategories();
+      setCategories(data);
+    } catch (error) {
+      console.error("Error refreshing categories:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const refreshLessons = async () => {
+    try {
+      setLoading(true);
+      const data = await getAllLessons();
+      if (Array.isArray(data)) {
+        setLessons(data);
+      } else {
+        console.error("Invalid data format for lessons:", data);
+        setLessons([]);
+      }
+    } catch (error) {
+      console.error("Error refreshing lessons:", error);
+      setLessons([]);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const renderCategoriesTable = () => {
     if (loading) {
@@ -697,8 +740,7 @@ const TeacherDashboard = () => {
         });
       }
 
-      const updatedCategories = await getAllCategories();
-      setCategories(updatedCategories);
+      await refreshCategories();
 
       setShowModal(false);
       
@@ -759,8 +801,7 @@ const TeacherDashboard = () => {
         });
       }
 
-      const updatedLessons = await getAllLessons();
-      setLessons(updatedLessons);
+      await refreshLessons();
 
       setShowModal(false);
       
