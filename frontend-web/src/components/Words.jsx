@@ -1,8 +1,14 @@
-import { faEdit, faPlus, faTrash } from "@fortawesome/free-solid-svg-icons";
+import { faEdit, faPlus, faSignOutAlt, faTrash, faUser } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useEffect, useRef, useState } from "react";
-import { useLocation, useNavigate, useParams } from "react-router-dom"; // Import useNavigate
+import ReactDOM from "react-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom"; // Import useNavigate
+import "../assets/css/Dashboard.css";
+import "../assets/css/DashboardResponsive.css";
 import "../assets/css/Words.css"; // Make sure to import the CSS
+import logo from "../assets/images/logo.png";
+import teacherIcon from "../assets/images/teachericon.png";
+import { getUserById } from "../services/userService";
 import { createWord, deleteWord, getWordsByLessonId, updateWord } from "../services/wordService";
 
 const Words = () => {
@@ -17,12 +23,16 @@ const Words = () => {
   const [imageFile, setImageFile] = useState(null); // State for uploaded image
   const [editingWord, setEditingWord] = useState(null); // State for the word being edited
   const [editImageFile, setEditImageFile] = useState(null); // State for the updated image
+  const [user, setUser] = useState({ firstName: "", lastName: "" });
+  const [showDropdown, setShowDropdown] = useState(false);
   const [notification, setNotification] = useState({
     show: false,
     message: '',
     type: 'success'
   });
   const modalRef = useRef(null);
+  const dropdownRef = useRef(null);
+  const userCardRef = useRef(null);
 
   useEffect(() => {
     // Fetch words by lesson ID
@@ -40,6 +50,59 @@ const Words = () => {
 
     fetchWords();
   }, [lessonId]);
+
+  const handleLogout = () => {
+    navigate("/login");
+  };
+
+  const toggleDropdown = (e) => {
+    e.stopPropagation();
+    setShowDropdown(!showDropdown);
+  };
+
+  const fetchUserData = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const storedUser = JSON.parse(localStorage.getItem("user"));
+      if (token && storedUser && storedUser.userId) {
+        const userData = await getUserById(storedUser.userId, token);
+        setUser({
+          firstName: userData.firstName,
+          lastName: userData.lastName,
+          id: userData.id,
+        });
+      } else {
+        throw new Error("User not found in localStorage");
+      }
+    } catch (error) {
+      console.error("Failed to fetch user data:", error);
+      localStorage.removeItem("user");
+      localStorage.removeItem("token");
+      navigate("/login");
+    }
+  };
+
+  useEffect(() => {
+    fetchUserData();
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target) &&
+        userCardRef.current &&
+        !userCardRef.current.contains(event.target)
+      ) {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [dropdownRef, userCardRef]);
 
   const showNotification = (message, type = 'success') => {
     setNotification({
@@ -141,6 +204,45 @@ const Words = () => {
     audio.play();
   };
 
+  const renderDropdown = () => {
+    if (!showDropdown) return null;
+
+    const rect = userCardRef.current?.getBoundingClientRect();
+    if (!rect) return null;
+
+    const dropdownStyle = {
+      position: "fixed",
+      top: `${rect.bottom + 3}px`,
+      right: `${window.innerWidth - rect.right}px`,
+      background: "white",
+      borderRadius: "8px",
+      boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+      zIndex: 9999,
+      width: "200px",
+      padding: "10px 0",
+    };
+
+    return ReactDOM.createPortal(
+      <div className="user-dropdown-portal" style={dropdownStyle} ref={dropdownRef}>
+        <Link to="/profile" className="dropdown-item">
+          <FontAwesomeIcon icon={faUser} className="dropdown-icon" />
+          Edit Profile
+        </Link>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            handleLogout();
+          }}
+          className="dropdown-item"
+        >
+          <FontAwesomeIcon icon={faSignOutAlt} className="dropdown-icon" />
+          Logout
+        </button>
+      </div>,
+      document.body
+    );
+  };
+
   // Render notification
   const renderNotification = () => {
     if (!notification.show) return null;
@@ -170,139 +272,161 @@ const Words = () => {
   // Update the return statement to improve the styling and layout
   return (
     <div className="dashboard-container">
-      <h1 className="dashboard-title text-center">Words for Lesson: {lessonName}</h1>
-
-      {/* Updated header section with both buttons aligned */}
-      <div className="section-header buttons-container">
-        <button 
-          className="back-button blue-back-btn" 
-          onClick={() => navigate("/teacher-dashboard")}
-        >
-          ← Back to Dashboard
-        </button>
-        <button
-          className="add-button"
-          onClick={() => setShowModal(true)}
-        >
-          <FontAwesomeIcon icon={faPlus} /> Add New Word
-        </button>
-      </div>
-
-      <div className="existing-items">
-        <h3>Existing Words</h3>
-        {loading ? (
-          <p>Loading...</p>
-        ) : words.length === 0 ? (
-          <p>No words found for this lesson.</p>
-        ) : (
-          <table className="items-table">
-            <thead>
-              <tr>
-                <th>Word</th>
-                <th>Image</th>
-                <th>Audio</th>
-                <th>Created By</th>
-                <th>Created Date</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {words.map((word) => (
-                <tr key={word.wordId}>
-                  <td>{word.word}</td>
-                  <td>
-                    <img
-                      src={`https://it332group46-pronounceit-production.up.railway.app${word.imageURL}`}
-                      alt={word.word}
-                      style={{ width: "100px", height: "auto", borderRadius: "5px" }}
-                    />
-                  </td>
-                  <td>
-                    {word.audioURL ? (
-                      <button
-                        className="play-audio-btn"
-                        onClick={() => playAudio(word.audioURL)}
-                      >
-                        Play Audio
-                      </button>
-                    ) : (
-                      <span>No Audio</span>
-                    )}
-                  </td>
-                  <td>{`${word.createdBy.firstName} ${word.createdBy.lastName}`}</td>
-                  <td>{new Date(word.createdDate).toLocaleDateString()}</td>
-                  <td className="action-buttons-cell">
-                    <button
-                      className="action-btn blue-btn"
-                      onClick={() => handleEditWord(word)}
-                    >
-                      <FontAwesomeIcon icon={faEdit} /> Edit
-                    </button>
-                    <button
-                      className="action-btn blue-btn"
-                      onClick={() => handleDeleteWord(word.wordId)}
-                    >
-                      <FontAwesomeIcon icon={faTrash} /> Delete
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        )}
-      </div>
-
-      {showModal && (
-        <div className="modal-overlay">
-          <div className="modal-container" ref={modalRef}>
-            <h3>{editingWord ? "Edit Word" : "Add New Word"}</h3>
-            <form className="modal-form" onSubmit={handleAddWord}>
-              <div className="form-group">
-                <label htmlFor="word">Word</label>
-                <input
-                  type="text"
-                  id="word"
-                  name="word"
-                  value={newWord.word}
-                  onChange={handleInputChange}
-                  placeholder="Enter the word"
-                  required
-                />
-              </div>
-              <div className="form-group">
-                <label htmlFor="image">Upload Image</label>
-                <input
-                  type="file"
-                  id="image"
-                  accept="image/*"
-                  onChange={(e) =>
-                    editingWord
-                      ? setEditImageFile(e.target.files[0])
-                      : setImageFile(e.target.files[0])
-                  } 
-                />
-              </div>
-              <div className="modal-actions">
-                <button
-                  type="button"
-                  className="cancel-btn"
-                  onClick={() => {
-                    setShowModal(false);
-                    setEditingWord(null);
-                  }}
-                >
-                  Cancel
-                </button>
-                <button type="submit" className="submit-btn">
-                  {editingWord ? "Update Word" : "Add Word"}
-                </button>
-              </div>
-            </form>
+      <header className="dashboard-header">
+        <div className="container">
+          <div className="logo">
+            <a href="/teacher-dashboard">
+              <img src={logo} alt="Pronounceit Logo" />
+            </a>
+          </div>
+          <div className="dashboard-title-header">
+            <h1>MANAGE WORDS</h1>
+          </div>
+          <div className="user-card" ref={userCardRef} onClick={toggleDropdown}>
+            <img src={teacherIcon} alt="Teacher" className="teacher-avatar-icon" />
+            <div className="user-info">
+              <p>{`${user.firstName} ${user.lastName}`}</p>
+            </div>
           </div>
         </div>
-      )}
+      </header>
 
-      {renderNotification()}
+      <main style={{ padding: "20px" }}>
+        <h1 className="dashboard-title text-center">Words for Lesson: {lessonName}</h1>
+
+        {/* Updated header section with both buttons aligned */}
+        <div className="section-header buttons-container">
+          <button
+            className="back-button blue-back-btn"
+            onClick={() => navigate("/teacher-dashboard")}
+          >
+            Back to Lessons
+          </button>
+          <button
+            className="add-button"
+            onClick={() => setShowModal(true)}
+          >
+            <FontAwesomeIcon icon={faPlus} /> Add New Word
+          </button>
+        </div>
+
+        <div className="existing-items">
+          <h3>Existing Words</h3>
+          {loading ? (
+            <p>Loading...</p>
+          ) : words.length === 0 ? (
+            <p>No words found for this lesson.</p>
+          ) : (
+            <table className="items-table">
+              <thead>
+                <tr>
+                  <th>Word</th>
+                  <th>Image</th>
+                  <th>Audio</th>
+                  <th>Created By</th>
+                  <th>Created Date</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {words.map((word) => (
+                  <tr key={word.wordId}>
+                    <td>{word.word}</td>
+                    <td>
+                      <img
+                        src={`https://it332group46-pronounceit-production.up.railway.app${word.imageURL}`}
+                        alt={word.word}
+                        style={{ width: "100px", height: "auto", borderRadius: "5px" }}
+                      />
+                    </td>
+                    <td>
+                      {word.audioURL ? (
+                        <button
+                          className="play-audio-btn"
+                          onClick={() => playAudio(word.audioURL)}
+                        >
+                          Play Audio
+                        </button>
+                      ) : (
+                        <span>No Audio</span>
+                      )}
+                    </td>
+                    <td>{`${word.createdBy.firstName} ${word.createdBy.lastName}`}</td>
+                    <td>{new Date(word.createdDate).toLocaleDateString()}</td>
+                    <td className="action-buttons-cell">
+                      <button
+                        className="action-btn blue-btn"
+                        onClick={() => handleEditWord(word)}
+                      >
+                        <FontAwesomeIcon icon={faEdit} /> Edit
+                      </button>
+                      <button
+                        className="action-btn blue-btn"
+                        onClick={() => handleDeleteWord(word.wordId)}
+                      >
+                        <FontAwesomeIcon icon={faTrash} /> Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+        </div>
+
+        {showModal && (
+          <div className="modal-overlay">
+            <div className="modal-container" ref={modalRef}>
+              <h3>{editingWord ? "Edit Word" : "Add New Word"}</h3>
+              <form className="modal-form" onSubmit={handleAddWord}>
+                <div className="form-group">
+                  <label htmlFor="word">Word</label>
+                  <input
+                    type="text"
+                    id="word"
+                    name="word"
+                    value={newWord.word}
+                    onChange={handleInputChange}
+                    placeholder="Enter the word"
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label htmlFor="image">Upload Image</label>
+                  <input
+                    type="file"
+                    id="image"
+                    accept="image/*"
+                    onChange={(e) =>
+                      editingWord
+                        ? setEditImageFile(e.target.files[0])
+                        : setImageFile(e.target.files[0])
+                    } 
+                  />
+                </div>
+                <div className="modal-actions">
+                  <button
+                    type="button"
+                    className="cancel-btn"
+                    onClick={() => {
+                      setShowModal(false);
+                      setEditingWord(null);
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button type="submit" className="submit-btn">
+                    {editingWord ? "Update Word" : "Add Word"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {renderDropdown()}
+        {renderNotification()}
+      </main>
     </div>
   );
 };
