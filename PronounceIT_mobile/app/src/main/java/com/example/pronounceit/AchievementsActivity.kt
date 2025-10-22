@@ -27,6 +27,7 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.load.engine.DiskCacheStrategy
 import com.example.pronounceit.network.RetrofitInstance
 import com.example.pronounceit.network.models.AchievementEntity
+import com.example.pronounceit.utils.AchievementCache
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -36,6 +37,7 @@ class AchievementsActivity : AppCompatActivity() {
     private lateinit var recyclerView: RecyclerView
     private var achievements: List<AchievementEntity> = emptyList()
     private var userAccumulatedPoints: Int = 0
+    private var dataLoaded: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -58,9 +60,11 @@ class AchievementsActivity : AppCompatActivity() {
             }
         })
 
-        loadAchievements()
-        // Also fetch current user accumulated points if logged in
-        fetchCurrentUserPoints()
+        if (!dataLoaded) {
+            loadAchievements()
+            // Also fetch current user accumulated points if logged in
+            fetchCurrentUserPoints()
+        }
     }
 
     private fun fetchCurrentUserPoints() {
@@ -142,6 +146,15 @@ class AchievementsActivity : AppCompatActivity() {
     private fun setupGradientBackground() {
         // Use the rainbow gradient background drawable instead of creating a new one
         findViewById<View>(android.R.id.content).rootView.setBackgroundResource(R.drawable.rainbow_gradient_background)
+    }
+
+    override fun onResume() {
+        super.onResume()
+        // Only refresh user points on resume (lightweight operation)
+        // Achievements are cached, so no need to refetch them
+        if (dataLoaded) {
+            fetchCurrentUserPoints()
+        }
     }
 
     override fun onDestroy() {
@@ -352,17 +365,15 @@ class AchievementsActivity : AppCompatActivity() {
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 Log.d("AchievementsActivity", "Starting to load achievements")
-                val response = RetrofitInstance.getApi(this@AchievementsActivity)
-                    .getAllAchievements()
-
-                if (response.isSuccessful) {
-                    val achievementsList = response.body() ?: emptyList()
-                    Log.d("AchievementsActivity", "Loaded ${achievementsList.size} achievements")
-                    displayAchievements(achievementsList)
-                } else {
-                    Log.e("AchievementsActivity", "Failed to load achievements: ${response.code()}")
-                    showError("Server error: ${response.code()}")
-                }
+                
+                // Use cached achievements to reduce API calls
+                val achievementsList = AchievementCache
+                    .getAchievements(this@AchievementsActivity)
+                
+                Log.d("AchievementsActivity", "Loaded ${achievementsList.size} achievements from cache")
+                displayAchievements(achievementsList)
+                dataLoaded = true
+                
             } catch (e: Exception) {
                 Log.e("AchievementsActivity", "Error loading achievements", e)
                 showError("Network error: ${e.message}")

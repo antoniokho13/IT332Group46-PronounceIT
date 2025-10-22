@@ -19,6 +19,7 @@ class CategoryActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityCategoryBinding
     private lateinit var categoryAdapter: CategoryAdapter
+    private var categoriesLoaded = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -32,7 +33,12 @@ class CategoryActivity : AppCompatActivity() {
         fetchCategories()
     }
 
-    private fun fetchCategories() {
+    private fun fetchCategories(forceRefresh: Boolean = false) {
+        // Skip if categories already loaded and we're not forcing a refresh
+        if (categoriesLoaded && !forceRefresh) {
+            return
+        }
+
         CoroutineScope(Dispatchers.IO).launch {
             try {
                 Log.d("CategoryActivity", "Attempting to fetch categories from: ${RetrofitInstance.getBaseUrl()}/api/categories")
@@ -43,6 +49,8 @@ class CategoryActivity : AppCompatActivity() {
                     Log.d("CategoryActivity", "Successfully loaded ${categories.size} categories")
                     withContext(Dispatchers.Main) {
                         setupRecyclerView(categories)
+                        // Mark categories as loaded to prevent unnecessary API calls
+                        categoriesLoaded = true
                     }
                 } else {
                     val errorBody = response.errorBody()?.string() ?: "Unknown error"

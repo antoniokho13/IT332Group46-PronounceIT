@@ -151,9 +151,8 @@ const UserManagement = () => {
       // Call the deleteUser function from userService
       await deleteUser(itemToDelete.id, token);
       
-      // Update local state
-      const updatedUsers = users.filter(user => user.id !== itemToDelete.id);
-      setUsers(updatedUsers);
+      // Refresh users from server
+      await refreshUsers();
       
       setShowDeleteModal(false);
       setItemToDelete(null);
@@ -212,6 +211,11 @@ const UserManagement = () => {
       });
       setLoading(false);
     }
+  };
+
+  // Force refresh function for when users are modified
+  const refreshUsers = async () => {
+    await fetchAllUsers();
   };
 
   // Add function to create a new user
@@ -549,7 +553,7 @@ const UserManagement = () => {
         await updateUser(editingItem.id, userData, token);
         
         // Refresh the user list to get updated data
-        await fetchAllUsers();
+        await refreshUsers();
         
         setNotification({
           show: true,
@@ -564,7 +568,7 @@ const UserManagement = () => {
         await createUser(userData);
         
         // Refresh the user list to get updated data
-        await fetchAllUsers();
+        await refreshUsers();
         
         setNotification({
           show: true,
@@ -609,9 +613,13 @@ const UserManagement = () => {
       id: currentUserId
     });
     
-    // Fetch all users
-    fetchAllUsers();
-  }, []);
+    // Only fetch users if they haven't been loaded yet
+    if (users.length === 0) {
+      fetchAllUsers();
+    } else {
+      setLoading(false);
+    }
+  }, [users.length]);
 
   const renderUsersTable = () => {
     if (loading) {

@@ -6,6 +6,7 @@ import android.os.Looper
 import android.util.Log
 import com.example.pronounceit.network.RetrofitInstance
 import com.example.pronounceit.network.models.AchievementEntity
+import com.example.pronounceit.utils.AchievementCache
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -95,8 +96,9 @@ object AchievementNotifier {
                 val userResp = RetrofitInstance.getApi(appContext).getUserById(userId, "Bearer $token")
                 val points = if (userResp.isSuccessful) userResp.body()?.accumulatedPoints ?: 0 else 0
 
-                val achievementsResp = RetrofitInstance.getApi(appContext).getAllAchievements()
-                val achievements = if (achievementsResp.isSuccessful) achievementsResp.body() ?: emptyList() else emptyList()
+                // Use cached achievements to reduce API calls
+                val achievements = AchievementCache
+                    .getAchievements(appContext)
 
                 val last = prefs.getInt(pointsKey, 0)
                 if (points <= last) {

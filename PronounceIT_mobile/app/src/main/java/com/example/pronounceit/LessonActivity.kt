@@ -26,6 +26,7 @@ class LessonActivity : AppCompatActivity() {
     private lateinit var api: AuthApi
     private var userId: Long = -1
     private var categoryId: Long = -1L
+    private var lessonsLoaded = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -54,12 +55,17 @@ class LessonActivity : AppCompatActivity() {
 
         binding.resetProgressButton.setOnClickListener {
             clearAllProgressForUser(this@LessonActivity, userId)
-            fetchLessons(categoryId)
+            fetchLessons(categoryId, forceRefresh = true)
             Toast.makeText(this@LessonActivity, "All progress cleared!", Toast.LENGTH_SHORT).show()
         }
     }
 
-    private fun fetchLessons(categoryId: Long) {
+    private fun fetchLessons(categoryId: Long, forceRefresh: Boolean = false) {
+        // Skip if lessons already loaded and we're not forcing a refresh
+        if (lessonsLoaded && !forceRefresh) {
+            return
+        }
+
         CoroutineScope(IO).launch {
             try {
                 Log.d("LessonActivity", "Attempting to fetch lessons for category $categoryId from: ${RetrofitInstance.getBaseUrl()}/api/categories/$categoryId/lessons")
@@ -95,6 +101,8 @@ class LessonActivity : AppCompatActivity() {
                                 Toast.LENGTH_SHORT
                             ).show()
                         }
+                        // Mark lessons as loaded to prevent unnecessary API calls
+                        lessonsLoaded = true
                     }
                 } else {
                     withContext(Main) {
@@ -201,9 +209,13 @@ class LessonActivity : AppCompatActivity() {
 
     override fun onResume() {
         super.onResume()
-        val categoryId = intent.getLongExtra("categoryId", -1L)
-        if (categoryId != -1L) {
-            fetchLessons(categoryId)
+        // Only fetch lessons if they haven't been loaded yet
+        // This prevents unnecessary API calls when returning to this activity
+        if (!lessonsLoaded) {
+            val categoryId = intent.getLongExtra("categoryId", -1L)
+            if (categoryId != -1L) {
+                fetchLessons(categoryId)
+            }
         }
     }
 }

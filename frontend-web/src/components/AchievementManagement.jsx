@@ -62,6 +62,12 @@ const AchievementManagement = () => {
   // Load achievements from backend on component mount
   useEffect(() => {
     const fetchAchievements = async () => {
+      // Only fetch if achievements haven't been loaded yet
+      if (achievements.length > 0) {
+        setLoading(false);
+        return;
+      }
+
       try {
         const data = await getAllAchievements();
         setAchievements(data);
@@ -78,7 +84,25 @@ const AchievementManagement = () => {
     };
 
     fetchAchievements();
-  }, []);
+  }, [achievements.length]);
+
+  // Force refresh function for when achievements are modified
+  const refreshAchievements = async () => {
+    try {
+      setLoading(true);
+      const data = await getAllAchievements();
+      setAchievements(data);
+    } catch (error) {
+      console.error("Error refreshing achievements:", error);
+      setNotification({
+        show: true,
+        message: "Failed to refresh achievements. Please try again.",
+        type: "error"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
   
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -222,9 +246,8 @@ const AchievementManagement = () => {
     try {
       await deleteAchievement(itemToDelete.id);
       
-      // Update the local state
-      const updatedAchievements = achievements.filter(achievement => achievement.id !== itemToDelete.id);
-      setAchievements(updatedAchievements);
+      // Refresh achievements from server
+      await refreshAchievements();
       
       setShowDeleteModal(false);
       setItemToDelete(null);
@@ -519,12 +542,7 @@ const AchievementManagement = () => {
       
       if (editingItem) {
         // Update existing achievement
-        const updatedAchievement = await updateAchievement(editingItem.id, achievementData);
-        
-        // Update state with the returned achievement
-        setAchievements(achievements.map(item => 
-          item.id === editingItem.id ? updatedAchievement : item
-        ));
+        await updateAchievement(editingItem.id, achievementData);
         
         setNotification({
           show: true,
@@ -533,10 +551,7 @@ const AchievementManagement = () => {
         });
       } else {
         // Create new achievement
-        const newAchievement = await createAchievement(achievementData);
-        
-        // Add the new achievement to state
-        setAchievements([...achievements, newAchievement]);
+        await createAchievement(achievementData);
         
         setNotification({
           show: true,
@@ -544,6 +559,9 @@ const AchievementManagement = () => {
           type: "success"
         });
       }
+
+      // Refresh achievements from server
+      await refreshAchievements();
       
       // Close modal and clean up
       setShowModal(false);

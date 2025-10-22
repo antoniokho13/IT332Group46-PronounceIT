@@ -15,6 +15,7 @@ import android.view.animation.AccelerateDecelerateInterpolator
 import android.view.animation.AnimationUtils
 import com.bumptech.glide.Glide
 import com.example.pronounceit.network.RetrofitInstance
+import com.example.pronounceit.utils.AchievementCache
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -100,46 +101,34 @@ object InAppPopupPoster {
 
                 // Load the achievement image
                 try {
-                    // Fetch the achievement data first to get the badge image path
+                    // Use cached achievement data instead of fetching all achievements
                     CoroutineScope(Dispatchers.IO).launch {
                         try {
-                            val achievementsResponse = RetrofitInstance.getApi(activity)
-                                .getAllAchievements()
+                            val achievement = AchievementCache
+                                .getAchievementById(activity, achId)
 
-                            if (achievementsResponse.isSuccessful) {
-                                val achievements = achievementsResponse.body() ?: emptyList()
-                                val achievement = achievements.find { it.id == achId }
-
-                                if (achievement != null && !achievement.badgeImagePath.isNullOrEmpty()) {
-                                    val baseUrl = RetrofitInstance.getBaseUrl()
-                                    val imageUrl = if (achievement.badgeImagePath.startsWith("/")) {
-                                        baseUrl + achievement.badgeImagePath
-                                    } else {
-                                        baseUrl + "/" + achievement.badgeImagePath
-                                    }
-
-                                    // Load image on the main thread
-                                    CoroutineScope(Dispatchers.Main).launch {
-                                        Glide.with(activity)
-                                            .load(imageUrl)
-                                            .placeholder(R.drawable.ic_achievement_default)
-                                            .error(R.drawable.ic_achievement_default)
-                                            .into(popupImage)
-
-                                        // Add bounce animation after image is loaded
-                                        val bounceAnimation = AnimationUtils.loadAnimation(activity, R.anim.logo_bounce)
-                                        popupImage.startAnimation(bounceAnimation)
-                                    }
+                            if (achievement != null && !achievement.badgeImagePath.isNullOrEmpty()) {
+                                val baseUrl = RetrofitInstance.getBaseUrl()
+                                val imageUrl = if (achievement.badgeImagePath.startsWith("/")) {
+                                    baseUrl + achievement.badgeImagePath
                                 } else {
-                                    // Use default image if achievement not found or no badge path
-                                    CoroutineScope(Dispatchers.Main).launch {
-                                        popupImage.setImageResource(R.drawable.ic_achievement_default)
-                                        val bounceAnimation = AnimationUtils.loadAnimation(activity, R.anim.logo_bounce)
-                                        popupImage.startAnimation(bounceAnimation)
-                                    }
+                                    baseUrl + "/" + achievement.badgeImagePath
+                                }
+
+                                // Load image on the main thread
+                                CoroutineScope(Dispatchers.Main).launch {
+                                    Glide.with(activity)
+                                        .load(imageUrl)
+                                        .placeholder(R.drawable.ic_achievement_default)
+                                        .error(R.drawable.ic_achievement_default)
+                                        .into(popupImage)
+
+                                    // Add bounce animation after image is loaded
+                                    val bounceAnimation = AnimationUtils.loadAnimation(activity, R.anim.logo_bounce)
+                                    popupImage.startAnimation(bounceAnimation)
                                 }
                             } else {
-                                // Error loading achievements - use default
+                                // Achievement not found or no badge path - use default
                                 CoroutineScope(Dispatchers.Main).launch {
                                     popupImage.setImageResource(R.drawable.ic_achievement_default)
                                     val bounceAnimation = AnimationUtils.loadAnimation(activity, R.anim.logo_bounce)
