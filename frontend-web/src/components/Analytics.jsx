@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
-import { useLocation, useParams } from "react-router-dom";
-import { getWordStatisticsByLessonId } from "../services/pronounciationAttemptService"; // Use the correct service
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import "../assets/css/Analytics.css";
+import { getWordStatisticsByLessonId } from "../services/pronounciationAttemptService";
 import { getAllScoreRecords } from "../services/scoreService";
 
 const Analytics = () => {
-  const { lessonId } = useParams(); // Get lessonId from URL
-  const location = useLocation(); // Get lessonName from state
+  const { lessonId } = useParams();
+  const location = useLocation();
+  const navigate = useNavigate();
   const [scoreData, setScoreData] = useState([]);
   const [wordStats, setWordStats] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -17,10 +19,8 @@ const Analytics = () => {
       try {
         const allScores = await getAllScoreRecords();
 
-        // Filter scores for the selected lesson
         const lessonScores = allScores.filter(score => score.lesson.lessonId === parseInt(lessonId));
 
-        // Group scores by user
         const groupedScores = lessonScores.reduce((acc, score) => {
           const userId = score.user.id;
           if (!acc[userId]) {
@@ -37,10 +37,9 @@ const Analytics = () => {
           return acc;
         }, {});
 
-        // Transform grouped data into an array
         const transformedData = Object.values(groupedScores).map(user => {
           const bestScore = Math.max(...user.scores);
-          const totalPerfectScore = 10; // Assuming the perfect score is 10
+          const totalPerfectScore = 10;
           const passThreshold = totalPerfectScore * 0.5;
           return {
             name: `${user.firstName} ${user.lastName}`,
@@ -63,11 +62,10 @@ const Analytics = () => {
       try {
         const wordStatsData = await getWordStatisticsByLessonId(lessonId);
 
-        // Transform the data into the required format
         const transformedData = wordStatsData.map(stat => ({
           word: stat.word,
           avgAccuracy: parseFloat(stat.avgAccuracy || 0).toFixed(2),
-          avgAttempts: Math.ceil(parseFloat(stat.avgAttempts || 0)), // Round up to the nearest whole number
+          avgAttempts: Math.ceil(parseFloat(stat.avgAttempts || 0)),
           avgCorrectlyPronounced: parseFloat(stat.avgCorrectlyPronounced || 0).toFixed(2),
         }));
 
@@ -83,6 +81,12 @@ const Analytics = () => {
 
   return (
     <div className="analytics-container">
+      <button onClick={() => navigate(-1)} className="analytics-back-link">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        Back to Lessons
+      </button>
       <h2>{lessonName} - Student Analytics</h2>
       {loading ? (
         <p>Loading...</p>
@@ -106,11 +110,16 @@ const Analytics = () => {
               ) : (
                 scoreData.map((data, index) => (
                   <tr key={index}>
-                    <td>{data.name}</td>
-                    <td>{data.email}</td>
-                    <td>{data.attempts}</td>
-                    <td>{data.bestScore}</td>
-                    <td>{data.status}</td>
+                    <td data-label="Student">{data.name}</td>
+                    <td data-label="Email">{data.email}</td>
+                    <td data-label="Attempts">{data.attempts}</td>
+                    <td data-label="Score">{data.bestScore}</td>
+                    <td
+                      data-label="Status"
+                      className={data.status === "Pass" ? "status-pass" : "status-fail"}
+                    >
+                      {data.status}
+                    </td>
                   </tr>
                 ))
               )}
@@ -135,10 +144,18 @@ const Analytics = () => {
               ) : (
                 wordStats.map((word, index) => (
                   <tr key={index}>
-                    <td>{word.word}</td>
-                    <td>{word.avgAccuracy}</td>
-                    <td>{word.avgAttempts}</td>
-                    <td>{word.avgCorrectlyPronounced}</td>
+                    <td data-label="Word">{word.word}</td>
+                    <td data-label="Avg Accuracy">{word.avgAccuracy}</td>
+                    <td data-label="Avg Attempts">{word.avgAttempts}</td>
+                    <td data-label="Avg Correctly Pronounced (%)">
+                      <div className="progress-bar-container">
+                        <div
+                          className="progress-bar"
+                          style={{ width: `${word.avgCorrectlyPronounced}%` }}
+                        ></div>
+                        <span className="progress-bar-label">{word.avgCorrectlyPronounced}%</span>
+                      </div>
+                    </td>
                   </tr>
                 ))
               )}
