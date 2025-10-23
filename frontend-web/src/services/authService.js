@@ -20,10 +20,23 @@ export const register = async (userData) => {
   }
 };
 
+// --- UPDATED LOGOUT FUNCTION ---
 export const logout = async () => {
   try {
-    await axios.post(`${API_BASE_URL}/logout`); // Call the backend logout endpoint
+    // 1. Tell the backend to blacklist the token (you are already doing this)
+    await axios.post(`${API_BASE_URL}/logout`);
   } catch (error) {
-    throw error.response?.data?.message || "Logout failed";
+    // Log the error but proceed with local logout anyway
+    console.error("Backend logout failed, proceeding with local logout:", error.response?.data?.message || "Logout failed");
+  } finally {
+    // 2. CRITICAL: Clear the user's state from the browser's storage
+    //    This is the fix for your frontend state.
+    //    (Adjust "token" and "user" if you use different keys)
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+    
+    // 3. Optional: Force a redirect to the login page
+    //    This is good practice.
+    window.location.href = '/login'; 
   }
 };

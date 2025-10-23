@@ -24,6 +24,7 @@ import { createCategory, deleteCategory, getAllCategories, updateCategory } from
 import { createLesson, deleteLesson, getAllLessons, updateLesson } from "../services/lessonService";
 import { getAllScoreRecords } from "../services/scoreService";
 import { getUserById } from "../services/userService";
+import {logout} from "../services/authService";
 
 const TeacherDashboard = () => {
   const [user, setUser] = useState({ firstName: "", lastName: "", id: null });
@@ -49,9 +50,14 @@ const TeacherDashboard = () => {
   const deleteModalRef = useRef(null);
   const navigate = useNavigate();
 
-  const handleLogout = () => {
-    navigate("/login");
-  };
+  const handleLogout = async () => {
+    // This calls your authService.js function.
+    // That function will clear localStorage and call the backend.
+    await logout(); 
+    
+    // After the storage is cleared, navigate to the login page.
+    navigate("/login");
+  };
 
  const toggleSidebar = () => {
   setSidebarOpen(!sidebarOpen);

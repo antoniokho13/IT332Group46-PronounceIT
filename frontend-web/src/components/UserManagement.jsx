@@ -21,6 +21,7 @@ import "../assets/css/UserManagement.css";
 import logo from "../assets/images/logo.png";
 import studentIcon from "../assets/images/studenticon.png";
 import { deleteUser, updateUser } from "../services/userService";
+import {logout} from "../services/authService";
 
 const API_BASE_URL = "https://it332group46-pronounceit-production.up.railway.app/api/users"; // Base URL for user API
 
@@ -114,13 +115,14 @@ const UserManagement = () => {
     }
   };
 
-  const handleLogout = () => {
-    // Remove token from localStorage and navigate to login
-    localStorage.removeItem("token");
-    localStorage.removeItem("userId");
-    localStorage.removeItem("role");
-    navigate("/login");
-  };
+  const handleLogout = async () => {
+      // This calls your authService.js function.
+      // That function will clear localStorage and call the backend.
+      await logout(); 
+      
+      // After the storage is cleared, navigate to the login page.
+      navigate("/login");
+    };
 
   // Function to open modal with specific type
   const openModal = (type, item = null) => {
