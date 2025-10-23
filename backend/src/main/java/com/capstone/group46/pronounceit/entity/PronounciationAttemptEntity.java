@@ -3,10 +3,14 @@ package com.capstone.group46.pronounceit.entity;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
+// ADD THESE IMPORTS
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
 @Entity
 @Table(
-    name = "pronounciation_attempts",
-    uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "word_id", "lesson_id", "sessionId"})
+        name = "pronounciation_attempts",
+        uniqueConstraints = @UniqueConstraint(columnNames = {"user_id", "word_id", "lesson_id", "sessionId"})
 )
 public class PronounciationAttemptEntity {
     @Id
@@ -19,11 +23,15 @@ public class PronounciationAttemptEntity {
 
     @ManyToOne
     @JoinColumn(name = "word_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE) // <-- ADD THIS LINE
     private WordEntity word;
 
     @ManyToOne
     @JoinColumn(name = "lesson_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE) // <-- ADD THIS LINE
     private LessonEntity lesson;
+
+    // ... (rest of the file is unchanged) ...
 
     @Column(nullable = false)
     private LocalDateTime timestamp;

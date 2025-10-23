@@ -3,6 +3,7 @@ package com.capstone.group46.pronounceit.service;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.file.Files; // <-- ADD IMPORT
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
@@ -10,7 +11,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+// ADD IMPORTS
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional; // <-- ADD IMPORT
 import org.springframework.web.multipart.MultipartFile;
 
 import com.capstone.group46.pronounceit.entity.LessonEntity;
@@ -20,8 +25,16 @@ import com.capstone.group46.pronounceit.repository.LessonRepository;
 import com.capstone.group46.pronounceit.repository.UserRepository;
 import com.capstone.group46.pronounceit.repository.WordRepository;
 
+import jakarta.persistence.EntityNotFoundException; // <-- ADD IMPORT
+
 @Service
 public class WordService {
+
+    // ADD LOGGER AND PATH CONSTANTS
+    private static final Logger logger = LoggerFactory.getLogger(WordService.class);
+    private final Path audioBaseDir = Paths.get("/app/uploads/audio");
+    private final Path imageBaseDir = Paths.get("/app/uploads/images");
+
     private final WordRepository wordRepository;
     private final LessonRepository lessonRepository;
     private final UserRepository userRepository;
@@ -42,6 +55,7 @@ public class WordService {
         return wordRepository.findById(wordId);
     }
 
+    @Transactional // ADD ANNOTATION
     public WordEntity createWord(WordEntity word) {
         // Fetch the LessonEntity from the database
         Long lessonId = word.getLesson().getLessonId();
@@ -73,7 +87,7 @@ public class WordService {
             word.setAudioURL(audioURL);
         } catch (IOException e) {
             // Handle exception appropriately (e.g., log it and set a default audio URL or null)
-            e.printStackTrace();
+            logger.error("Error creating audio for word: {}", word.getWord(), e);
             word.setAudioURL(null); // Or a default audio URL
         }
 
@@ -84,23 +98,28 @@ public class WordService {
         return wordRepository.save(word);
     }
 
+    @Transactional // ADD ANNOTATION
     public Optional<WordEntity> updateWord(Long wordId, WordEntity updatedWord) {
         return wordRepository.findById(wordId).map(word -> {
             word.setWord(updatedWord.getWord());
             word.setImageURL(updatedWord.getImageURL());
             try {
+                // Clean up old files before adding new ones
+                deleteFileFromServer(word.getAudioURL(), audioBaseDir);
+
                 byte[] audioContent = textToSpeechService.synthesizeText(word.getWord());
                 String audioURL = storeAudio(audioContent, word.getWord());
                 word.setAudioURL(audioURL);
             } catch (IOException e) {
                 // Handle exception appropriately
-                e.printStackTrace();
+                logger.error("Error updating audio for word: {}", word.getWord(), e);
                 word.setAudioURL(null); // Or a default audio URL
             }
             return wordRepository.save(word);
         });
     }
 
+    @Transactional // ADD ANNOTATION
     public Optional<WordEntity> updateWord(Long wordId, WordEntity updatedWord, MultipartFile imageFile) {
         return wordRepository.findById(wordId).map(word -> {
             // Check if the word has been updated
@@ -112,21 +131,27 @@ public class WordService {
             // Update the image if provided
             if (imageFile != null && !imageFile.isEmpty()) {
                 try {
+                    // Delete old image if it exists
+                    deleteFileFromServer(word.getImageURL(), imageBaseDir);
+
                     String imageUrl = uploadImage(imageFile);
                     word.setImageURL(imageUrl);
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    logger.error("Error uploading new image for wordId: {}", wordId, e);
                 }
             }
 
             // Generate new audio only if the word has been updated
             if (isWordUpdated) {
                 try {
+                    // Delete old audio
+                    deleteFileFromServer(word.getAudioURL(), audioBaseDir);
+
                     byte[] audioContent = textToSpeechService.synthesizeText(word.getWord());
                     String audioURL = storeAudio(audioContent, word.getWord());
                     word.setAudioURL(audioURL);
                 } catch (IOException e) {
-                    e.printStackTrace();
+                    logger.error("Error updating audio for wordId: {}", wordId, e);
                     word.setAudioURL(null); // Or retain the existing audio URL
                 }
             }
@@ -135,63 +160,103 @@ public class WordService {
         });
     }
 
+    // --- REPLACE THIS ENTIRE METHOD ---
+    @Transactional // ADD ANNOTATION
     public void deleteWord(Long wordId) {
-        wordRepository.deleteById(wordId);
+        // 1. Find the word entity first to get file paths
+        WordEntity word = wordRepository.findById(wordId)
+                .orElseThrow(() -> new EntityNotFoundException("Word not found with ID: " + wordId));
+
+        // 2. Get file paths *before* deleting the entity
+        String imageURL = word.getImageURL();
+        String audioURL = word.getAudioURL();
+
+        // 3. Delete the entity from the database
+        // This will cascade and delete child PronounciationAttemptEntity records
+        wordRepository.delete(word);
+        logger.info("Database record deleted for wordId: {}. Now deleting files.", wordId);
+
+        // 4. If DB deletion is successful, delete the files from the server
+        deleteFileFromServer(imageURL, imageBaseDir);
+        deleteFileFromServer(audioURL, audioBaseDir);
     }
+    // --- END OF REPLACED METHOD ---
 
+
+    // --- ADD THIS NEW HELPER METHOD ---
+    private void deleteFileFromServer(String fileUrl, Path baseDir) {
+        if (fileUrl == null || fileUrl.isBlank()) {
+            logger.warn("File URL is null or blank, skipping delete.");
+            return; // No file to delete
+        }
+
+        try {
+            // Extract filename from URL (e.g., "/images/filename.jpg" -> "filename.jpg")
+            String fileName = fileUrl.substring(fileUrl.lastIndexOf('/') + 1);
+            if (fileName.isBlank()) {
+                logger.warn("Could not extract filename from URL: {}", fileUrl);
+                return;
+            }
+
+            Path filePath = baseDir.resolve(fileName);
+
+            if (Files.exists(filePath)) {
+                Files.delete(filePath);
+                logger.info("Successfully deleted file: {}", filePath);
+            } else {
+                logger.warn("File to delete not found: {}", filePath);
+            }
+        } catch (Exception e) {
+            // Log the error but don't stop the process
+            logger.error("Error deleting file: {} from directory {}. Error: {}", fileUrl, baseDir, e.getMessage());
+        }
+    }
+    // --- END OF NEW HELPER METHOD ---
+
+
+    // --- UPDATE storeAudio TO USE PATH CONSTANTS ---
     private String storeAudio(byte[] audioContent, String word) throws IOException {
-        // ----------------------------------------------------
-        // CHANGE 1: Define the directory to the mounted volume
-        // ----------------------------------------------------
-        Path audioDirPath = Paths.get("/app/uploads/audio");
-        File audioDir = audioDirPath.toFile();
-
-        // Create the directory if it doesn't exist (this creates the 'audio' subdir on the volume)
+        File audioDir = audioBaseDir.toFile(); // Use constant
         if (!audioDir.exists()) {
             audioDir.mkdirs();
         }
 
-        // Generate a unique file name
-        String fileName = UUID.randomUUID().toString() + "_" + word + ".mp3";
-        Path filePath = audioDirPath.resolve(fileName);
+        String fileName = UUID.randomUUID().toString() + "_" + word.replaceAll("\\s+", "_") + ".mp3";
+        Path filePath = audioBaseDir.resolve(fileName); // Use constant
 
-        // Save the file to the directory
         try (FileOutputStream fos = new FileOutputStream(filePath.toFile())) {
             fos.write(audioContent);
         }
 
-        // Return the relative path to access the audio (This is correct for static serving)
+        logger.info("Audio file stored at: {}", filePath);
         return "/audio/" + fileName;
     }
+    // --- END OF storeAudio UPDATE ---
+
 
     public byte[] synthesizeAudioForWord(WordEntity word) throws IOException {
         return textToSpeechService.synthesizeText(word.getWord());
     }
 
+    // --- UPDATE uploadImage TO USE PATH CONSTANTS ---
     public String uploadImage(MultipartFile imageFile) throws IOException {
-        // ----------------------------------------------------
-        // CHANGE 2: Define the directory to the mounted volume
-        // ----------------------------------------------------
-        Path imageDirPath = Paths.get("/app/uploads/images");
-        File imageDir = imageDirPath.toFile();
-
-        // Create the directory if it doesn't exist (this creates the 'images' subdir on the volume)
+        File imageDir = imageBaseDir.toFile(); // Use constant
         if (!imageDir.exists()) {
             imageDir.mkdirs();
         }
 
-        // Generate a unique file name
         String fileName = UUID.randomUUID().toString() + "_" + imageFile.getOriginalFilename();
-        Path filePath = imageDirPath.resolve(fileName);
+        Path filePath = imageBaseDir.resolve(fileName); // Use constant
 
-        // Save the file to the directory
         try (FileOutputStream fos = new FileOutputStream(filePath.toFile())) {
             fos.write(imageFile.getBytes());
         }
 
-        // Return the relative path to access the image (This is correct for static serving)
+        logger.info("Image file stored at: {}", filePath);
         return "/images/" + fileName;
     }
+    // --- END OF uploadImage UPDATE ---
+
 
     public List<WordEntity> getWordsByLessonId(Long lessonId) {
         return wordRepository.findAll().stream()
