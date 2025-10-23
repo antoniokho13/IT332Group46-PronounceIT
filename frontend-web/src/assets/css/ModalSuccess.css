@@ -1,0 +1,65 @@
+/* --- Notification Modal Styles (Prefixed) --- */
+.modal-success-notification-overlay { /* Prefixed */
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background-color: rgba(0, 128, 128, 0.3); display: flex;
+  justify-content: center; align-items: center; z-index: 1000;
+  backdrop-filter: blur(4px);
+  animation: modal-success-fadeIn 0.4s ease-out; /* Prefixed animation name */
+}
+/* Prefixed animation name */
+@keyframes modal-success-fadeIn { from { opacity: 0; backdrop-filter: blur(0px); } to { opacity: 1; backdrop-filter: blur(4px); } }
+
+.modal-success-notification-modal { /* Prefixed */
+  background-color: #fff; border-radius: 30px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15), 0 0 0 10px rgba(255, 255, 255, 0.5);
+  padding: 30px 35px 35px; width: 90%; max-width: 400px; display: flex; flex-direction: column;
+  align-items: center; text-align: center; border: none;
+  animation: modal-success-bounceIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Prefixed animation name */
+  position: relative;
+}
+/* REMOVED: .modal-success-notification-modal::before and .modal-success-notification-modal.error::before */
+
+/* REMOVED: @keyframes modal-success-popUpEmojiSuccess and @keyframes modal-success-popUpEmojiError */
+
+@keyframes modal-success-bounceIn { 0% { transform: scale(0.5) translateY(50px); opacity: 0; } 60% { transform: scale(1.05) translateY(-10px); opacity: 1; } 100% { transform: scale(1) translateY(0); opacity: 1; } }
+
+.modal-success-notification-icon { /* Prefixed */
+  width: 85px; height: 85px; border-radius: 50%; display: flex; justify-content: center;
+  align-items: center; font-size: 45px; margin-bottom: 20px; color: white;
+  border: 5px solid white; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+.modal-success-notification-modal.success .modal-success-notification-icon { background-color: #58cc83; } /* Prefixed */
+.modal-success-notification-modal.error .modal-success-notification-icon { background-color: #ff7878; } /* Prefixed */
+.modal-success-notification-modal.info .modal-success-notification-icon { background-color: #64b5f6; } /* Prefixed */
+.modal-success-notification-modal.success .modal-success-notification-icon.has-image { background-color: transparent; border-color: #58cc83; } /* Prefixed */
+.modal-success-notification-icon .modal-success-admin-icon-img { width: calc(100% + 10px); height: calc(100% + 10px); object-fit: cover; border-radius: 50%; margin: -5px; } /* Prefixed */
+
+.modal-success-notification-content { width: 100%; } /* Prefixed */
+.modal-success-notification-content p { color: #455a64; margin-bottom: 30px; font-size: 18px; line-height: 1.6; font-weight: 600; } /* Prefixed */
+
+.modal-success-notification-button { /* Prefixed */
+  background-color: #ffca28; color: #424242; border: none; border-radius: 15px;
+  padding: 15px 30px; font-size: 16px; font-weight: 800; cursor: pointer;
+  transition: all 0.2s ease-out; width: 100%; box-sizing: border-box;
+  text-transform: uppercase; letter-spacing: 1px;
+  box-shadow: 0 4px 10px rgba(255, 202, 40, 0.4); border-bottom: 4px solid #f9a825;
+}
+.modal-success-notification-button:hover { background-color: #ffc107; transform: translateY(-3px); box-shadow: 0 7px 15px rgba(255, 202, 40, 0.5); border-bottom-width: 2px; } /* Prefixed */
+.modal-success-notification-button:active { transform: translateY(1px); box-shadow: 0 2px 5px rgba(255, 202, 40, 0.4); border-bottom-width: 2px; } /* Prefixed */
+.modal-success-notification-modal.success .modal-success-notification-button { background-color: #66bb6a; box-shadow: 0 4px 10px rgba(102, 187, 106, 0.4); border-bottom-color: #388e3c; color: white; } /* Prefixed */
+.modal-success-notification-modal.success .modal-success-notification-button:hover { background-color: #4caf50; box-shadow: 0 7px 15px rgba(102, 187, 106, 0.5); } /* Prefixed */
+.modal-success-notification-modal.error .modal-success-notification-button { background-color: #ef5350; box-shadow: 0 4px 10px rgba(239, 83, 80, 0.4); border-bottom-color: #c62828; color: white; } /* Prefixed */
+.modal-success-notification-modal.error .modal-success-notification-button:hover { background-color: #e53935; box-shadow: 0 7px 15px rgba(239, 83, 80, 0.5); } /* Prefixed */
+.modal-success-notification-modal.info .modal-success-notification-button { background-color: #42a5f5; box-shadow: 0 4px 10px rgba(66, 165, 245, 0.4); border-bottom-color: #1976d2; color: white; } /* Prefixed */
+.modal-success-notification-modal.info .modal-success-notification-button:hover { background-color: #1e88e5; box-shadow: 0 7px 15px rgba(66, 165, 245, 0.5); } /* Prefixed */
+
+/* Responsive adjustments specific to the notification modal */
+@media (max-width: 768px) {
+  .modal-success-notification-modal { /* Prefixed */
+   padding: 25px; border-radius: 25px;
+   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15), 0 0 0 8px rgba(255, 255, 255, 0.4);
+  }
+  .modal-success-notification-icon { width: 70px; height: 70px; font-size: 35px; } /* Prefixed */
+  .modal-success-notification-content p { font-size: 16px; margin-bottom: 25px; } /* Prefixed */
+  .modal-success-notification-button { padding: 14px 25px; font-size: 15px; border-radius: 12px; } /* Prefixed */
+}

@@ -1,0 +1,202 @@
+/* Header and Navigation Styles (Fonts Smaller) */
+
+/* Header Styles */
+header {
+  background-color: white;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+header .container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 15px;
+}
+
+/* Logo size (Kept at original size) */
+.logo img {
+  height: 85px; 
+  width: auto;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+}
+
+/* Navigation styles */
+nav {
+  display: flex;
+  align-items: center;
+}
+
+nav ul {
+  display: flex;
+  margin: 0;
+  padding: 0;
+}
+
+nav ul li {
+  margin-left: 20px; /* Reduced margin slightly */
+}
+
+/* --- FONT SIZE ADJUSTMENT HERE (Navigation Links) --- */
+nav ul li a {
+  color: #333;
+  font-weight: 600;
+  font-size: 0.8rem; /* Further reduced from 0.85rem to 0.8rem */
+  transition: color 0.3s ease; 
+}
+
+nav ul li a:hover {
+  color: #4361ee;
+}
+
+/* Desktop buttons - FONT SIZE ADJUSTMENT HERE */
+.desktop-buttons {
+  display: flex;
+  align-items: center;
+}
+
+.desktop-buttons .btn {
+  /* Reduced button padding and font size for a smaller, tighter button */
+  padding: 8px 16px; 
+  font-size: 0.75rem; /* Further reduced from 0.8rem to 0.75rem */
+  border-radius: 50px;
+}
+
+/* Mobile buttons - hidden by default */
+.mobile-buttons {
+  display: none;
+}
+
+/* Mobile menu button - FONT SIZE ADJUSTMENT HERE */
+.mobile-menu-button {
+  display: none;
+  font-size: 1.1rem; /* Reduced icon size slightly */
+  cursor: pointer;
+  color: #333;
+  z-index: 101;
+  margin-left: 15px;
+}
+
+/* Mobile menu overlay styles */
+.mobile-menu-overlay {
+  display: none; 
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 99;
+  transition: opacity 0.3s ease;
+}
+
+.mobile-menu-overlay.active {
+  display: block; 
+}
+
+/* --- Responsive Media Queries (Mobile Menu Logic) --- */
+
+@media (max-width: 991px) {
+  /* Show mobile menu button */
+  .mobile-menu-button {
+    display: block;
+  }
+  
+  /* Mobile navigation styles: slide-out menu */
+  nav {
+    position: fixed;
+    top: 0;
+    right: -100%; 
+    width: 80%;
+    max-width: 300px;
+    height: 100vh;
+    background-color: white;
+    z-index: 100;
+    padding: 80px 20px 20px;
+    box-shadow: -5px 0 15px rgba(0, 0, 0, 0.1);
+    transition: right 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    visibility: hidden;
+  }
+
+  nav.active {
+    right: 0;
+    visibility: visible;
+  }
+
+  nav ul {
+    flex-direction: column;
+    width: 100%;
+    text-align: center;
+  }
+
+  nav ul li {
+    margin: 0;
+    padding: 15px 0;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    width: 100%;
+    text-align: center;
+  }
+}
+
+/* Small screen adjustments - show mobile buttons, hide desktop buttons */
+@media (max-width: 768px) {
+  .desktop-buttons {
+    display: none; /* Hide desktop buttons on small screens */
+  }
+
+  /* Show mobile buttons inside the navigation menu */
+  .mobile-buttons {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 20px;
+    width: 80%;
+  }
+
+  .mobile-buttons .btn {
+    width: 100%;
+    text-align: center;
+  }
+  
+  /* Ensure header container is horizontal on small screens */
+  header .container {
+    flex-direction: row; 
+    align-items: center; 
+  }
+}
+
+/* Ensure desktop navigation is fully visible when screen size allows */
+@media (min-width: 992px) {
+  nav {
+    position: static;
+    width: auto;
+    height: auto;
+    background-color: transparent;
+    box-shadow: none;
+    padding: 0;
+    display: flex;
+    flex-direction: row;
+    visibility: visible;
+  }
+
+  nav ul {
+    flex-direction: row;
+    margin-right: 25px;
+  }
+
+  nav ul li {
+    margin-left: 25px;
+    padding: 0;
+    border-bottom: none;
+    width: auto;
+  }
+}
