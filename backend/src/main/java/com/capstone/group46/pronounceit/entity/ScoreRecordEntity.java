@@ -1,6 +1,9 @@
 package com.capstone.group46.pronounceit.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.OnDelete;
+import org.hibernate.annotations.OnDeleteAction;
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -19,10 +22,12 @@ public class ScoreRecordEntity {
 
     @ManyToOne
     @JoinColumn(name = "lesson_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private LessonEntity lesson;
 
     @ManyToOne
     @JoinColumn(name = "category_id", nullable = false)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     private CategoryEntity category;
 
     @Column(nullable = false)

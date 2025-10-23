@@ -25,6 +25,7 @@ import {
   getAllAchievements,
   updateAchievement
 } from "../services/achievementService";
+import {logout} from "../services/authService";
 
 const AchievementManagement = () => {
   const [showModal, setShowModal] = useState(false);
@@ -189,10 +190,14 @@ const AchievementManagement = () => {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    navigate("/login");
-  };
+  const handleLogout = async () => {
+      // This calls your authService.js function.
+      // That function will clear localStorage and call the backend.
+      await logout(); 
+      
+      // After the storage is cleared, navigate to the login page.
+      navigate("/login");
+    };
 
   // Function to handle image selection
   const handleImageChange = (e) => {

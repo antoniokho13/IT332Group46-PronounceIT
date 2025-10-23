@@ -14,6 +14,9 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+// <-- IMPORT THIS
+import org.springframework.security.web.context.SecurityContextPersistenceFilter;
+
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true)
@@ -26,19 +29,21 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-    http.csrf(csrf -> csrf.disable())
-        .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-        .authorizeHttpRequests(auth -> auth
-            // Public endpoints
-            .requestMatchers("/api/auth/**").permitAll()
-            .requestMatchers("/error").permitAll()
-            .requestMatchers(HttpMethod.GET, "/images/**", "/audio/**").permitAll()
-            // Everything else requires authentication; finer rules via @PreAuthorize on controllers
-            .anyRequest().authenticated()
-        )
-        .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+        http.csrf(csrf -> csrf.disable())
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                // <-- ADD THIS FILTER TO PREVENT BROWSER CACHING
+                .addFilterBefore(new CacheControlFilter(), SecurityContextPersistenceFilter.class)
+                .authorizeHttpRequests(auth -> auth
+                        // Public endpoints
+                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/error").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/images/**", "/audio/**").permitAll()
+                        // Everything else requires authentication; finer rules via @PreAuthorize on controllers
+                        .anyRequest().authenticated()
+                )
+                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
-    return http.build();
+        return http.build();
     }
 
     @Bean
