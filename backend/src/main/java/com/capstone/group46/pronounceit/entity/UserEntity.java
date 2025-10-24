@@ -11,6 +11,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+// --- ADD IMPORT ---
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -40,9 +42,13 @@ public class UserEntity implements UserDetails {
     private String lastName;
     @Column(unique = true)
     private String email;
+    // --- CHANGE HERE ---
     @Column
-    @JsonIgnore
+    // Replace @JsonIgnore with @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    // This allows reading the password during registration/update, but prevents sending it back.
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
+    // --- END CHANGE ---
     @Column
     private String role; //TEACHER OR STUDENT
     @Column
