@@ -13,21 +13,21 @@
         android:padding="20dp"
         android:background="@drawable/testbackground">
 
-        <!-- App Logo -->
         <ImageView
             android:id="@+id/logoImageView"
-            android:layout_width="350dp"
-            android:layout_height="350dp"
+            android:layout_width="300dp"
+            android:layout_height="242dp"
             android:layout_marginTop="4dp"
             android:contentDescription="App Logo"
             android:src="@drawable/pronounce_logo"
+            app:layout_constraintDimensionRatio="1:1"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.5"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintWidth_percent="0.8" />
 
-        <!-- Rest of the existing XML remains unchanged -->
-        <!-- First Name -->
+
         <EditText
             android:id="@+id/firstNameEditText"
             android:layout_width="0dp"
@@ -42,7 +42,6 @@
             app:layout_constraintEnd_toEndOf="parent"
             android:layout_marginTop="20dp" />
 
-        <!-- Last Name -->
         <EditText
             android:id="@+id/lastNameEditText"
             android:layout_width="0dp"
@@ -57,7 +56,6 @@
             app:layout_constraintEnd_toEndOf="parent"
             android:layout_marginTop="15dp" />
 
-        <!-- Email -->
         <EditText
             android:id="@+id/emailEditText"
             android:layout_width="0dp"
@@ -72,7 +70,6 @@
             app:layout_constraintEnd_toEndOf="parent"
             android:layout_marginTop="15dp" />
 
-        <!-- Password -->
         <EditText
             android:id="@+id/passwordEditText"
             android:layout_width="0dp"
@@ -87,7 +84,6 @@
             app:layout_constraintEnd_toEndOf="parent"
             android:layout_marginTop="15dp" />
 
-        <!-- Confirm Password -->
         <EditText
             android:id="@+id/confirmPasswordEditText"
             android:layout_width="0dp"
@@ -102,7 +98,6 @@
             app:layout_constraintEnd_toEndOf="parent"
             android:layout_marginTop="15dp" />
 
-        <!-- Register Button -->
         <Button
             android:id="@+id/registerButton"
             android:layout_width="0dp"
@@ -119,7 +114,6 @@
             app:layout_constraintEnd_toEndOf="parent"
             android:layout_marginTop="20dp" />
 
-        <!-- OR Divider -->
         <TextView
             android:id="@+id/orText"
             android:layout_width="wrap_content"
@@ -132,7 +126,6 @@
             app:layout_constraintEnd_toEndOf="parent"
             android:layout_marginTop="15dp" />
 
-        <!-- Login Button -->
         <Button
             android:id="@+id/loginButton"
             android:layout_width="0dp"
