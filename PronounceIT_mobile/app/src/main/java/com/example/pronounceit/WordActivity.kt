@@ -49,7 +49,7 @@ import com.example.pronounceit.network.models.StreakDTO
 import com.example.pronounceit.StreakUpdateManager
 
 
-class WordActivity : AppCompatActivity() {
+class WordActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
     private lateinit var binding: ActivityWordBinding
     private var mediaPlayer: MediaPlayer? = null
@@ -113,16 +113,7 @@ class WordActivity : AppCompatActivity() {
             repeatCount = Animation.INFINITE
         }
 
-        tts = TextToSpeech(this) { status ->
-            if (status == TextToSpeech.SUCCESS) {
-                val result = tts.setLanguage(Locale.US)
-                if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
-                    Log.e("WordActivity", "Language not supported")
-                }
-            } else {
-                Log.e("WordActivity", "TTS initialization failed")
-            }
-        }
+        tts = TextToSpeech(this, this)
 
         fetchWords(lessonId)
 
@@ -184,6 +175,20 @@ class WordActivity : AppCompatActivity() {
 
         // Generate sessionId ONCE per session
         sessionId = UUID.randomUUID().toString()
+    }
+
+    override fun onInit(status: Int) {
+        if (status == TextToSpeech.SUCCESS) {
+            // Set language to US English
+            val result = tts.setLanguage(Locale.US)
+            if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
+                Log.e("WordActivity", "Language not supported for TTS")
+            } else {
+                Log.d("WordActivity", "TTS initialized successfully")
+            }
+        } else {
+            Log.e("WordActivity", "TTS initialization failed")
+        }
     }
 
     // Call this when the lesson session is complete (after last word)
@@ -527,6 +532,9 @@ class WordActivity : AppCompatActivity() {
 
                             // Show confetti celebration for correct pronunciation
                             showCorrectPronunciationCelebration()
+                            
+                            // Show "Correct!" feedback with TTS
+                            showCorrectFeedback()
 
                             // Switch from play button to next button
                             binding.playAudioButton.visibility = View.GONE
@@ -537,6 +545,9 @@ class WordActivity : AppCompatActivity() {
                         } else {
                             // Play the error sound effect for incorrect pronunciation
                             playErrorSound()
+                            
+                            // Show "Try again!" feedback with TTS
+                            showTryAgainFeedback()
 
                             if (attemptCount >= maxAttempts) {
                                 if (!wordScored) {
@@ -657,6 +668,55 @@ class WordActivity : AppCompatActivity() {
             }
         } catch (e: Exception) {
             Log.e("WordActivity", "playErrorSound failed: ${e.message}", e)
+        }
+    }
+
+    private fun showCorrectFeedback() {
+        // Display "Correct!" text and speak it
+        showFeedbackMessage("Correct!", android.graphics.Color.parseColor("#00C853")) // Green color
+        speakFeedback("Excellent! Correct pronunciation!")
+    }
+
+    private fun showTryAgainFeedback() {
+        // Display "Try again!" text and speak it based on attempts left
+        val attemptsLeft = (maxAttempts - attemptCount).coerceAtLeast(0)
+        val message = if (attemptsLeft > 0) "Try again!" else "Out of attempts"
+        val speech = if (attemptsLeft > 0) "Try again. You can do it!" else "Out of attempts. Moving to next word."
+        
+        showFeedbackMessage(message, android.graphics.Color.parseColor("#F44336")) // Red color
+        speakFeedback(speech)
+    }
+
+    private fun showFeedbackMessage(message: String, color: Int) {
+        // Check if feedbackTextView exists in your layout, if not we'll create it dynamically
+        val feedbackTextView = binding.root.findViewById<TextView>(R.id.feedbackTextView)
+        if (feedbackTextView != null) {
+            feedbackTextView.text = message
+            feedbackTextView.setTextColor(color)
+            feedbackTextView.visibility = View.VISIBLE
+            
+            // Animate the feedback text
+            val fadeInOut = AlphaAnimation(0.0f, 1.0f).apply {
+                duration = 300
+                repeatMode = Animation.REVERSE
+                repeatCount = 5 // Will show for about 3 seconds
+            }
+            feedbackTextView.startAnimation(fadeInOut)
+            
+            // Hide the feedback after animation
+            Handler(Looper.getMainLooper()).postDelayed({
+                feedbackTextView.visibility = View.GONE
+                feedbackTextView.clearAnimation()
+            }, 3000)
+        } else {
+            // If no feedbackTextView exists, show a Toast as fallback
+            android.widget.Toast.makeText(this, message, android.widget.Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun speakFeedback(text: String) {
+        if (::tts.isInitialized) {
+            tts.speak(text, TextToSpeech.QUEUE_ADD, null, "feedback")
         }
     }
 
@@ -824,6 +884,18 @@ class WordActivity : AppCompatActivity() {
     }
     override fun onDestroy() {
         super.onDestroy()
+        
+        // Clean up TTS resources
+        if (::tts.isInitialized) {
+            tts.stop()
+            tts.shutdown()
+        }
+        
+        // Clean up media players
+        mediaPlayer?.release()
+        correctSoundEffect?.release()
+        errorSoundEffect?.release()
+        
         // Make sure popups are allowed when exiting
         AchievementNotifier.allowPopups()
     }

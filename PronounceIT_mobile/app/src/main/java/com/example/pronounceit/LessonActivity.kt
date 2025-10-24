@@ -135,7 +135,7 @@ class LessonActivity : AppCompatActivity() {
         }
 
         lessonAdapter.onItemClick = { lesson: LessonEntity ->
-            val intent = Intent(this@LessonActivity, WordActivity::class.java).apply {
+            val intent = Intent(this@LessonActivity, InstructionsActivity::class.java).apply {
                 putExtra("lessonId", lesson.lessonId)
                 putExtra("categoryId", categoryId)
             }

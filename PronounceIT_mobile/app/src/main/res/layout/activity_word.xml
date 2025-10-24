@@ -109,6 +109,27 @@
             android:elevation="4dp"
             android:fontFamily="@font/nunito"/>
 
+        <!-- Feedback TextView for "Correct!" or "Try again!" messages -->
+        <TextView
+            android:id="@+id/feedbackTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textSize="32sp"
+            android:textStyle="bold"
+            android:textColor="#00FF00"
+            android:layout_marginBottom="8dp"
+            android:background="#33FFFFFF"
+            android:padding="12dp"
+            android:elevation="6dp"
+            android:shadowColor="#000000"
+            android:shadowDx="2"
+            android:shadowDy="2"
+            android:shadowRadius="3"
+            android:fontFamily="@font/nunito"
+            android:gravity="center"
+            android:visibility="gone"/>
+
         <Space
             android:layout_width="match_parent"
             android:layout_height="0dp"
