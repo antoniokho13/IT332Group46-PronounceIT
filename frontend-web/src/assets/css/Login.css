@@ -1,101 +1,63 @@
-/* Import same font as Home page */
+/* Import Nunito font */
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&display=swap');
 
-/* Body reset - CHANGE to allow scrolling */
-body {
+/* MODIFIED: Body styles */
+body.login-page {
   margin: 0;
   padding: 0;
-  overflow-y: auto;
+  overflow: hidden; /* Changed from auto to hidden */
   overflow-x: hidden;
   font-family: 'Nunito', sans-serif;
+  background-color: #f0f2f5;
 }
 
-/* Header Styles - Fixed position with reduced height */
-header {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  background-color: white;
-  z-index: 100;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
-  height: 60px;
-}
-
-header .container {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0 15px;
-  max-width: 1200px;
-  margin: 0 auto;
-  height: 100%;
-}
-
-.logo img {
-  max-height: 40px; /* Even smaller logo */
-  width: auto;
-}
-
-/* Navigation styling - more compact */
-nav ul {
-  display: flex;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-}
-
-nav ul li {
-  margin-left: 12px; /* Reduced margin */
-}
-
-nav ul li a {
-  color: #333;
-  font-weight: 600;
-  font-size: 13px; /* Smaller font */
-  text-decoration: none;
-  transition: color 0.2s;
-}
-
-nav ul li a:hover {
-  color: #4361ee;
-}
-
-/* CTA buttons in header - smaller */
-header .cta-button {
-  display: flex;
-  align-items: center;
-}
-
-header .cta-button .btn {
-  margin-left: 8px;
-  padding: 5px 12px;
-  font-size: 12px;
-}
-
-/* Clean container setup - optimized for single-page view */
+/* MODIFIED: Login Container */
 .login-container {
+  display: flex;
+  padding: 0;
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+/* --- MODIFIED: Split Screen Layout --- */
+
+.split-container {
+  display: flex;
+  width: 100%;
+  min-height: 100vh;
+  background-color: transparent;
+}
+
+.form-panel {
+  flex: 1 1 50%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 20px 40px; /* Reduced vertical padding */
+  box-sizing: border-box;
+  background-color: #ffffff;
+  overflow-y: auto; /* Add scroll only if content still overflows */
+}
+
+/* --- MODIFIED: Image Panel (Gradient Animation Background) --- */
+.image-panel {
+  flex: 1 1 50%;
+  /* Removed: background: linear-gradient(135deg, #0277bd 0%, #03a9f4 100%); */
+  background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab); /* ADDED gradient from home.css */
+  background-size: 400% 400%; /* ADDED for animation */
+  animation: login-gradient-animation 5s ease infinite; /* ADDED animation (renamed to avoid conflict) */
+  color: white;
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 80px 20px 20px;
-  min-height: 100vh;
-  background: linear-gradient(
-    -45deg, 
-    #ee7752, 
-    #e73c7e, 
-    #23a6d5, 
-    #23d5ab
-  );
-  background-size: 400% 400%;
-  animation: gradient-animation 5s ease infinite;
+  padding: 30px; /* Reduced */
   box-sizing: border-box;
-  margin-top: 0; /* Remove margin-top */
-  position: relative; /* Use position relative instead of fixed header offset */
+  position: relative; /* Ensure relative positioning for content */
 }
 
-/* Add the animation keyframes for the gradient */
-@keyframes gradient-animation {
+/* ADDED: Keyframes for the gradient animation (renamed) */
+@keyframes login-gradient-animation {
   0% {
     background-position: 0% 50%;
   }
@@ -107,221 +69,250 @@ header .cta-button .btn {
   }
 }
 
-/* Registration Form Container - More compact */
-.login-box {
-  background-color: white;
-  border-radius: 12px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
-  padding: 24px 30px;
-  width: 100%;
-  max-width: 580px; /* Increased from 380px to 580px */
+
+/* Remove any ::before overlay if it was present */
+.image-panel::before {
+  display: none; /* Ensure no overlay is applied */
+}
+
+
+.image-panel-content {
   text-align: center;
-  border: 1px solid rgba(226, 232, 240, 0.8);
+  position: relative; /* Ensure content is above any theoretical overlay */
+  z-index: 2; /* Ensure content is above any theoretical overlay */
+}
+
+/* MODIFIED: Styling for the new logo graphic */
+.image-panel-content .logo-graphic {
+  width: 400px;   /* Set to exactly 400px */
+  height: auto;
+  max-width: none; /* Ensure it strictly adheres to 400px and doesn't scale down automatically */
+  margin-bottom: 0; /* REMOVED all space below the image */
+  opacity: 0.9;
+  filter: drop-shadow(0 5px 10px rgba(0,0,0,0.25)); /* Slightly stronger shadow for impact */
+  display: block; /* Ensure it behaves as a block element for margin auto to work */
+  margin-left: auto; /* Center the image */
+  margin-right: auto; /* Center the image */
+}
+
+.image-panel-content h2 {
+  font-size: 24px; /* Reduced */
+  font-weight: 800;
+  margin-top: 0; /* REMOVED all space above the heading */
+  margin-bottom: 10px; /* Keep this small space below the heading and above the paragraph */
+  color: white; /* Ensure heading is white */
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.3); /* Added subtle shadow for readability */
+}
+
+.image-panel-content p {
+  font-size: 16px; /* Reduced */
+  line-height: 1.5; /* Reduced */
+  max-width: 350px;
+  margin: 0 auto;
+  opacity: 0.9;
+  color: white; /* Ensure paragraph is white */
+  text-shadow: 1px 1px 2px rgba(0,0,0,0.3); /* Added subtle shadow for readability */
+}
+/* --- END IMAGE PANEL --- */
+
+
+/* --- MODIFIED: Login Box --- */
+.login-box {
+  background-color: transparent;
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0;
+  width: 100%;
+  max-width: 420px; /* Reduced */
+  text-align: center;
+  border: none;
   margin: 0;
   overflow: visible;
+  position: relative;
+  box-sizing: border-box;
 }
 
-/* Specialized role selection box */
 .login-box.role-selection {
-  max-width: 480px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+  max-width: 420px; /* Reduced */
 }
 
-/* More compact header */
+/* --- Compact Styles --- */
 .login-header {
-  margin-bottom: 18px;
+  margin-bottom: 20px; /* Reduced */
 }
 
 .login-header h1 {
   margin-top: 0;
-  margin-bottom: 6px;
-  font-size: 20px;
-  color: #111827;
-  font-weight: 700;
+  margin-bottom: 8px; /* Reduced */
+  font-size: 26px; /* Reduced */
+  color: #0277bd;
+  font-weight: 800;
 }
 
 .login-subtitle {
-  color: #6b7280;
-  margin: 0 0 10px;
-  font-size: 14px;
+  color: #546e7a;
+  margin: 0 0 15px; /* Reduced */
+  font-size: 15px; /* Reduced */
 }
 
-/* Enhanced form styling */
-.login-form {
-  display: grid !important;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 15px;
-  margin-bottom: 15px;
-  padding: 0;
-  width: 100%;
-  box-sizing: border-box;
-}
-
-/* Full width items */
-.form-group.role-display,
-.form-group.confirm-password-field,
-.login-button {
-  grid-column: span 2;
-}
-
-/* Style individual form groups */
-.form-group {
-  margin-bottom: 0;
-  text-align: left;
-  width: 100%;
-}
-
-/* Adjusted form layout */
-.login-form {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 15px;
-  margin-bottom: 15px;
-  padding: 5px;
-}
-
-/* Make form groups take less vertical space */
-.form-group {
-  margin-bottom: 0;
-  flex: 0 0 100%;
-}
-
-/* Improved input styling */
-.form-group input {
-  width: 100%;
-  padding: 10px 12px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 14px;
-  box-sizing: border-box;
-  transition: border-color 0.2s, box-shadow 0.2s;
-  background-color: #f9fafb;
-}
-
-.form-group input:focus {
-  outline: none;
-  border-color: #4361ee;
-  box-shadow: 0 0 0 2px rgba(67, 97, 238, 0.2);
-  background-color: white;
-}
-
-/* Adjust input fields to be more compact */
-.form-group input {
-  padding: 8px 10px;
-}
-
-/* Button Styles - More compact */
-.btn {
-  display: inline-block;
-  padding: 7px 14px;
-  border-radius: 6px;
-  font-weight: 600;
-  font-size: 13px;
-  text-align: center;
-  transition: all 0.3s ease;
-  cursor: pointer;
-  text-decoration: none;
-  border: none;
-}
-
-.btn-primary {
-  background-color: #4361ee;
-  color: white;
-}
-
-.btn-primary:hover {
-  background-color: #3a56d4;
-  transform: translateY(-1px);
-}
-
-.btn-secondary {
-  background-color: transparent;
-  color: #4361ee;
-  border: 1px solid #4361ee;
-}
-
-.btn-secondary:hover {
-  background-color: #4361ee;
-  color: white;
-}
-
-/* Login form improvements - more compact */
 .login-form {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin-bottom: 10px;
+  gap: 15px; /* Reduced */
+  margin-bottom: 20px; /* Reduced */
+  padding: 0;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .form-group {
+  margin-bottom: 0;
   text-align: left;
+  width: 100%;
 }
+
+.form-group.role-display {
+    margin-bottom: 0px; /* Reduced */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 
 .form-group label {
   display: block;
-  font-size: 13px;
-  color: #4b5563;
-  margin-bottom: 5px;
-  font-weight: 600;
-  text-align: left;
+  font-size: 14px; /* Reduced */
+  color: #37474f;
+  margin-bottom: 6px; /* Reduced */
+  font-weight: 700;
 }
 
 .form-group input {
   width: 100%;
-  padding: 10px 12px;
-  border: 1px solid #ddd;
-  border-radius: 6px;
-  font-size: 14px;
+  padding: 12px 15px; /* Reduced */
+  border: 2px solid #b0bec5;
+  border-radius: 10px; /* Reduced */
+  font-size: 14px; /* Reduced */
   box-sizing: border-box;
-  transition: border-color 0.2s, box-shadow 0.2s;
-  background-color: #f9fafb;
+  transition: all 0.2s ease;
+  background-color: #eceff1;
+  color: #37474f;
+  font-family: 'Nunito', sans-serif;
 }
 
 .form-group input:focus {
   outline: none;
-  border-color: #4361ee;
-  box-shadow: 0 0 0 2px rgba(67, 97, 238, 0.2);
+  border-color: #0288d1;
   background-color: white;
+  box-shadow: 0 0 0 4px rgba(2, 136, 209, 0.2);
 }
 
-/* Error message - smaller */
+.form-group input::placeholder {
+    color: #90a4ae;
+    opacity: 1;
+}
+
+.form-group input.error {
+    border-color: #e57373;
+    background-color: #ffebee;
+}
+.form-group input.error:focus {
+    box-shadow: 0 0 0 4px rgba(229, 115, 115, 0.2);
+}
+
 .error-message {
-  color: #e53e3e;
-  font-size: 11px;
-  margin-top: 2px;
+  color: #d32f2f;
+  font-size: 12px; /* Reduced */
+  margin-top: 5px; /* Reduced */
   text-align: left;
+  font-weight: 600;
 }
 
-/* Switch between login and register - more compact */
 .login-footer {
-  margin-top: 8px;
-  font-size: 12px;
-  color: #666;
+  margin-top: 20px; /* Reduced */
+  font-size: 14px; /* Reduced */
+  color: #546e7a;
+  line-height: 1.5; /* Reduced */
+}
+
+.login-footer > p {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px; /* Reduced */
 }
 
 .switch-button {
-  background: none;
+  background: linear-gradient(135deg, #0288d1 0%, #03a9f4 100%);
   border: none;
-  color: #4361ee;
+  color: white;
   cursor: pointer;
-  font-weight: 600;
-  padding: 0;
-  margin-left: 4px;
-  font-size: 13px;
+  font-weight: 700;
+  padding: 8px 16px; /* Reduced */
+  margin-left: 0;
+  font-size: 13px; /* Reduced */
+  border-radius: 25px;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 3px 12px rgba(2, 136, 209, 0.3);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  position: relative;
+  overflow: hidden;
+}
+
+.switch-button::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.3);
+  transform: translate(-50%, -50%);
+  transition: width 0.4s, height 0.4s;
+}
+
+.switch-button:hover::before {
+  width: 300px;
+  height: 300px;
 }
 
 .switch-button:hover {
-  text-decoration: underline;
+  background: linear-gradient(135deg, #01579b 0%, #0277bd 100%);
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 6px 20px rgba(2, 136, 209, 0.45);
 }
 
-/* Role selection styling - more compact */
+.switch-button:active {
+  transform: translateY(0) scale(0.98);
+  box-shadow: 0 2px 8px rgba(2, 136, 209, 0.3);
+}
+
+.home-link {
+    margin-top: 10px; /* Reduced */
+}
+
+.home-link a {
+    color: #0288d1;
+    text-decoration: none;
+    font-size: 14px; /* Reduced */
+    font-weight: 700;
+    transition: color 0.2s ease;
+}
+.home-link a:hover {
+    color: #01579b;
+    text-decoration: underline;
+}
+
+/* Role selection */
 .role-options {
   display: flex;
-  gap: 15px;
+  gap: 20px; /* Reduced */
   width: 100%;
-  margin: 12px 0;
+  margin: 25px 0; /* Reduced */
 }
 
 .role-button {
@@ -330,135 +321,176 @@ header .cta-button .btn {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 10px;
-  padding: 15px 10px;
+  background: #f5f5f5;
+  border: none;
+  border-radius: 20px;
+  padding: 20px 15px; /* Reduced */
   cursor: pointer;
-  transition: all 0.2s ease;
-  min-height: 160px;
+  transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  min-height: 170px; /* Reduced */
+  text-align: center;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
 }
 
 .role-button:hover {
-  background: #f0f7ff;
-  border-color: #4361ee;
-  box-shadow: 0 8px 20px rgba(67, 97, 238, 0.15);
-  transform: translateY(-3px);
+  transform: translateY(-8px) scale(1.03);
+  box-shadow: 0 12px 25px rgba(0, 0, 0, 0.12);
+  background-color: #ffffff;
 }
 
+/* --- MODIFIED: Role Icon Styles --- */
 .role-icon {
-  font-size: 32px;
-  margin-bottom: 10px;
-  background: #f0f7ff;
-  width: 60px;
-  height: 60px;
+  margin-bottom: 12px; /* Reduced */
+  width: 70px; /* Reduced */
+  height: 70px; /* Reduced */
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: all 0.2s ease-out;
+  overflow: hidden;
 }
 
-.role-button.teacher .role-icon {
-  background: #ffece8;
+.role-button:hover .role-icon {
+  transform: rotate(-10deg) scale(1.1);
 }
 
-.role-button.student .role-icon {
-  background: #e8f4ff;
+/* Style for images inside role selection buttons */
+.role-icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
+/* --- END: Role Icon Styles --- */
+
 
 .role-button h3 {
-  margin: 8px 0 5px;
-  color: #303545;
-  font-size: 16px;
+  margin: 8px 0 6px; /* Reduced */
+  color: #37474f;
+  font-size: 17px; /* Reduced */
+  font-weight: 700;
 }
 
 .role-button p {
   margin: 0;
-  font-size: 12px;
-  color: #666;
-  text-align: center;
+  font-size: 13px; /* Reduced */
+  color: #78909c;
+  line-height: 1.4; /* Reduced */
 }
 
-/* Role chip for smaller screens */
+/* Role Chip */
 .role-chip {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  font-size: 13px;
-  background: #f0f7ff;
-  padding: 8px 12px;
-  border-radius: 6px;
-  justify-content: space-between;
-  border: 1px solid #d1e3ff;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  font-size: 13px; /* Reduced */
+  background: #e1f5fe;
+  padding: 8px 14px; /* Reduced */
+  border-radius: 20px;
+  justify-content: center;
+  border: none;
+  box-shadow: none;
+  margin-top: 0;
+  color: #0277bd;
+  font-weight: 600;
+  width: auto;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .change-role-button {
-  background: rgba(67, 97, 238, 0.1);
-  border: 1px solid rgba(67, 97, 238, 0.3);
-  color: #4361ee;
-  font-size: 11px;
-  font-weight: 600;
+  background: #bbdefb;
+  border: none;
+  color: #0d47a1;
+  font-size: 11px; /* Reduced */
+  font-weight: 700;
   cursor: pointer;
-  margin-left: 8px;
-  padding: 3px 8px;
-  border-radius: 4px;
+  margin-left: 10px; /* Reduced */
+  padding: 5px 10px; /* Reduced */
+  border-radius: 15px;
   transition: all 0.2s;
 }
 
 .change-role-button:hover {
-  background: rgba(67, 97, 238, 0.2);
+  background: #90caf9;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
-/* Login button - more compact */
+/* Login button */
 .login-button {
-  grid-column: span 2;
   width: 100%;
-  margin-top: 10px;
-  margin-bottom: 5px; /* Add some bottom margin */
-  background-color: #4361ee;
+  margin-top: 5px; /* Reduced */
+  margin-bottom: 5px;
+  background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);
   color: white;
-  padding: 10px;
+  padding: 15px; /* Reduced */
   border: none;
-  border-radius: 6px;
-  font-weight: 600;
+  border-radius: 12px; /* Reduced */
+  font-weight: 800;
   cursor: pointer;
-  font-size: 14px;
-  transition: all 0.2s;
-  box-shadow: 0 2px 5px rgba(67, 97, 238, 0.2);
+  font-size: 16px; /* Reduced */
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  box-shadow: 0 6px 20px rgba(76, 175, 80, 0.35);
+  text-transform: uppercase;
+  letter-spacing: 1.2px; /* Reduced */
+  border-bottom: 4px solid #388e3c;
+  position: relative;
+  overflow: hidden;
+}
+
+.login-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+  transition: left 0.5s;
+}
+
+.login-button:hover::before {
+  left: 100%;
 }
 
 .login-button:hover {
-  background-color: #3a56d4;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(67, 97, 238, 0.3);
+  background: linear-gradient(135deg, #388e3c 0%, #4caf50 100%);
+  transform: translateY(-4px) scale(1.02);
+  box-shadow: 0 10px 30px rgba(76, 175, 80, 0.5);
+  border-bottom-width: 2px;
+}
+
+.login-button:active {
+  transform: translateY(1px) scale(0.98);
+  box-shadow: 0 3px 10px rgba(76, 175, 80, 0.4);
+  border-bottom-width: 2px;
 }
 
 .login-button:disabled {
-  background-color: #a0aec0;
+  background: linear-gradient(135deg, #bdbdbd 0%, #9e9e9e 100%);
   cursor: not-allowed;
+  transform: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border-bottom: 4px solid #757575;
+  opacity: 0.7;
 }
 
-/* Form row for name fields - side by side for space saving */
-.name-row {
-  grid-column: span 2; /* Make name row full width */
-  display: flex;
-  gap: 15px;
-  width: 100%;
+.login-button:disabled::before {
+  display: none;
 }
 
-/* Fix for name fields overflowing the border */
+/* Name fields row */
 .name-row {
-  grid-column: span 2;
   display: flex;
-  gap: 10px; /* Reduce gap between first and last name */
+  gap: 15px; /* Reduced */
   width: 100%;
   box-sizing: border-box;
 }
 
 .name-row .form-group {
   flex: 1;
-  max-width: calc(50% - 5px); /* Ensure each field takes exactly half minus gap */
-  min-width: 0; /* Allow fields to shrink if needed */
+  min-width: 0;
 }
 
 .name-row .form-group input {
@@ -466,430 +498,60 @@ header .cta-button .btn {
   box-sizing: border-box;
 }
 
-/* Fix input width in general to prevent overflow */
-.form-group input {
-  width: 100%;
-  box-sizing: border-box;
-  max-width: 100%;
-}
 
-/* Add more horizontal padding to the login box */
-.login-box {
-  padding-left: 25px;
-  padding-right: 25px;
-  box-sizing: border-box;
-}
+/* --- MODIFIED: Responsive adjustments --- */
 
-/* Ensure proper spacing on smaller screens */
-@media (max-width: 580px) {
-  .login-box {
-    padding-left: 20px;
-    padding-right: 20px;
-  }
-  
-  .name-row {
+@media (max-width: 900px) {
+  .split-container {
     flex-direction: column;
-    gap: 15px;
+    min-height: 100vh;
   }
-  
-  .name-row .form-group {
-    max-width: 100%;
-  }
-}
 
-/* Notification Modal */
-.notification-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0); /* Removed the dark overlay */
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-  animation: fadeIn 0.3s ease-out;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-.notification-modal {
-  background-color: white;
-  border-radius: 12px;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-  padding: 30px;
-  width: 90%;
-  max-width: 480px; /* Increased from 400px */
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  text-align: center;
-  transform: translateY(0);
-  animation: popup 0.3s ease-out; /* Changed animation to popup */
-}
-
-@keyframes popup {
-  from { transform: scale(0.8); opacity: 0; }
-  to { transform: scale(1); opacity: 1; }
-}
-
-.notification-modal.success {
-  border-top: 5px solid #38b2ac;
-}
-
-.notification-modal.error {
-  border-top: 5px solid #e53e3e;
-}
-
-.notification-modal.info {
-  border-top: 5px solid #4361ee;
-}
-
-.notification-icon {
-  width: 90px; /* Increased icon size */
-  height: 90px; /* Increased icon size */
-  border-radius: 50%;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  font-size: 40px; /* Increased font size for checkmark/cross */
-  margin-bottom: 15px;
-  color: white;
-}
-
-.notification-modal.success .notification-icon {
-  background-color: #38b2ac;
-}
-
-.notification-modal.success .notification-icon.has-image {
-  background-color: transparent;
-}
-
-.notification-icon .admin-icon-img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  border-radius: 50%;
-}
-
-.notification-modal.error .notification-icon {
-  background-color: #e53e3e;
-}
-
-.notification-modal.info .notification-icon {
-  background-color: #4361ee;
-}
-
-.notification-content {
-  width: 100%;
-}
-
-.notification-content p {
-  color: #4a5568;
-  margin-bottom: 20px;
-  font-size: 18px; /* Increased from 16px */
-  line-height: 1.5;
-}
-
-.notification-button {
-  background-color: #4361ee;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  padding: 10px 20px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  width: 100%;
-}
-
-.notification-button:hover {
-  background-color: #3a56d4;
-  transform: translateY(-2px);
-}
-
-.notification-modal.success .notification-button {
-  background-color: #38b2ac;
-}
-
-.notification-modal.success .notification-button:hover {
-  background-color: #2c7a7b;
-}
-
-.notification-modal.error .notification-button {
-  background-color: #e53e3e;
-}
-
-.notification-modal.error .notification-button:hover {
-  background-color: #c53030;
-}
-
-/* Responsive adjustments for the notification */
-@media (max-width: 768px) {
-  .notification-modal {
-    padding: 20px;
-  }
-  
-  .notification-icon {
-    width: 70px; /* Increased responsive icon size */
-    height: 70px; /* Increased responsive icon size */
-    font-size: 32px;
-  }
-  
-  .notification-content p {
-    font-size: 16px;
-  }
-}
-
-/* Responsive adjustments */
-@media (max-width: 768px) {
-  header .cta-button {
-    margin-left: auto;
-  }
-  
-  .login-box {
-    padding: 20px 15px;
-    max-width: 100%;
-  }
-  
-  .role-options {
-    flex-direction: column;
-    gap: 10px;
-  }
-  
-  .role-button {
-    min-height: 120px;
-  }
-}
-
-/* Optimize signup form specifically for smaller screens */
-@media (max-height: 700px) {
-  .login-header {
-    margin-bottom: 10px;
-  }
-  
-  .login-form {
-    gap: 8px;
-  }
-  
-  .form-group input {
-    padding: 6px 8px;
-  }
-  
-  .login-button {
-    padding: 8px;
-    font-size: 13px;
-  }
-  
-  .name-row {
-    gap: 6px;
-  }
-  
-  .login-footer {
-    margin-top: 8px;
-    font-size: 12px;
-  }
-  
-  .home-link {
-    margin-top: 6px;
-    font-size: 12px;
-  }
-  
-  .form-group.role-display {
-    margin-bottom: -2px;
-  }
-}
-
-/* Specific optimizations for laptops */
-@media (min-width: 769px) and (max-height: 800px) {
-  .login-box {
-    padding: 14px;
-    max-height: 90vh;
-  }
-  
-  .form-group input {
-    height: 30px;
-    min-height: unset;
-  }
-  
-  .role-display {
-    margin-bottom: 4px !important;
-  }
-}
-
-/* Responsive adjustments for role selection */
-@media (max-height: 700px) {
-  .role-button {
-    min-height: 140px;
-    padding: 12px 8px;
-  }
-  
-  .role-icon {
-    width: 50px;
-    height: 50px;
-    font-size: 28px;
-  }
-}
-
-/* Fix for high-resolution devices */
-@media (min-height: 800px) {
-  .login-container {
-    align-items: center; /* Keep centered */
-    padding-top: 80px; /* Add padding for header */
-  }
-}
-
-/* Additional fix for very small screens */
-@media (max-height: 640px) {
-  .login-container {
-    align-items: center;
-    padding-top: 80px;
-  }
-}
-
-
-
-
-/* Mobile menu button (hidden on desktop) */
-.mobile-menu-button {
-  display: none;
-  font-size: 1.5rem;
-  cursor: pointer;
-  color: #333;
-  z-index: 1001;
-  margin-left: 15px;
-}
-
-/* Mobile menu overlay */
-.mobile-menu-overlay {
-  display: none;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.5);
-  z-index: 999;
-}
-
-.mobile-menu-overlay.active {
-  display: block;
-}
-
-/* Responsive styles for screens 768px and smaller */
-@media (max-width: 768px) {
-  /* Hide desktop buttons and show mobile menu button */
-  header .cta-button {
+  .image-panel {
     display: none;
   }
-  .mobile-menu-button {
-    display: block;
+
+  .form-panel {
+    padding: 30px 25px;
+    flex-basis: 100%;
+    flex-grow: 1;
+    min-height: 100vh;
+    justify-content: center; /* Ensure content is centered vertically */
   }
 
-  /* Style the navigation container as a popup */
-  header nav {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    width: 90vw;
-    max-width: 320px;
-    background-color: white;
-    border-radius: 12px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
-    padding: 20px;
-    z-index: 1000;
-    
-    /* Initial state: hidden for animation */
-    opacity: 0;
-    transform: translate(-50%, -50%) scale(0.9);
-    pointer-events: none;
-    
-    /* Animation */
-    transition: transform 0.3s ease-out, opacity 0.3s ease-out;
-    
-    /* Ensure it's a flex container for alignment */
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-
-  /* When the menu is active, make it visible with a popup animation */
-  header nav.active {
-    opacity: 1;
-    transform: translate(-50%, -50%) scale(1);
-    pointer-events: auto;
-  }
-
-  /* Style the navigation links for the mobile menu */
-  header nav ul {
+  .role-options {
     flex-direction: column;
     gap: 15px;
-    width: 100%;
-    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .form-panel {
+    padding: 25px 20px;
+    justify-content: center; /* Ensure content is centered vertically */
   }
 
-  header nav ul li {
-    margin-left: 0;
+  .login-box {
+    max-width: 100%;
   }
 
-  /* Style the mobile-specific buttons container */
-  .mobile-buttons {
-    display: flex;
+  .login-header h1 { font-size: 22px; } /* Further reduced */
+  .login-subtitle { font-size: 14px; } /* Further reduced */
+
+  .name-row {
     flex-direction: column;
-    gap: 10px;
-    margin-top: 20px;
-    width: 100%;
+    gap: 15px; /* Reduced */
   }
 }
 
-/* Add a highlight effect to the active navigation item */
-header nav ul li a:hover,
-header nav ul li a:active {
-  color: #4361ee;
+/* Added to prevent image overflow if panel is too small */
+@media (max-width: 1100px) and (min-width: 901px) {
+  .image-panel-content .logo-graphic {
+    width: 300px;
+  }
 }
-
-/* Add these styles for the back button */
-
-.back-button {
-  position: absolute;
-  top: 15px;
-  left: 15px;
-  background: none;
-  border: none;
-  font-size: 24px;
-  color: #4361ee;
-  cursor: pointer;
-  padding: 5px 10px;
-  border-radius: 50%;
-  transition: all 0.2s ease;
-  line-height: 1;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 5;
-}
-
-.back-button:hover {
-  background-color: rgba(67, 97, 238, 0.1);
-  transform: translateX(-2px);
-}
-
-/* Ensure the login box has proper positioning for the absolute positioned back button */
-.login-box {
-  position: relative;
-  /* ...existing styles remain... */
-}
-
-/* Responsive adjustment for smaller screens */
-@media (max-width: 576px) {
-  .back-button {
-    top: 10px;
-    left: 10px;
-    font-size: 22px;
+@media (max-width: 950px) and (min-width: 901px) {
+  .image-panel-content .logo-graphic {
+    width: 250px;
   }
 }
