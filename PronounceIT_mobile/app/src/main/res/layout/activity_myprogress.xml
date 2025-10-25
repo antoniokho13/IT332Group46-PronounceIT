@@ -22,7 +22,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         android:layout_marginBottom="16dp" />
 
-    <!-- Achievements Button with pushable_button background -->
+    <!-- Achievements Button -->
     <Button
         android:id="@+id/achievementsButton"
         android:layout_width="match_parent"
@@ -33,7 +33,7 @@
         android:textSize="24sp"
         android:textColor="#FFFFFF"
         android:textStyle="bold"
-        android:background="@drawable/raindbow_button"
+        android:background="@drawable/game_button_primary"
         android:padding="12dp"
         android:fontFamily="@font/wonderbar"
         android:stateListAnimator="@null"
@@ -41,22 +41,23 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- View Scores Button with pushable_button background -->
+    <!-- View Scores Button -->
     <Button
         android:id="@+id/viewScoresButton"
         android:layout_width="match_parent"
         android:layout_height="90dp"
-        android:layout_marginTop="16dp"
-        android:text="View Scores"
-        android:textSize="24sp"
-        android:textColor="#FFFFFF"
-        android:textStyle="bold"
-        android:background="@drawable/raindbow_button"
-        android:padding="12dp"
+        android:layout_marginTop="12dp"
+        android:background="@drawable/game_button_primary"
         android:fontFamily="@font/wonderbar"
+        android:padding="12dp"
         android:stateListAnimator="@null"
-        app:layout_constraintTop_toBottomOf="@id/achievementsButton"
+        android:text="View Scores"
+        android:textColor="#FFFFFF"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        app:layout_constraintTop_toBottomOf="@id/achievementsButton" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

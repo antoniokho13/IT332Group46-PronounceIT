@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Background -->
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="16dp" />
+            <solid android:color="@color/primary_color" />
+        </shape>
+    </item>
+    
+    <!-- Image area with green border (recording active) -->
+    <item android:top="40dp" android:bottom="180dp" android:left="20dp" android:right="20dp">
+        <shape android:shape="rectangle">
+            <corners android:radius="8dp" />
+            <solid android:color="@color/white" />
+            <stroke android:width="4dp" android:color="@color/bright_green" />
+        </shape>
+    </item>
+    
+    <!-- Apple -->
+    <item android:top="60dp" android:bottom="200dp" android:left="40dp" android:right="40dp">
+        <shape android:shape="oval">
+            <solid android:color="@color/bright_red" />
+        </shape>
+    </item>
+    
+    <!-- Microphone button (active/recording) -->
+    <item android:top="250dp" android:bottom="290dp" android:left="70dp" android:right="110dp">
+        <shape android:shape="oval">
+            <solid android:color="@color/bright_red" />
+            <stroke android:width="3dp" android:color="@color/white" />
+        </shape>
+    </item>
+    
+    <!-- Microphone icon -->
+    <item android:top="265dp" android:bottom="275dp" android:left="85dp" android:right="95dp">
+        <shape android:shape="rectangle">
+            <corners android:radius="2dp" />
+            <solid android:color="@color/white" />
+        </shape>
+    </item>
+    
+    <!-- Recording indicator (green dot) -->
+    <item android:top="10dp" android:bottom="20dp" android:left="160dp" android:right="170dp">
+        <shape android:shape="oval">
+            <solid android:color="@color/bright_green" />
+        </shape>
+    </item>
+</layer-list>

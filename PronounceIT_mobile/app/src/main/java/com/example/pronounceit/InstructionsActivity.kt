@@ -1,6 +1,7 @@
 package com.example.pronounceit
 
 import android.content.Intent
+import android.media.MediaPlayer
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
@@ -19,21 +20,26 @@ class InstructionsActivity : AppCompatActivity() {
     private lateinit var instructionsAdapter: InstructionsAdapter
     private var lessonId: Long = -1L
     private var categoryId: Long = -1L
-    
-    // Instruction data - you can customize these texts and add your images later
+    private var buttonClickSound: MediaPlayer? = null
+
+    // Instruction data using actual tutorial images
     private val instructionData = listOf(
-        InstructionSlide("Welcome to the lesson! Get ready to practice your pronunciation.", R.drawable.placeholder_instruction),
-        InstructionSlide("Listen to the word by tapping the audio button.", R.drawable.placeholder_instruction),
-        InstructionSlide("Press and hold the microphone to record your pronunciation.", R.drawable.placeholder_instruction),
-        InstructionSlide("Release the microphone when you're done speaking.", R.drawable.placeholder_instruction),
-        InstructionSlide("Get feedback on your pronunciation accuracy.", R.drawable.placeholder_instruction),
-        InstructionSlide("Complete all words to finish the lesson!", R.drawable.placeholder_instruction)
+        InstructionSlide("Listen to the word by tapping the play button.", R.drawable.playimg1),
+        InstructionSlide("Press the microphone to record your pronunciation.", R.drawable.microphone),
+        InstructionSlide("Speak clearly into the microphone, then click the button when finished.", R.drawable.mic_recording_animation),
+        InstructionSlide("If correct, you'll see a this message.", R.drawable.correct),
+        InstructionSlide("If not, try again!", R.drawable.wrong),
+        InstructionSlide("Click the Next button to move to the next word", R.drawable.nextimg1),
+        InstructionSlide("Complete all words to finish the lesson!", R.drawable.pronounce_logo)
     )
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityInstructionsBinding.inflate(layoutInflater)
         setContentView(binding.root)
+
+        // Initialize button click sound
+        buttonClickSound = MediaPlayer.create(this, R.raw.button_click)
 
         // Get lesson and category IDs from intent
         lessonId = intent.getLongExtra("lessonId", -1L)
@@ -50,10 +56,14 @@ class InstructionsActivity : AppCompatActivity() {
         createPageIndicators()
     }
 
+    private fun playButtonSound() {
+        buttonClickSound?.start()
+    }
+
     private fun setupViewPager() {
         instructionsAdapter = InstructionsAdapter(this, instructionData)
         binding.instructionsViewPager.adapter = instructionsAdapter
-        
+
         // Set up page change callback
         binding.instructionsViewPager.registerOnPageChangeCallback(object : ViewPager2.OnPageChangeCallback() {
             override fun onPageSelected(position: Int) {
@@ -66,6 +76,7 @@ class InstructionsActivity : AppCompatActivity() {
 
     private fun setupNavigationButtons() {
         binding.previousButton.setOnClickListener {
+            playButtonSound()
             val currentItem = binding.instructionsViewPager.currentItem
             if (currentItem > 0) {
                 binding.instructionsViewPager.currentItem = currentItem - 1
@@ -73,6 +84,7 @@ class InstructionsActivity : AppCompatActivity() {
         }
 
         binding.nextButton.setOnClickListener {
+            playButtonSound()
             val currentItem = binding.instructionsViewPager.currentItem
             if (currentItem < instructionData.size - 1) {
                 binding.instructionsViewPager.currentItem = currentItem + 1
@@ -80,33 +92,35 @@ class InstructionsActivity : AppCompatActivity() {
         }
 
         binding.startGameButton.setOnClickListener {
+            playButtonSound()
             startWordActivity()
         }
     }
 
     private fun setupSkipButton() {
         binding.skipButton.setOnClickListener {
+            playButtonSound()
             startWordActivity()
         }
     }
 
     private fun createPageIndicators() {
         binding.pageIndicatorContainer.removeAllViews()
-        
+
         for (i in instructionData.indices) {
             val indicator = ImageView(this)
             val layoutParams = LinearLayout.LayoutParams(24, 24)
             layoutParams.setMargins(8, 0, 8, 0)
             indicator.layoutParams = layoutParams
-            
+
             // Set indicator drawable (you can customize these)
             indicator.setImageDrawable(
                 ContextCompat.getDrawable(this, R.drawable.page_indicator_inactive)
             )
-            
+
             binding.pageIndicatorContainer.addView(indicator)
         }
-        
+
         // Set first indicator as active
         updatePageIndicators(0)
     }
@@ -150,6 +164,12 @@ class InstructionsActivity : AppCompatActivity() {
         }
         startActivity(intent)
         finish() // Close instructions activity
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        buttonClickSound?.release()
+        buttonClickSound = null
     }
 
     // Data class for instruction slides
