@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Background -->
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="16dp" />
+            <solid android:color="@color/primary_color" />
+        </shape>
+    </item>
+    
+    <!-- Word display area -->
+    <item android:top="40dp" android:bottom="200dp" android:left="20dp" android:right="20dp">
+        <shape android:shape="rectangle">
+            <corners android:radius="8dp" />
+            <solid android:color="@color/white" />
+            <stroke android:width="2dp" android:color="@color/gray_medium" />
+        </shape>
+    </item>
+    
+    <!-- Apple image placeholder -->
+    <item android:top="60dp" android:bottom="220dp" android:left="40dp" android:right="40dp">
+        <shape android:shape="oval">
+            <solid android:color="@color/bright_red" />
+        </shape>
+    </item>
+    
+    <!-- Welcome text indicator -->
+    <item android:top="20dp" android:bottom="300dp" android:left="60dp" android:right="60dp">
+        <shape android:shape="rectangle">
+            <corners android:radius="4dp" />
+            <solid android:color="@color/primary_text" />
+        </shape>
+    </item>
+</layer-list>

@@ -104,5 +104,11 @@
             android:label="My Progress"
             android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
 
+        <activity
+            android:name=".InstructionsActivity"
+            android:exported="false"
+            android:label="Instructions"
+            android:theme="@style/Theme.AppCompat.Light.NoActionBar" />
+
     </application>
 </manifest>

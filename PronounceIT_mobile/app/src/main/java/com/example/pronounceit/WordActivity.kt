@@ -49,7 +49,7 @@ import com.example.pronounceit.network.models.StreakDTO
 import com.example.pronounceit.StreakUpdateManager
 
 
-class WordActivity : AppCompatActivity() {
+class WordActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
     private lateinit var binding: ActivityWordBinding
     private var mediaPlayer: MediaPlayer? = null
@@ -113,16 +113,7 @@ class WordActivity : AppCompatActivity() {
             repeatCount = Animation.INFINITE
         }
 
-        tts = TextToSpeech(this) { status ->
-            if (status == TextToSpeech.SUCCESS) {
-                val result = tts.setLanguage(Locale.US)
-                if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
-                    Log.e("WordActivity", "Language not supported")
-                }
-            } else {
-                Log.e("WordActivity", "TTS initialization failed")
-            }
-        }
+        tts = TextToSpeech(this, this)
 
         fetchWords(lessonId)
 
@@ -184,6 +175,20 @@ class WordActivity : AppCompatActivity() {
 
         // Generate sessionId ONCE per session
         sessionId = UUID.randomUUID().toString()
+    }
+
+    override fun onInit(status: Int) {
+        if (status == TextToSpeech.SUCCESS) {
+            // Set language to US English
+            val result = tts.setLanguage(Locale.US)
+            if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
+                Log.e("WordActivity", "Language not supported for TTS")
+            } else {
+                Log.d("WordActivity", "TTS initialized successfully")
+            }
+        } else {
+            Log.e("WordActivity", "TTS initialization failed")
+        }
     }
 
     // Call this when the lesson session is complete (after last word)
@@ -367,7 +372,7 @@ class WordActivity : AppCompatActivity() {
     private fun updateUI() {
         if (currentWordIndex < words.size) {
             val currentWord = words[currentWordIndex]
-            binding.lessonNameTextView.text = "Lesson: ${currentWord.lesson.name}"
+            binding.lessonNameTextView.text = "${currentWord.lesson.name}"
             binding.wordTextView.text = currentWord.word.uppercase()
 
             // Update the word counter
@@ -527,6 +532,9 @@ class WordActivity : AppCompatActivity() {
 
                             // Show confetti celebration for correct pronunciation
                             showCorrectPronunciationCelebration()
+                            
+                            // Show "Correct!" feedback with TTS
+                            showCorrectFeedback()
 
                             // Switch from play button to next button
                             binding.playAudioButton.visibility = View.GONE
@@ -537,6 +545,9 @@ class WordActivity : AppCompatActivity() {
                         } else {
                             // Play the error sound effect for incorrect pronunciation
                             playErrorSound()
+                            
+                            // Show "Try again!" feedback with TTS
+                            showTryAgainFeedback()
 
                             if (attemptCount >= maxAttempts) {
                                 if (!wordScored) {
@@ -657,6 +668,134 @@ class WordActivity : AppCompatActivity() {
             }
         } catch (e: Exception) {
             Log.e("WordActivity", "playErrorSound failed: ${e.message}", e)
+        }
+    }
+
+    private fun showCorrectFeedback() {
+        // Check if this is the last word
+        val isLastWord = currentWordIndex == totalWords - 1
+        
+        if (isLastWord) {
+            // Special messages for completing the last word correctly
+            val lastWordMessages = arrayOf("Lesson Complete!", "You did it!", "Fantastic finish!")
+            val lastWordSpeech = arrayOf(
+                "Congratulations! You've completed the entire lesson perfectly!",
+                "Amazing work! You finished the lesson with excellent pronunciation!",
+                "Outstanding! You've mastered all the words in this lesson!"
+            )
+            
+            val randomIndex = (0..2).random()
+            showFeedbackMessage(lastWordMessages[randomIndex], android.graphics.Color.parseColor("#4CAF50")) // Brighter green
+            speakFeedback(lastWordSpeech[randomIndex])
+        } else {
+            // Regular correct feedback for other words
+            val correctMessages = arrayOf("Correct!", "Great job!", "Excellent!")
+            val correctSpeech = arrayOf(
+                "Excellent! Correct pronunciation!",
+                "Great job! You nailed it!",
+                "Perfect! Well done!"
+            )
+            
+            // Randomly select a message and speech
+            val randomIndex = (0..2).random()
+            
+            showFeedbackMessage(correctMessages[randomIndex], android.graphics.Color.parseColor("#00C853")) // Green color
+            speakFeedback(correctSpeech[randomIndex])
+        }
+    }
+
+    private fun showTryAgainFeedback() {
+        // Display "Try again!" text and speak it based on attempts left
+        val attemptsLeft = (maxAttempts - attemptCount).coerceAtLeast(0)
+        val isLastWord = currentWordIndex == totalWords - 1
+        
+        if (attemptsLeft > 0) {
+            if (isLastWord) {
+                // Special encouraging messages for the last word
+                val lastWordTryMessages = arrayOf("Final word!", "Almost done!", "Last chance!")
+                val lastWordTrySpeech = arrayOf(
+                    "This is the final word! You're so close to completing the lesson!",
+                    "Almost there! One more correct pronunciation to finish the lesson!",
+                    "You're doing great! Just nail this last word and you're done!"
+                )
+                
+                val randomIndex = (0..2).random()
+                showFeedbackMessage(lastWordTryMessages[randomIndex], android.graphics.Color.parseColor("#FF9800")) // Orange color for urgency
+                speakFeedback(lastWordTrySpeech[randomIndex])
+            } else {
+                // Array of encouraging messages for incorrect attempts
+                val tryAgainMessages = arrayOf("Try again!", "Keep trying!", "Almost there!")
+                val tryAgainSpeech = arrayOf(
+                    "Try again. You can do it!",
+                    "Don't give up! Keep practicing!",
+                    "Almost there! One more try!"
+                )
+                
+                // Randomly select encouraging feedback
+                val randomIndex = (0..2).random()
+                showFeedbackMessage(tryAgainMessages[randomIndex], android.graphics.Color.parseColor("#F44336")) // Red color
+                speakFeedback(tryAgainSpeech[randomIndex])
+            }
+        } else {
+            if (isLastWord) {
+                // Special messages when running out of attempts on the last word
+                val lastWordFailMessages = arrayOf("Lesson ending", "Final attempt used", "Moving to results")
+                val lastWordFailSpeech = arrayOf(
+                    "That's okay! You've completed the lesson. Let's see your results!",
+                    "Great effort throughout the lesson! Time to review your performance.",
+                    "You tried your best! The lesson is complete. Well done overall!"
+                )
+                
+                val randomIndex = (0..2).random()
+                showFeedbackMessage(lastWordFailMessages[randomIndex], android.graphics.Color.parseColor("#9C27B0")) // Purple color
+                speakFeedback(lastWordFailSpeech[randomIndex])
+            } else {
+                // Out of attempts messages
+                val outOfAttemptsMessages = arrayOf("Out of attempts", "No more tries", "Moving on")
+                val outOfAttemptsSpeech = arrayOf(
+                    "Out of attempts. Moving to next word.",
+                    "No more tries left. Let's continue to the next word.",
+                    "That's okay! Let's move on to the next word."
+                )
+                
+                // Randomly select out of attempts feedback
+                val randomIndex = (0..2).random()
+                showFeedbackMessage(outOfAttemptsMessages[randomIndex], android.graphics.Color.parseColor("#F44336")) // Red color
+                speakFeedback(outOfAttemptsSpeech[randomIndex])
+            }
+        }
+    }
+
+    private fun showFeedbackMessage(message: String, color: Int) {
+        // Check if feedbackTextView exists in your layout, if not we'll create it dynamically
+        val feedbackTextView = binding.root.findViewById<TextView>(R.id.feedbackTextView)
+        if (feedbackTextView != null) {
+            feedbackTextView.text = message
+            feedbackTextView.setTextColor(color)
+            feedbackTextView.visibility = View.VISIBLE
+            
+            // Animate the feedback text
+            val fadeInOut = AlphaAnimation(0.0f, 1.0f).apply {
+                duration = 300
+                repeatMode = Animation.REVERSE
+                repeatCount = 5 // Will show for about 3 seconds
+            }
+            feedbackTextView.startAnimation(fadeInOut)
+            
+            // Hide the feedback after animation
+            Handler(Looper.getMainLooper()).postDelayed({
+                feedbackTextView.visibility = View.GONE
+                feedbackTextView.clearAnimation()
+            }, 3000)
+        } else {
+            // If no feedbackTextView exists, show a Toast as fallback
+            android.widget.Toast.makeText(this, message, android.widget.Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    private fun speakFeedback(text: String) {
+        if (::tts.isInitialized) {
+            tts.speak(text, TextToSpeech.QUEUE_ADD, null, "feedback")
         }
     }
 
@@ -824,6 +963,18 @@ class WordActivity : AppCompatActivity() {
     }
     override fun onDestroy() {
         super.onDestroy()
+        
+        // Clean up TTS resources
+        if (::tts.isInitialized) {
+            tts.stop()
+            tts.shutdown()
+        }
+        
+        // Clean up media players
+        mediaPlayer?.release()
+        correctSoundEffect?.release()
+        errorSoundEffect?.release()
+        
         // Make sure popups are allowed when exiting
         AchievementNotifier.allowPopups()
     }

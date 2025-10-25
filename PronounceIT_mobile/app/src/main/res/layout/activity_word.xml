@@ -26,7 +26,7 @@
             android:layout_height="wrap_content"
             android:textSize="22sp"
             android:textStyle="bold"
-            android:textColor="#F3AD00"
+            android:textColor="#1C2826"
             android:text="Lesson: "
             android:layout_marginBottom="8dp"
             android:background="#33FFFFFF"
@@ -45,18 +45,18 @@
             android:layout_height="wrap_content"
             android:textSize="36sp"
             android:textStyle="bold"
-            android:textColor="#F3AD00"
+            android:textColor="#1C2826"
             android:text="Word"
             android:layout_marginBottom="8dp"
-            android:background="#33FFFFFF"
+            android:background="@drawable/curved_word_background"
             android:padding="10dp"
             android:paddingStart="20dp"
             android:paddingEnd="20dp"
             android:elevation="6dp"
             android:shadowColor="#000000"
-            android:shadowDx="1"
-            android:shadowDy="1"
-            android:shadowRadius="2"
+            android:shadowDx="3"
+            android:shadowDy="5"
+            android:shadowRadius="4"
             android:fontFamily="@font/nunito"
             android:includeFontPadding="true"
             android:layout_marginStart="12dp"
@@ -76,7 +76,7 @@
                 android:text="Score: 0/0"
                 android:textSize="20sp"
                 android:textStyle="bold"
-                android:textColor="#F3AD00"
+                android:textColor="#1C2826"
                 android:background="#33FFFFFF"
                 android:padding="6dp"
                 android:layout_marginEnd="16dp"
@@ -89,7 +89,7 @@
                 android:text="Word: 1/10"
                 android:textSize="20sp"
                 android:textStyle="bold"
-                android:textColor="#F3AD00"
+                android:textColor="#1C2826"
                 android:background="#33FFFFFF"
                 android:padding="6dp"
                 android:fontFamily="@font/nunito"/>
@@ -102,12 +102,33 @@
             android:text="Attempts left: 5"
             android:textSize="24sp"
             android:textStyle="bold"
-            android:textColor="#F3AD00"
+            android:textColor="#1C2826"
             android:layout_marginBottom="12dp"
             android:background="#33FFFFFF"
             android:padding="6dp"
             android:elevation="4dp"
             android:fontFamily="@font/nunito"/>
+
+        <!-- Feedback TextView for "Correct!" or "Try again!" messages -->
+        <TextView
+            android:id="@+id/feedbackTextView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text=""
+            android:textSize="32sp"
+            android:textStyle="bold"
+            android:textColor="#00FF00"
+            android:layout_marginBottom="8dp"
+            android:background="#33FFFFFF"
+            android:padding="12dp"
+            android:elevation="6dp"
+            android:shadowColor="#000000"
+            android:shadowDx="2"
+            android:shadowDy="2"
+            android:shadowRadius="3"
+            android:fontFamily="@font/nunito"
+            android:gravity="center"
+            android:visibility="gone"/>
 
         <Space
             android:layout_width="match_parent"
@@ -143,23 +164,27 @@
         </FrameLayout>
 
         <FrameLayout
-            android:layout_width="90dp"
-            android:layout_height="90dp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
             android:layout_marginBottom="16dp">
 
-            <ImageButton
+            <Button
                 android:id="@+id/playAudioButton"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:src="@drawable/playaudio"
-                android:scaleType="fitCenter"
-                android:background="@android:color/transparent"
-                android:contentDescription="Play Audio" />
+                android:layout_width="180dp"
+                android:layout_height="60dp"
+                android:background="@drawable/game_button_primary"
+                android:contentDescription="Play Audio"
+                android:fontFamily="@font/wonderbar"
+                android:stateListAnimator="@null"
+                android:text="PLAY SOUND"
+                android:textColor="#FFFFFF"
+                android:textSize="18sp"
+                android:textStyle="bold" />
 
             <ImageButton
                 android:id="@+id/nextWordButton"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
+                android:layout_width="90dp"
+                android:layout_height="90dp"
                 android:src="@drawable/nextbutton"
                 android:scaleType="fitCenter"
                 android:background="@android:color/transparent"
