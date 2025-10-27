@@ -4,6 +4,7 @@ import android.content.Intent
 import android.media.MediaPlayer
 import android.os.Bundle
 import android.widget.Button
+import android.widget.ImageButton
 import androidx.appcompat.app.AppCompatActivity
 
 class SettingsActivity : AppCompatActivity() {
@@ -25,6 +26,11 @@ class SettingsActivity : AppCompatActivity() {
 
         setupBackgroundMusic()
         setupButtonListeners()
+        
+        // Setup back button
+        findViewById<ImageButton>(R.id.backButton).setOnClickListener {
+            onBackPressed()
+        }
     }
 
     private fun setupButtonListeners() {
