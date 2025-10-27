@@ -7,6 +7,20 @@
     android:background="@drawable/purple_gradient_background"
     tools:context=".InstructionsActivity">
 
+    <!-- Back Button (Top Left) -->
+    <ImageButton
+        android:id="@+id/backButton"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_margin="16dp"
+        android:background="@drawable/circle_button_background"
+        android:contentDescription="Back"
+        android:src="@drawable/ic_arrow_back"
+        android:scaleType="centerInside"
+        android:padding="8dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
     <!-- Skip Button (Top Right) -->
     <ImageButton
         android:id="@+id/skipButton"

@@ -53,6 +53,7 @@ class InstructionsActivity : AppCompatActivity() {
         setupViewPager()
         setupNavigationButtons()
         setupSkipButton()
+        setupBackButton()
         createPageIndicators()
     }
 
@@ -101,6 +102,13 @@ class InstructionsActivity : AppCompatActivity() {
         binding.skipButton.setOnClickListener {
             playButtonSound()
             startWordActivity()
+        }
+    }
+
+    private fun setupBackButton() {
+        binding.backButton.setOnClickListener {
+            playButtonSound()
+            onBackPressed()
         }
     }
 

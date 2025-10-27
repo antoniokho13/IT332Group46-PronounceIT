@@ -20,4 +20,5 @@
     <color name="primary_background">#FAFAFA</color>
     <color name="primary_text">#212121</color>
     <color name="streak_red">#FF2222</color>
+    <color name="warning_color">#FF9800</color>
 </resources>

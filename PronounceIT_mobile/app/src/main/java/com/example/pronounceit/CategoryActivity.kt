@@ -30,6 +30,11 @@ class CategoryActivity : AppCompatActivity() {
         val zoomAnimation = AnimationUtils.loadAnimation(this, R.anim.category_zoom)
         binding.categoryTitle.startAnimation(zoomAnimation)
 
+        // Set up back button
+        binding.backButton.setOnClickListener {
+            onBackPressed()
+        }
+
         fetchCategories()
     }
 

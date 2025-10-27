@@ -175,6 +175,11 @@ class WordActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
         // Generate sessionId ONCE per session
         sessionId = UUID.randomUUID().toString()
+
+        // Set up back button
+        binding.backButton.setOnClickListener {
+            showExitConfirmationDialog()
+        }
     }
 
     override fun onInit(status: Int) {
@@ -799,6 +804,32 @@ class WordActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         }
     }
 
+    private fun showExitConfirmationDialog() {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_exit_confirmation, null)
+        val exitMessage = dialogView.findViewById<TextView>(R.id.exitMessageTextView)
+        val backButton = dialogView.findViewById<android.widget.Button>(R.id.exitBackButton)
+        val continueButton = dialogView.findViewById<android.widget.Button>(R.id.continueGameButton)
+
+        exitMessage.text = "Are you sure you want to exit the game? Your progress will not be saved."
+
+        val dialog = AlertDialog.Builder(this)
+            .setView(dialogView)
+            .setCancelable(true)
+            .create()
+
+        backButton.setOnClickListener {
+            // Exit the game and go back
+            dialog.dismiss()
+            onBackPressed()
+        }
+
+        continueButton.setOnClickListener {
+            // Continue playing, dismiss dialog
+            dialog.dismiss()
+        }
+
+        dialog.show()
+    }
 
     private fun showSessionEndDialog() {
         // Suppress achievement popups during dialog display
