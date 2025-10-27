@@ -8,6 +8,20 @@
     android:background="@drawable/background5"
     tools:context=".WordActivity">
 
+    <!-- Back Button -->
+    <ImageButton
+        android:id="@+id/backButton"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentStart="true"
+        android:layout_margin="16dp"
+        android:background="@drawable/circle_button_background"
+        android:src="@drawable/ic_arrow_back"
+        android:contentDescription="Back"
+        android:scaleType="centerInside"
+        android:padding="8dp" />
+
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"

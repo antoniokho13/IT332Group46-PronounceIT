@@ -93,7 +93,7 @@ class HomeActivity : AppCompatActivity() {
         logoutButton.setOnClickListener {
             playButtonSound()
             if (token != null) {
-                logout(token)
+                showLogoutConfirmationDialog(token)
             } else {
                 navigateToLogin()
             }
@@ -416,6 +416,33 @@ class HomeActivity : AppCompatActivity() {
         if (::backgroundMusic.isInitialized) {
             backgroundMusic.release()
         }
+    }
+
+    private fun showLogoutConfirmationDialog(token: String) {
+        val dialogView = layoutInflater.inflate(R.layout.dialog_logout_confirmation, null)
+        val logoutMessage = dialogView.findViewById<TextView>(R.id.logoutMessageTextView)
+        val logoutButton = dialogView.findViewById<android.widget.Button>(R.id.confirmLogoutButton)
+        val cancelButton = dialogView.findViewById<android.widget.Button>(R.id.cancelLogoutButton)
+
+        logoutMessage.text = "Are you sure you want to logout? You will need to sign in again to continue."
+
+        val dialog = AlertDialog.Builder(this)
+            .setView(dialogView)
+            .setCancelable(true)
+            .create()
+
+        logoutButton.setOnClickListener {
+            // Confirm logout
+            dialog.dismiss()
+            logout(token)
+        }
+
+        cancelButton.setOnClickListener {
+            // Cancel logout, dismiss dialog
+            dialog.dismiss()
+        }
+
+        dialog.show()
     }
 
     private fun logout(token: String) {

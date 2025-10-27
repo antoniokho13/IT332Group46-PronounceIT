@@ -58,6 +58,11 @@ class LessonActivity : AppCompatActivity() {
             fetchLessons(categoryId, forceRefresh = true)
             Toast.makeText(this@LessonActivity, "All progress cleared!", Toast.LENGTH_SHORT).show()
         }
+
+        // Set up back button
+        binding.backButton.setOnClickListener {
+            onBackPressed()
+        }
     }
 
     private fun fetchLessons(categoryId: Long, forceRefresh: Boolean = false) {
