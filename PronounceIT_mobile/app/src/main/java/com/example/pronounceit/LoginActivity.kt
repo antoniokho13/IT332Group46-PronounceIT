@@ -172,7 +172,7 @@ class LoginActivity : AppCompatActivity() {
     private fun navigateToHome() {
         val intent = Intent(this@LoginActivity, HomeActivity::class.java)
         startActivity(intent)
-        overridePendingTransition(R.anim.slide_in_right, R.anim.slide_out_left)
+        overridePendingTransition(R.anim.bubble_pop_in, R.anim.bubble_pop_out)
         finish()
     }
 

@@ -102,6 +102,11 @@ class ViewScoreActivity : AppCompatActivity() {
                 }
             }
         }
+        
+        // Setup back button
+        findViewById<ImageButton>(R.id.backButton).setOnClickListener {
+            onBackPressed()
+        }
     }
 
     class ScoreAdapter(

@@ -6,6 +6,7 @@ import android.media.MediaPlayer
 import android.os.Bundle
 import android.view.animation.AnimationUtils
 import android.widget.Button
+import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
@@ -37,6 +38,11 @@ class MyProgressActivity : AppCompatActivity() {
 
         // Setup navigation buttons
         setupButtons()
+        
+        // Setup back button
+        findViewById<ImageButton>(R.id.backButton).setOnClickListener {
+            onBackPressed()
+        }
     }
 
     private fun setupButtons() {

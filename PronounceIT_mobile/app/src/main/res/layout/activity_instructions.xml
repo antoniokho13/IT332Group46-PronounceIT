@@ -4,78 +4,77 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@drawable/purple_gradient_background"
+    android:background="@drawable/scorebg"
     tools:context=".InstructionsActivity">
 
-    <!-- Back Button (Top Left) -->
-    <ImageButton
-        android:id="@+id/backButton"
-        android:layout_width="48dp"
-        android:layout_height="48dp"
-        android:layout_margin="16dp"
-        android:background="@drawable/circle_button_background"
-        android:contentDescription="Back"
-        android:src="@drawable/ic_arrow_back"
-        android:scaleType="centerInside"
-        android:padding="8dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
 
     <!-- Skip Button (Top Right) -->
+
+    <!-- Title -->
+
+    <!-- ViewPager2 for instruction slides -->
     <ImageButton
         android:id="@+id/skipButton"
-        android:layout_width="48dp"
+        android:layout_width="56dp"
         android:layout_height="48dp"
         android:layout_margin="16dp"
-        android:background="@drawable/circle_button_background"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="16dp"
+        android:background="@drawable/yellow_violet_back_button"
         android:contentDescription="Skip Instructions"
-        android:src="@drawable/ic_close"
-        android:scaleType="centerInside"
         android:padding="8dp"
+        android:scaleType="centerInside"
+        android:src="@drawable/ic_close_purple"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- Title -->
+    <!-- Navigation Container -->
+
     <TextView
         android:id="@+id/instructionsTitle"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
+        android:layout_width="244dp"
+        android:layout_height="81dp"
         android:layout_marginStart="32dp"
+        android:layout_marginTop="28dp"
         android:layout_marginEnd="80dp"
-        android:text="How to Play"
-        android:textSize="28sp"
-        android:textStyle="bold"
-        android:textColor="@color/white"
+        android:fontFamily="@font/wonderbar"
         android:gravity="center"
+        android:text=" HOW TO PLAY"
+        android:textColor="@color/black"
+        android:textSize="35sp"
+        android:textStyle="bold"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.927"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- ViewPager2 for instruction slides -->
     <androidx.viewpager2.widget.ViewPager2
         android:id="@+id/instructionsViewPager"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
+        android:layout_width="352dp"
+        android:layout_height="492dp"
+        android:layout_marginStart="24dp"
         android:layout_marginTop="32dp"
+        android:layout_marginEnd="24dp"
         android:layout_marginBottom="120dp"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
+        android:background="@drawable/viewpager_background"
+        android:elevation="8dp"
+        android:padding="16dp"
         app:layout_constraintBottom_toTopOf="@+id/navigationContainer"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/instructionsTitle" />
+        app:layout_constraintTop_toBottomOf="@+id/instructionsTitle"
+        app:layout_constraintVertical_bias="0.0" />
 
-    <!-- Navigation Container -->
     <LinearLayout
         android:id="@+id/navigationContainer"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="32dp"
-        android:orientation="vertical"
+        android:layout_width="538dp"
+        android:layout_height="219dp"
+        android:layout_marginBottom="40dp"
         android:gravity="center"
+        android:orientation="vertical"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.504"
         app:layout_constraintStart_toStartOf="parent">
 
         <!-- Page Indicators -->
@@ -84,8 +83,8 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginBottom="24dp"
-            android:orientation="horizontal"
-            android:gravity="center">
+            android:gravity="center"
+            android:orientation="horizontal">
 
             <!-- Page indicators will be added programmatically -->
         </LinearLayout>
@@ -93,34 +92,34 @@
         <!-- Navigation Buttons -->
         <LinearLayout
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center">
+            android:layout_height="59dp"
+            android:gravity="center"
+            android:orientation="horizontal">
 
             <!-- Previous Button -->
             <ImageButton
                 android:id="@+id/previousButton"
-                android:layout_width="56dp"
-                android:layout_height="56dp"
+                android:layout_width="65dp"
+                android:layout_height="58dp"
                 android:layout_marginEnd="32dp"
-                android:background="@drawable/circle_button_background"
+                android:background="@drawable/yellow_violet_back_button"
                 android:contentDescription="Previous"
-                android:src="@drawable/ic_arrow_back"
-                android:scaleType="centerInside"
+                android:enabled="false"
                 android:padding="12dp"
-                android:enabled="false" />
+                android:scaleType="centerInside"
+                android:src="@drawable/ic_arrow_back_purple" />
 
             <!-- Next/Start Button -->
             <ImageButton
                 android:id="@+id/nextButton"
-                android:layout_width="56dp"
-                android:layout_height="56dp"
+                android:layout_width="62dp"
+                android:layout_height="match_parent"
                 android:layout_marginStart="32dp"
-                android:background="@drawable/circle_button_background"
+                android:background="@drawable/yellow_violet_back_button"
                 android:contentDescription="Next"
-                android:src="@drawable/ic_arrow_forward"
+                android:padding="12dp"
                 android:scaleType="centerInside"
-                android:padding="12dp" />
+                android:src="@drawable/ic_arrow_forward_purple" />
 
         </LinearLayout>
 
@@ -130,15 +129,15 @@
             android:layout_width="wrap_content"
             android:layout_height="56dp"
             android:layout_marginTop="16dp"
+            android:background="@drawable/button_primary"
+            android:elevation="4dp"
             android:paddingStart="32dp"
             android:paddingEnd="32dp"
             android:text="Start Game"
+            android:textColor="@color/white"
             android:textSize="18sp"
             android:textStyle="bold"
-            android:textColor="@color/white"
-            android:background="@drawable/button_primary"
-            android:visibility="gone"
-            android:elevation="4dp" />
+            android:visibility="gone" />
 
     </LinearLayout>
 

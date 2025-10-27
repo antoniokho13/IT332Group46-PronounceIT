@@ -41,6 +41,11 @@ class DetailedScoresActivity : AppCompatActivity() {
         }
 
         loadUserScores(userId)
+        
+        // Setup back button
+        findViewById<ImageButton>(R.id.backButton).setOnClickListener {
+            onBackPressed()
+        }
     }
 
     private fun loadUserScores(userId: Long) {

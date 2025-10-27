@@ -9,6 +9,21 @@
     android:padding="16dp"
     android:background="@drawable/testbackground">
 
+    <!-- Back Button (Top Left) -->
+    <ImageButton
+        android:id="@+id/backButton"
+        android:layout_width="56dp"
+        android:layout_height="48dp"
+        android:layout_margin="16dp"
+        android:background="@drawable/yellow_violet_back_button"
+        android:contentDescription="Back"
+        android:src="@drawable/ic_arrow_back_purple"
+        android:scaleType="centerInside"
+        android:padding="8dp"
+        android:elevation="16dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
     <ImageView
         android:id="@+id/progressImage"
         android:layout_width="0dp"

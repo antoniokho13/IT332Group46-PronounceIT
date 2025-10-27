@@ -518,6 +518,7 @@ class WordActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             withContext(Dispatchers.Main) {
                 if (response.isSuccessful) {
                     val pronunciationCheckResponse = response.body()
+                    Log.d("WordActivity", "Response received - Body is null: ${pronunciationCheckResponse == null}")
                     if (pronunciationCheckResponse != null) {
                         attemptCount++ // Increment on every attempt
 
@@ -569,8 +570,20 @@ class WordActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
                         val attemptsLeft = (maxAttempts - attemptCount).coerceAtLeast(0)
                         binding.attemptCounterTextView.text = "Attempts left: " + attemptsLeft
 
-                        Log.d("WordActivity", "Transcribed: ${pronunciationCheckResponse.transcribedText}")
+                        // Enhanced logging for debugging transcription issues
+                        Log.d("WordActivity", "Pronunciation check result:")
+                        Log.d("WordActivity", "- Correct: ${pronunciationCheckResponse.correct}")
+                        Log.d("WordActivity", "- Feedback: ${pronunciationCheckResponse.feedbackMessage}")
+                        Log.d("WordActivity", "- Transcribed: ${pronunciationCheckResponse.transcribedText ?: "NULL"}")
+                        
+                        if (pronunciationCheckResponse.transcribedText == null) {
+                            Log.w("WordActivity", "Warning: Transcribed text is null. This might indicate an issue with the backend speech-to-text service.")
+                        }
+                        
                         sendPronunciationAttemptToBackend(pronunciationCheckResponse.correct)
+                    } else {
+                        Log.e("WordActivity", "Pronunciation check response body is null even though response was successful")
+                        android.widget.Toast.makeText(this@WordActivity, "Error processing pronunciation check", android.widget.Toast.LENGTH_SHORT).show()
                     }
                 } else {
                     val errorBody = response.errorBody()?.string()

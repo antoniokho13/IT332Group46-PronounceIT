@@ -65,6 +65,11 @@ class AchievementsActivity : AppCompatActivity() {
             // Also fetch current user accumulated points if logged in
             fetchCurrentUserPoints()
         }
+        
+        // Setup back button
+        findViewById<ImageButton>(R.id.backButton).setOnClickListener {
+            onBackPressed()
+        }
     }
 
     private fun fetchCurrentUserPoints() {
@@ -83,10 +88,6 @@ class AchievementsActivity : AppCompatActivity() {
                     val acc = body?.accumulatedPoints ?: 0
                     withContext(Dispatchers.Main) {
                         userAccumulatedPoints = acc
-
-                        // Hide the total points text view completely
-                        val totalPointsLabel = findViewById<TextView>(R.id.totalPointsTextView)
-                        totalPointsLabel.visibility = View.GONE
 
                         // refresh UI if achievements already loaded
                         (recyclerView.adapter as? AchievementAdapter)?.let { adapter ->
