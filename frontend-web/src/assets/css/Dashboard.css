@@ -1,55 +1,70 @@
-/* ===== Dashboard Container ===== */
-.dashboard-container {
-  display: flex;
-  flex-direction: column;
-  width: 100%;
-  height: 100vh;
-  background-color: white;
-  overflow: hidden; /* Prevents sidebar from scrolling */
-}
-
-/* ===== Layout Wrapper ===== */
-.dashboard.single {
-  display: flex;
-  flex-direction: row;
+/* ===== BASE STYLES ===== */
+html,
+body {
   height: 100%;
+  overflow: auto; /* still scrollable */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* Internet Explorer and Edge */
 }
 
-/* ===== Sidebar (Fixed Below Header) ===== */
-.sidebar {
-  position: fixed;
-  top: 70px; /* directly below header */
-  left: 0;
-  width: 260px;
-  height: calc(100vh - 70px);
-  background-color: #fff;
-  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
-  overflow-y: auto;
-  overflow-x: hidden;
-  z-index: 10;
+/* Hide scrollbar for Chrome, Safari, Edge */
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none;
 }
 
-/* ===== Main Content ===== */
-.content {
-  margin-left: 260px;       /* sidebar offset */
+/* ===== HEADER ===== */
+.dashboard-header {
+  z-index: 2001 !important; /* Ensures header is above sidebar */
+}
+
+/* ===== DASHBOARD CONTAINER ===== */
+.dashboard-container {
+  width: 100%;
   background-color: white;
-  height: 100vh;
-  overflow-y: auto;
-  overflow-x: hidden;
-  padding: 20px 20px 40px 20px;  /* 🟢 smaller side padding = visually wider area */
+  transform: none !important;
+  filter: none !important;
+}
+
+/* ===== LAYOUT WRAPPER ===== */
+.dashboard.single {
+  transform: none !important;
+  filter: none !important;
+}
+
+/* ===== MAIN CONTENT AREA ===== */
+.content {
+  margin-left: 240px; /* To match wider sidebar */
+  background-color: white;
+  height: calc(100vh - 70px);
+  margin-top: 70px;
+  padding: 0 20px 20px 20px;
   display: flex;
   flex-direction: column;
-  margin-top: -80px;       /* your preferred top alignment */
   box-sizing: border-box;
+  position: relative;
+  z-index: 1;
 }
 
-/* ===== Header Row (Existing Lessons + Add Button) ===== */
+/* ===== CONTENT SECTIONS ===== */
+.existing-items {
+  display: flex;
+  flex-direction: column;
+  height: auto; /* ✅ Let it expand with content */
+  overflow: visible; /* ✅ Allow pagination to show */
+  padding-top: 0;
+  margin-top: -30px;
+}
+
+/* ===== HEADER ROW (Title + Add Button) ===== */
 .existing-header {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
-  margin-bottom: 15px;
-  margin-top: 0; /* at the very top */
+  margin-bottom: 0;
+  margin-top: 0;
+  padding-top: 0;
+  flex-shrink: 0;
 }
 
 .existing-header h3 {
@@ -59,50 +74,80 @@
   color: #333;
 }
 
-/* ===== Add Button ===== */
-.add-button {
-  background-color: #4f46e5;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  padding: 12px 20px;
-  cursor: pointer;
-  font-weight: 500;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  transition: background-color 0.2s ease;
+/* ===== FLEXIBLE TABLE WRAPPER ===== */
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto; /* ✅ Only horizontal scroll */
+  overflow-y: visible; /* ✅ Allow vertical expansion */
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background-color: white;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  margin-bottom: 16px; /* Space for pagination below */
+  transition: all 0.3s ease;
 }
 
-.add-button:hover {
-  background-color: #4338ca;
+.table-wrapper:hover {
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
 }
 
-/* ===== Table (No Box or Container) ===== */
+/* Hide scrollbar inside table wrapper but keep scrollable */
+.table-wrapper::-webkit-scrollbar {
+  display: none;
+}
+.table-wrapper {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+/* ===== TABLE STYLES ===== */
 .items-table {
-  width: 100%;              /* already full width of .content */
+  width: 100%;
   border-collapse: collapse;
+  border: none;
 }
 
-.items-table th,
-.items-table td {
-  padding: 16px 18px;
-  text-align: left;
-  border-bottom: 1px solid #e5e7eb;
-  word-wrap: break-word;
-}
-
+/* Sticky table header */
 .items-table th {
+  padding: 8px 12px;
+  text-align: center;
+  border-bottom: 1px solid #e5e7eb;
   background-color: #f9fafb;
   font-weight: 600;
-  color: #333;
+  color: #5f6368;
+  font-size: 14px;
+  text-transform: none;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.items-table td {
+  padding: 10px 12px;
+  text-align: center;
+  border-bottom: 1px solid #e5e7eb;
+  word-wrap: break-word;
+  font-size: 14px;
+  color: #3c4043;
 }
 
 .items-table tbody tr:hover {
-  background-color: #f5f6ff;
+  background-color: #f5f5f5;
+  box-shadow: inset 1px 0 0 #dadce0, inset -1px 0 0 #dadce0,
+    0 1px 2px 0 rgba(60, 64, 67, 0.3), 0 1px 3px 1px rgba(60, 64, 67, 0.15);
+  position: relative;
+  z-index: 2;
 }
 
-/* ===== Action Buttons ===== */
+/* Empty state styling */
+.items-table tbody tr td[colspan] {
+  text-align: center;
+  color: #5f6368;
+  padding: 40px 18px;
+  font-style: italic;
+}
+
+/* ===== ACTION BUTTONS ===== */
 .lesson-action-btn,
 .action-btn {
   background-color: #4f46e5;
@@ -114,59 +159,134 @@
   font-weight: 500;
   cursor: pointer;
   margin-right: 6px;
-  transition: background-color 0.2s ease;
+  min-width: 80px;
+  text-align: center;
+  box-shadow: 0 2px 4px rgba(79, 70, 229, 0.3);
+  transition: all 0.2s ease;
 }
 
 .lesson-action-btn:hover,
 .action-btn:hover {
   background-color: #4338ca;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(79, 70, 229, 0.4);
 }
 
-/* ===== Scrollbar ===== */
-.content::-webkit-scrollbar {
-  width: 8px;
+.lesson-action-btn:active,
+.action-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(79, 70, 229, 0.3);
+  background-color: #4338ca;
 }
-.content::-webkit-scrollbar-thumb {
-  background-color: rgba(0, 0, 0, 0.15);
+
+/* Actions cell styling */
+.lesson-actions-cell {
+  white-space: nowrap;
+}
+
+/* ===== PLAY AUDIO BUTTON ===== */
+.play-audio-btn {
+  background-color: #facc15;
+  color: #333;
+  border: none;
   border-radius: 6px;
+  padding: 6px 14px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(250, 204, 21, 0.4);
+  transition: all 0.2s ease;
 }
 
-/* ===== Responsive Adjustments ===== */
-@media (max-width: 1024px) {
-  .content {
-    margin-left: 0;
-    padding: 100px 20px 40px 20px;
-    height: auto;
-  }
-
-  .existing-header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
-  }
-
-  .add-button {
-    align-self: flex-end;
-  }
-
-  .items-table th,
-  .items-table td {
-    padding: 10px;
-    font-size: 13px;
-  }
+.play-audio-btn:hover {
+  background-color: #fde047;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(250, 204, 21, 0.5);
 }
 
-@media (max-width: 768px) {
-  .content {
-    padding: 80px 15px 30px 15px;
-  }
+.play-audio-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(250, 204, 21, 0.4);
+}
 
-  .items-table th,
-  .items-table td {
-    font-size: 12px;
-  }
+/* ===== DELETE BUTTON CONSISTENT STYLE ===== */
+.action-btn.delete {
+  background-color: #dc2626 !important;
+  color: white;
+  box-shadow: 0 2px 4px rgba(220, 38, 38, 0.3);
+}
 
-  .add-button {
-    padding: 8px 14px;
-  }
+.action-btn.delete:hover {
+  background-color: #b91c1c !important;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(220, 38, 38, 0.4);
+}
+
+.action-btn.delete:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 2px rgba(220, 38, 38, 0.3);
+}
+
+/* ===== PAGINATION STYLES (AESTHETIC BLUE PILLS) ===== */
+.pagination-container {
+  display: flex;
+  justify-content: flex-end; /* align right */
+  align-items: center;
+  gap: 6px;
+  margin-top: 8px;
+  padding-right: 8px;
+}
+
+.pagination-number {
+  border: 1px solid #2563eb;
+  background-color: #f0f7ff;
+  color: #2563eb;
+  border-radius: 8px;
+  padding: 4px 10px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.pagination-number:hover {
+  background-color: #dbeafe;
+  transform: translateY(-1px);
+}
+
+.pagination-number.active {
+  background-color: #2563eb;
+  color: white;
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(37, 99, 235, 0.4);
+  transform: scale(1.05);
+}
+
+.analytics-lesson-link {
+  color: #2563eb; /* Visible blue link even when not hovered */
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline; /* shows it's clickable */
+  text-underline-offset: 3px; /* adds spacing from text */
+  transition: all 0.25s ease;
+  text-align: center;
+  position: relative;
+}
+
+.analytics-lesson-link::after {
+  content: "↗"; /* small arrow icon hinting it's clickable */
+  margin-left: 6px;
+  font-size: 0.75rem;
+  opacity: 0.6;
+  transition: all 0.3s ease;
+}
+
+.analytics-lesson-link:hover {
+  color: #1e40af;
+  transform: scale(1.05);
+}
+
+.analytics-lesson-link:hover::after {
+  opacity: 1;
+  transform: translateY(-2px);
 }

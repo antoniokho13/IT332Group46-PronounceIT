@@ -3,19 +3,65 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import "../assets/css/Analytics.css";
 import Header from "../layout/Header";
 import SidebarLayout from "../layout/Sidebar";
+import { logout } from "../services/authService";
 import { getWordStatisticsByLessonId } from "../services/pronounciationAttemptService";
 import { getAllScoreRecords } from "../services/scoreService";
+import { getUserById } from "../services/userService"; // ✅ Import userService
 
 const Analytics = () => {
   const { lessonId } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
+
+  const [user, setUser] = useState({ firstName: "", lastName: "" });
   const [scoreData, setScoreData] = useState([]);
   const [wordStats, setWordStats] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Pagination states
+  const [scorePage, setScorePage] = useState(1);
+  const [wordPage, setWordPage] = useState(1);
+  const itemsPerPage = 5;
 
   const lessonName = location.state?.lessonName || "Lesson";
 
+  /* ===============================
+     FETCH USER DETAILS
+  =============================== */
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        const storedUser = JSON.parse(localStorage.getItem("user"));
+
+        if (token && storedUser && storedUser.userId) {
+          const userData = await getUserById(storedUser.userId, token);
+          setUser({
+            firstName: userData.firstName,
+            lastName: userData.lastName,
+            id: userData.id,
+          });
+        }
+      } catch (err) {
+        console.error("Error fetching user:", err);
+      }
+    };
+
+    fetchUser();
+  }, []);
+
+  /* ===============================
+     LOGOUT HANDLER
+  =============================== */
+  const handleLogout = async () => {
+    await logout();
+    navigate("/login");
+  };
+
+  /* ===============================
+     FETCH ANALYTICS DATA
+  =============================== */
   useEffect(() => {
     const fetchScoreData = async () => {
       try {
@@ -40,14 +86,14 @@ const Analytics = () => {
           return acc;
         }, {});
 
-        const transformedData = Object.values(groupedScores).map((user) => {
-          const bestScore = Math.max(...user.scores);
+        const transformedData = Object.values(groupedScores).map((u) => {
+          const bestScore = Math.max(...u.scores);
           const totalPerfectScore = 10;
           const passThreshold = totalPerfectScore * 0.5;
           return {
-            name: `${user.firstName} ${user.lastName}`,
-            email: user.email,
-            attempts: user.attempts,
+            name: `${u.firstName} ${u.lastName}`,
+            email: u.email,
+            attempts: u.attempts,
             bestScore: `${bestScore}/10`,
             status: bestScore >= passThreshold ? "Pass" : "Fail",
           };
@@ -74,7 +120,7 @@ const Analytics = () => {
         }));
         setWordStats(transformedData);
       } catch (error) {
-        console.error("Error fetching word statistics:", error);
+        console.error("Error fetching word stats:", error);
       }
     };
 
@@ -82,97 +128,177 @@ const Analytics = () => {
     fetchWordStats();
   }, [lessonId]);
 
+  /* ===============================
+     SIDEBAR TOGGLE
+  =============================== */
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen);
+    document.body.classList.toggle("sidebar-open", !sidebarOpen);
+  };
+
+  const handleNavClick = (section) => {
+    navigate("/teacher-dashboard", { state: { defaultSection: section } });
+  };
+
+  /* ===============================
+     PAGINATION LOGIC
+  =============================== */
+  const scoreStartIndex = (scorePage - 1) * itemsPerPage;
+  const scoreEndIndex = scoreStartIndex + itemsPerPage;
+  const currentScores = scoreData.slice(scoreStartIndex, scoreEndIndex);
+  const totalScorePages = Math.ceil(scoreData.length / itemsPerPage);
+
+  const wordStartIndex = (wordPage - 1) * itemsPerPage;
+  const wordEndIndex = wordStartIndex + itemsPerPage;
+  const currentWords = wordStats.slice(wordStartIndex, wordEndIndex);
+  const totalWordPages = Math.ceil(wordStats.length / itemsPerPage);
+
+  /* ===============================
+     RENDER LAYOUT
+  =============================== */
   return (
     <div className="dashboard-container">
-      <Header isDashboard={true} pageTitle="Student Analytics" />
-      <SidebarLayout>
-        <div className="analytics-wrapper">
-          <button onClick={() => navigate(-1)} className="analytics-back-link">
-            ← Back to Lessons
-          </button>
+      <Header
+        isDashboard={true}
+        pageTitle={`${lessonName} Analytics`}
+        user={user}
+        onLogout={handleLogout}
+        toggleSidebar={toggleSidebar}
+        sidebarOpen={sidebarOpen}
+      />
 
-          <h2>{lessonName} - Student Analytics</h2>
-
+      <SidebarLayout
+        activeSection="analytics"
+        handleNavClick={handleNavClick}
+        sidebarOpen={sidebarOpen}
+      >
+        <div className="analytics-page">
           {loading ? (
-            <p>Loading...</p>
+            <p className="analytics-loading">Loading...</p>
           ) : (
             <>
-              <table className="analytics-table">
-                <thead>
-                  <tr>
-                    <th>Student</th>
-                    <th>Email</th>
-                    <th>Attempts</th>
-                    <th>Score</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {scoreData.length === 0 ? (
+              {/* === Student Scores Table === */}
+              <div className="analytics-table-wrapper">
+                <table className="analytics-table">
+                  <thead>
                     <tr>
-                      <td colSpan="5">No data available.</td>
+                      <th>Student</th>
+                      <th>Email</th>
+                      <th>Attempts</th>
+                      <th>Score</th>
+                      <th>Status</th>
                     </tr>
-                  ) : (
-                    scoreData.map((data, index) => (
-                      <tr key={index}>
-                        <td>{data.name}</td>
-                        <td>{data.email}</td>
-                        <td>{data.attempts}</td>
-                        <td>{data.bestScore}</td>
-                        <td
-                          className={
-                            data.status === "Pass"
-                              ? "status-pass"
-                              : "status-fail"
-                          }
-                        >
-                          {data.status}
-                        </td>
+                  </thead>
+                  <tbody>
+                    {currentScores.length === 0 ? (
+                      <tr>
+                        <td colSpan="5">No data available.</td>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+                    ) : (
+                      currentScores.map((data, index) => (
+                        <tr key={index}>
+                          <td>{data.name}</td>
+                          <td>{data.email}</td>
+                          <td>{data.attempts}</td>
+                          <td>{data.bestScore}</td>
+                          <td
+                            className={
+                              data.status === "Pass"
+                                ? "status-pass"
+                                : "status-fail"
+                            }
+                          >
+                            {data.status}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
 
-              <h3>Word Statistics</h3>
-              <table className="analytics-table">
-                <thead>
-                  <tr>
-                    <th>Word</th>
-                    <th>Average Accuracy</th>
-                    <th>Average Attempts</th>
-                    <th>Average Correctly Pronounced (%)</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {wordStats.length === 0 ? (
+                {/* Pagination */}
+                {scoreData.length > itemsPerPage && (
+                  <div className="pagination-container">
+                    <button
+                      onClick={() => setScorePage(scorePage - 1)}
+                      disabled={scorePage === 1}
+                    >
+                      Previous
+                    </button>
+                    <span>
+                      Page {scorePage} of {totalScorePages}
+                    </span>
+                    <button
+                      onClick={() => setScorePage(scorePage + 1)}
+                      disabled={scorePage === totalScorePages}
+                    >
+                      Next
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* === Word Statistics Table === */}
+              <div className="analytics-table-wrapper">
+                <table className="analytics-table">
+                  <thead>
                     <tr>
-                      <td colSpan="4">No data available.</td>
+                      <th>Word</th>
+                      <th>Average Accuracy</th>
+                      <th>Average Attempts</th>
+                      <th>Average Correctly Pronounced (%)</th>
                     </tr>
-                  ) : (
-                    wordStats.map((word, index) => (
-                      <tr key={index}>
-                        <td>{word.word}</td>
-                        <td>{word.avgAccuracy}</td>
-                        <td>{word.avgAttempts}</td>
-                        <td>
-                          <div className="progress-bar-container">
-                            <div
-                              className="progress-bar"
-                              style={{
-                                width: `${word.avgCorrectlyPronounced}%`,
-                              }}
-                            ></div>
-                            <span className="progress-bar-label">
-                              {word.avgCorrectlyPronounced}%
-                            </span>
-                          </div>
-                        </td>
+                  </thead>
+                  <tbody>
+                    {currentWords.length === 0 ? (
+                      <tr>
+                        <td colSpan="4">No data available.</td>
                       </tr>
-                    ))
-                  )}
-                </tbody>
-              </table>
+                    ) : (
+                      currentWords.map((word, index) => (
+                        <tr key={index}>
+                          <td>{word.word}</td>
+                          <td>{word.avgAccuracy}</td>
+                          <td>{word.avgAttempts}</td>
+                          <td>
+                            <div className="progress-bar-container">
+                              <div
+                                className="progress-bar"
+                                style={{
+                                  width: `${word.avgCorrectlyPronounced}%`,
+                                }}
+                              ></div>
+                              <span className="progress-bar-label">
+                                {word.avgCorrectlyPronounced}%
+                              </span>
+                            </div>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+
+                {wordStats.length > itemsPerPage && (
+                  <div className="pagination-container">
+                    <button
+                      onClick={() => setWordPage(wordPage - 1)}
+                      disabled={wordPage === 1}
+                    >
+                      Previous
+                    </button>
+                    <span>
+                      Page {wordPage} of {totalWordPages}
+                    </span>
+                    <button
+                      onClick={() => setWordPage(wordPage + 1)}
+                      disabled={wordPage === totalWordPages}
+                    >
+                      Next
+                    </button>
+                  </div>
+                )}
+              </div>
             </>
           )}
         </div>

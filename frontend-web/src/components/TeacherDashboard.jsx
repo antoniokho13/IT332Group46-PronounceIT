@@ -1,19 +1,24 @@
-
 import {
   faCheckCircle,
   faEdit,
   faExclamationCircle,
   faInfoCircle,
-  faPlus,
   faTimes,
-  faTrash
+  faTrash,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useEffect, useRef, useState } from "react";
 import ReactDOM from "react-dom";
 import { useNavigate } from "react-router-dom";
 import "../assets/css/Dashboard.css";
-import "../assets/css/DashboardResponsive.css";
+import "../assets/css/Modal.css";
+import ModalSuccess from "../layout/ModalSuccess";
+
+// --- ADD THIS NEW IMPORT ---
+import "../assets/css/Analytics.css";
+// --- END OF ADD ---
+
+// import "../assets/css/DashboardResponsive.css"; // This import is correctly removed
 import Header from "../layout/Header";
 import SidebarLayout from "../layout/Sidebar";
 import { logout } from "../services/authService";
@@ -35,7 +40,7 @@ import { getUserById } from "../services/userService";
 const TeacherDashboard = () => {
   const [user, setUser] = useState({ firstName: "", lastName: "", id: null });
   const [activeSection, setActiveSection] = useState("lessons");
-  const [pageTitle, setPageTitle] = useState("Lessons Management");
+  const [pageTitle, setPageTitle] = useState("Lesson Management");
   const [showModal, setShowModal] = useState(false);
   const [modalType, setModalType] = useState(""); // 'lesson' | 'category'
   const [editingItem, setEditingItem] = useState(null);
@@ -47,40 +52,78 @@ const TeacherDashboard = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
   const [deleteType, setDeleteType] = useState(""); // 'lesson' | 'category'
-  const [notification, setNotification] = useState({ show: false, message: "", type: "" });
+  const [notification, setNotification] = useState({
+    show: false,
+    message: "",
+    type: "",
+  });
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  
+  const ITEMS_PER_PAGE = 5;
+  const [pageLessons, setPageLessons] = useState(1);
+  const [pageCategories, setPageCategories] = useState(1);
+  const [pageAnalytics, setPageAnalytics] = useState(1);
 
   const modalRef = useRef(null);
   const deleteModalRef = useRef(null);
   const navigate = useNavigate();
 
-  // Auth/logout
+  /* ===============================
+     AUTH / LOGOUT
+  =============================== */
   const handleLogout = async () => {
     await logout();
     navigate("/login");
   };
 
-  // Sidebar
+  /* ===============================
+     SIDEBAR TOGGLE
+  =============================== */
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen);
     document.body.classList.toggle("sidebar-open", !sidebarOpen);
   };
   const closeSidebar = () => setSidebarOpen(false);
 
-  // Nav
+  /* ===============================
+     NAVIGATION BETWEEN SECTIONS
+  =============================== */
   const handleNavClick = (section) => {
     setActiveSection(section);
     setPageTitle(
       section === "lessons"
         ? "Lessons Management"
         : section === "categories"
-        ? "Categories Management"
+        ? "Category Management"
         : "Student Analytics"
     );
+    // Reset relevant page on switch
+    if (section === "lessons") setPageLessons(1);
+    if (section === "categories") setPageCategories(1);
+    if (section === "analytics") setPageAnalytics(1);
     closeSidebar();
   };
 
-  // Fetch user
+  /* ===============================
+     NEW SIDEBAR BUTTON HANDLER
+  =============================== */
+  const handleAddButtonClick = () => {
+    if (activeSection === "lessons") {
+      setShowModal(true);
+      setModalType("lesson");
+      setEditingItem(null);
+    } else if (activeSection === "categories") {
+      setShowModal(true);
+      setModalType("category");
+      setEditingItem(null);
+    }
+    // No action for 'analytics'
+  };
+
+  /* ===============================
+     FETCH USER DATA
+  =============================== */
   useEffect(() => {
     const fetchUserData = async () => {
       try {
@@ -106,7 +149,9 @@ const TeacherDashboard = () => {
     fetchUserData();
   }, [navigate]);
 
-  // Fetch categories and lessons
+  /* ===============================
+     FETCH CATEGORIES & LESSONS
+  =============================== */
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -125,25 +170,29 @@ const TeacherDashboard = () => {
     fetchData();
   }, []);
 
-  // Refresh helpers
   const refreshCategories = async () => {
     try {
       const data = await getAllCategories();
       setCategories(data);
+      setPageCategories(1); // keep UX sane after data change
     } catch (error) {
       console.error("Error refreshing categories:", error);
     }
   };
+
   const refreshLessons = async () => {
     try {
       const data = await getAllLessons();
       setLessons(data);
+      setPageLessons(1);
     } catch (error) {
       console.error("Error refreshing lessons:", error);
     }
   };
 
-  // CRUD: Category
+  /* ===============================
+  ADD / UPDATE CATEGORY
+  =============================== */
   const handleAddCategory = async (e) => {
     e.preventDefault();
     const name = e.target.categoryName.value;
@@ -158,20 +207,33 @@ const TeacherDashboard = () => {
     try {
       if (editingItem) {
         await updateCategory(editingItem.categoryId, newCategory);
-        setNotification({ show: true, message: "Category updated successfully!", type: "success" });
+        setNotification({
+          show: true,
+          message: "Category updated successfully!",
+          type: "success",
+        });
       } else {
         await createCategory(newCategory, user.id);
-        setNotification({ show: true, message: "Category added successfully!", type: "success" });
+        setNotification({
+          show: true,
+          message: "Category added successfully!",
+          type: "success",
+        });
       }
       await refreshCategories();
       setShowModal(false);
     } catch (error) {
       console.error("Error saving category:", error);
-      setNotification({ show: true, message: "Failed to save category.", type: "error" });
+      setNotification({
+        show: true,
+        message: "Failed to save category.",
+        type: "error",
+      });
     }
   };
 
-  // CRUD: Lesson
+  /* ===============================  ADD / UPDATE LESSON
+  =============================== */
   const handleAddLesson = async (e) => {
     e.preventDefault();
     const isEditing = editingItem !== null;
@@ -193,79 +255,121 @@ const TeacherDashboard = () => {
     try {
       if (isEditing) {
         await updateLesson(editingItem.lessonId, newLesson);
-        setNotification({ show: true, message: "Lesson updated successfully!", type: "success" });
+        setNotification({
+          show: true,
+          message: "Lesson updated successfully!",
+          type: "success",
+        });
       } else {
         await createLesson(newLesson, user.id);
-        setNotification({ show: true, message: "Lesson added successfully!", type: "success" });
+        setNotification({
+          show: true,
+          message: "Lesson added successfully!",
+          type: "success",
+        });
       }
       await refreshLessons();
       setShowModal(false);
     } catch (error) {
       console.error("Error saving lesson:", error);
-      setNotification({ show: true, message: "Failed to save lesson.", type: "error" });
+      setNotification({
+        show: true,
+        message: "Failed to save lesson.",
+        type: "error",
+      });
     }
   };
 
-  // Delete
+  /* ===============================
+     DELETE CATEGORY / LESSON
+  =============================== */
   const handleDelete = (item, type) => {
     setItemToDelete(item);
     setDeleteType(type);
     setShowDeleteModal(true);
   };
+
   const confirmDelete = async () => {
     try {
       if (deleteType === "lesson" && itemToDelete) {
         await deleteLesson(itemToDelete.lessonId);
         await refreshLessons();
-        setNotification({ show: true, message: `Lesson "${itemToDelete.name}" deleted successfully!`, type: "success" });
+        setNotification({
+          show: true,
+          message: `Lesson "${itemToDelete.name}" deleted successfully!`,
+          type: "success",
+        });
       } else if (deleteType === "category" && itemToDelete) {
         await deleteCategory(itemToDelete.categoryId);
         await refreshCategories();
-        setNotification({ show: true, message: `Category "${itemToDelete.name}" deleted successfully!`, type: "success" });
+        setNotification({
+          show: true,
+          message: `Category "${itemToDelete.name}" deleted successfully!`,
+          type: "success",
+        });
       }
       setShowDeleteModal(false);
       setItemToDelete(null);
     } catch (error) {
       console.error("Error deleting:", error);
-      setNotification({ show: true, message: `Failed to delete ${deleteType}.`, type: "error" });
+      setNotification({
+        show: true,
+        message: `Failed to delete ${deleteType}.`,
+        type: "error",
+      });
     }
   };
 
-  // Analytics
+  /* ===============================LYTICS FETCH
+  =============================== */
   const fetchAnalyticsData = async () => {
     try {
       const lessonsData = await getAllLessons();
       const scoreRecords = await getAllScoreRecords();
       const lessonsWithAttempts = lessonsData.map((lesson) => {
-        const attempts = scoreRecords.filter((s) => s.lesson.lessonId === lesson.lessonId).length;
+        const attempts = scoreRecords.filter(
+          (s) => s.lesson.lessonId === lesson.lessonId
+        ).length;
         return { ...lesson, attempts };
       });
       setAnalyticsLessons(lessonsWithAttempts);
+      setPageAnalytics(1);
     } catch (error) {
       console.error("Failed to fetch analytics data:", error);
     }
   };
+
   useEffect(() => {
     if (activeSection === "analytics") fetchAnalyticsData();
   }, [activeSection]);
 
-  // Notifications
+  /* ===============================
+     NOTIFICATION PORTAL
+  =============================== */
   const renderNotification = () => {
     if (!notification.show) return null;
     return ReactDOM.createPortal(
-      <div className={`notification-overlay`}>
+      <div className="notification-overlay">
         <div className={`notification-modal ${notification.type}`}>
           <div className="notification-icon">
-            {notification.type === "success" && <FontAwesomeIcon icon={faCheckCircle} />}
-            {notification.type === "error" && <FontAwesomeIcon icon={faExclamationCircle} />}
-            {notification.type === "info" && <FontAwesomeIcon icon={faInfoCircle} />}
+            {notification.type === "success" && (
+              <FontAwesomeIcon icon={faCheckCircle} />
+            )}
+            {notification.type === "error" && (
+              <FontAwesomeIcon icon={faExclamationCircle} />
+            )}
+            {notification.type === "info" && (
+              <FontAwesomeIcon icon={faInfoCircle} />
+            )}
           </div>
           <div className="notification-content">
             <p>{notification.message}</p>
           </div>
           <button
             className="notification-button"
-            onClick={() => setNotification({ show: false, message: "", type: "" })}
+            onClick={() =>
+              setNotification({ show: false, message: "", type: "" })
+            }
           >
             <FontAwesomeIcon icon={faTimes} />
           </button>
@@ -275,7 +379,48 @@ const TeacherDashboard = () => {
     );
   };
 
-  // Modals
+  /* ===============================
+     DELETE MODAL PORTAL
+  =============================== */
+  const renderDeleteModal = () => {
+    if (!showDeleteModal || !itemToDelete) return null;
+    return ReactDOM.createPortal(
+      <div className="modal-overlay">
+        <div className="modal-container" ref={deleteModalRef}>
+          <h3>Confirm Deletion</h3>
+          <p>
+            Are you sure you want to delete the {deleteType} "
+            {itemToDelete.name}"?
+          </p>
+          <p>This action cannot be undone.</p>
+          <div className="modal-actions">
+            <button
+              type="button"
+              className="cancel-btn"
+              onClick={() => {
+                setShowDeleteModal(false);
+                setItemToDelete(null);
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              className="delete-btn"
+              onClick={confirmDelete}
+            >
+              Delete
+            </button>
+          </div>
+        </div>
+      </div>,
+      document.body
+    );
+  };
+
+  /* ===============================
+     MODAL PORTAL (ADD / EDIT)
+  =============================== */
   const renderModal = () => {
     if (!showModal) return null;
     const isLesson = modalType === "lesson";
@@ -290,11 +435,14 @@ const TeacherDashboard = () => {
                 ? "Edit Lesson"
                 : "Edit Category"
               : isLesson
-              ? "Add New Lesson"
-              : "Add New Category"}
+              ? "Add Lessons"
+              : "Add Category"}
           </h3>
 
-          <form className="modal-form" onSubmit={isLesson ? handleAddLesson : handleAddCategory}>
+          <form
+            className="modal-form"
+            onSubmit={isLesson ? handleAddLesson : handleAddCategory}
+          >
             {isLesson ? (
               <>
                 {!isEditing && (
@@ -387,42 +535,40 @@ const TeacherDashboard = () => {
     );
   };
 
-  const renderDeleteModal = () => {
-    if (!showDeleteModal || !itemToDelete) return null;
-    return ReactDOM.createPortal(
-      <div className="modal-overlay">
-        <div className="modal-container" ref={deleteModalRef}>
-          <h3>Confirm Deletion</h3>
-          <p>
-            Are you sure you want to delete the {deleteType} "{itemToDelete.name}"?
-          </p>
-          <p>This action cannot be undone.</p>
-          <div className="modal-actions">
-            <button
-              type="button"
-              className="cancel-btn"
-              onClick={() => {
-                setShowDeleteModal(false);
-                setItemToDelete(null);
-              }}
-            >
-              Cancel
-            </button>
-            <button
-              type="button"
-              className="delete-btn"
-              onClick={confirmDelete}
-            >
-              Delete
-            </button>
-          </div>
-        </div>
-      </div>,
-      document.body
-    );
+  /* ===============================
+     PAGINATION HELPERS
+  =============================== */
+  const paginate = (items, page) => {
+    const start = (page - 1) * ITEMS_PER_PAGE;
+    return items.slice(start, start + ITEMS_PER_PAGE);
   };
 
-  // Tables
+  const Pagination = ({ total, page, setPage }) => {
+  const totalPages = Math.ceil(total / ITEMS_PER_PAGE);
+  if (totalPages === 0) return null;
+
+  // Generate page numbers
+  const pageNumbers = Array.from({ length: totalPages }, (_, i) => i + 1);
+
+  return (
+    <div className="pagination-container right">
+      {pageNumbers.map((num) => (
+        <button
+          key={num}
+          className={`pagination-number ${page === num ? "active" : ""}`}
+          onClick={() => setPage(num)}
+        >
+          {num}
+        </button>
+      ))}
+    </div>
+  );
+};
+
+
+  /* ===============================
+     LESSONS, CATEGORIES & ANALYTICS TABLES
+  =============================== */
   const renderLessonsTable = () =>
     loading ? (
       <tr>
@@ -433,7 +579,7 @@ const TeacherDashboard = () => {
         <td colSpan="7">No lessons found.</td>
       </tr>
     ) : (
-      lessons.map((lesson) => (
+      paginate(lessons, pageLessons).map((lesson) => (
         <tr key={lesson.lessonId}>
           <td>{lesson.name}</td>
           <td>{lesson.focus}</td>
@@ -445,7 +591,11 @@ const TeacherDashboard = () => {
             <button
               className="lesson-action-btn"
               style={{ backgroundColor: "#16a34a", color: "white" }}
-              onClick={() => navigate(`/words/${lesson.lessonId}`, { state: { lessonName: lesson.name } })}
+              onClick={() =>
+                navigate(`/words/${lesson.lessonId}`, {
+                  state: { lessonName: lesson.name },
+                })
+              }
             >
               Words
             </button>
@@ -461,7 +611,10 @@ const TeacherDashboard = () => {
             </button>
             <button
               className="lesson-action-btn"
-              style={{ backgroundColor: "rgba(229, 62, 62, 0.8)", color: "white" }}
+              style={{
+                backgroundColor: "rgba(229, 62, 62, 0.8)",
+                color: "white",
+              }}
               onClick={() => handleDelete(lesson, "lesson")}
             >
               <FontAwesomeIcon icon={faTrash} />
@@ -481,7 +634,7 @@ const TeacherDashboard = () => {
         <td colSpan="5">No categories found.</td>
       </tr>
     ) : (
-      categories.map((category) => (
+      paginate(categories, pageCategories).map((category) => (
         <tr key={category.categoryId}>
           <td>{category.name}</td>
           <td>{category.description}</td>
@@ -496,11 +649,14 @@ const TeacherDashboard = () => {
                 setEditingItem(category);
               }}
             >
-              <FontAwesomeIcon icon={faEdit} /> 
+              <FontAwesomeIcon icon={faEdit} />
             </button>
             <button
               className="lesson-action-btn"
-              style={{ backgroundColor: "rgba(229, 62, 62, 0.8)", color: "white" }}
+              style={{
+                backgroundColor: "rgba(229, 62, 62, 0.8)",
+                color: "white",
+              }}
               onClick={() => handleDelete(category, "category")}
             >
               <FontAwesomeIcon icon={faTrash} />
@@ -510,7 +666,7 @@ const TeacherDashboard = () => {
       ))
     );
 
-  // Analytics table
+  /* === MODIFIED THIS FUNCTION === */
   const renderAnalyticsTable = () => {
     const filtered = analyticsCategory
       ? analyticsLessons.filter(
@@ -520,81 +676,64 @@ const TeacherDashboard = () => {
 
     return (
       <div className="existing-items">
-        <div className="existing-header">
-          <h3>Lesson Analytics</h3>
-          <div>
-            <label style={{ marginRight: 8 }}>Filter by Category:</label>
-            <select
-              value={analyticsCategory}
-              onChange={(e) => setAnalyticsCategory(e.target.value)}
-            >
-              <option value="">All</option>
-              {categories.map((cat) => (
-                <option key={cat.categoryId} value={cat.categoryId}>
-                  {cat.name}
-                </option>
-              ))}
-            </select>
-          </div>
+        <div className="table-wrapper">
+          <table className="items-table">
+            <thead>
+              <tr>
+                <th>Lesson Name</th>
+                <th>Category</th>
+                <th>Attempts</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filtered.length === 0 ? (
+                <tr>
+                  <td colSpan="3">No lessons found.</td>
+                </tr>
+              ) : (
+                paginate(filtered, pageAnalytics).map((lesson) => (
+                  <tr key={lesson.lessonId}>
+                    {/* --- THIS IS THE CHANGED LINE --- */}
+                    <td
+                      className="analytics-lesson-link" /* <-- USE CLASS INSTEAD OF STYLE */
+                      onClick={() =>
+                        navigate(`/analytics/${lesson.lessonId}`, {
+                          state: { lessonName: lesson.name },
+                        })
+                      }
+                    >
+                      {lesson.name}
+                    </td>
+                    {/* --- END OF CHANGE --- */}
+                    <td>{lesson.category.name}</td>
+                    <td>{lesson.attempts}</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
         </div>
 
-        <table className="items-table">
-          <thead>
-            <tr>
-              <th>Lesson Name</th>
-              <th>Category</th>
-              <th>Attempts</th>
-            </tr>
-          </thead>
-          <tbody>
-            {filtered.length === 0 ? (
-              <tr>
-                <td colSpan="3">No lessons found.</td>
-              </tr>
-            ) : (
-              filtered.map((lesson) => (
-                <tr key={lesson.lessonId}>
-                  <td
-                    style={{ color: "blue", cursor: "pointer", textDecoration: "underline" }}
-                    onClick={() =>
-                      navigate(`/analytics/${lesson.lessonId}`, {
-                        state: { lessonName: lesson.name },
-                      })
-                    }
-                  >
-                    {lesson.name}
-                  </td>
-                  <td>{lesson.category.name}</td>
-                  <td>{lesson.attempts}</td>
-                </tr>
-              ))
-            )}
-          </tbody>
-        </table>
+        {/* Pagination for Analytics */}
+        <Pagination
+          total={filtered.length}
+          page={pageAnalytics}
+          setPage={setPageAnalytics}
+        />
       </div>
     );
   };
 
-  // Content switch
+  /* ===============================
+     SECTION RENDER LOGIC
+  =============================== */
+  /* === MODIFIED THIS FUNCTION === */
   const renderContent = () => {
     switch (activeSection) {
       case "lessons":
         return (
-          <>
-            <div className="existing-items">
-              <div className="existing-header">
-                <h3>Existing Lessons</h3>
-                <button
-                  className="add-button"
-                  onClick={() => {
-                    setShowModal(true);
-                    setModalType("lesson");
-                    setEditingItem(null);
-                  }}
-                >
-                  <FontAwesomeIcon icon={faPlus} /> Add New Lesson
-                </button>
-              </div>
+          <div className="existing-items">
+            <div className="table-wrapper">
               <table className="items-table">
                 <thead>
                   <tr>
@@ -610,25 +749,17 @@ const TeacherDashboard = () => {
                 <tbody>{renderLessonsTable()}</tbody>
               </table>
             </div>
-          </>
+            <Pagination
+              total={lessons.length}
+              page={pageLessons}
+              setPage={setPageLessons}
+            />
+          </div>
         );
       case "categories":
         return (
-          <>
-            <div className="existing-items">
-              <div className="existing-header">
-                <h3>Existing Categories</h3>
-                <button
-                  className="add-button"
-                  onClick={() => {
-                    setShowModal(true);
-                    setModalType("category");
-                    setEditingItem(null);
-                  }}
-                >
-                  <FontAwesomeIcon icon={faPlus} /> Add New Category
-                </button>
-              </div>
+          <div className="existing-items">
+            <div className="table-wrapper">
               <table className="items-table">
                 <thead>
                   <tr>
@@ -642,15 +773,23 @@ const TeacherDashboard = () => {
                 <tbody>{renderCategoriesTable()}</tbody>
               </table>
             </div>
-          </>
+            <Pagination
+              total={categories.length}
+              page={pageCategories}
+              setPage={setPageCategories}
+            />
+          </div>
         );
       case "analytics":
-        return renderAnalyticsTable();
+        return renderAnalyticsTable(); // This function now builds the full section
       default:
         return null;
     }
   };
 
+  /* ===============================
+     RENDER LAYOUT
+  =============================== */
   return (
     <div className="dashboard-container">
       <Header
@@ -665,12 +804,25 @@ const TeacherDashboard = () => {
         activeSection={activeSection}
         handleNavClick={handleNavClick}
         sidebarOpen={sidebarOpen}
+        onAddButtonClick={handleAddButtonClick} /* === PROP ADDED === */
       >
         {renderContent()}
       </SidebarLayout>
+
       {renderModal()}
       {renderDeleteModal()}
       {renderNotification()}
+
+      {notification.show && (
+        <ModalSuccess
+          show={notification.show}
+          message={notification.message}
+          type={notification.type}
+          onClose={() =>
+            setNotification({ show: false, message: "", type: "" })
+          }
+        />
+      )}
     </div>
   );
 };

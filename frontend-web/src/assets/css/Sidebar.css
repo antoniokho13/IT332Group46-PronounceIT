@@ -1,147 +1,171 @@
+/* ===== 
+  GMAIL-STYLE SIDEBAR NAVIGATION 
+===== */
+
 .sidebar {
   position: fixed;
-  top: 70px; /* offset to match header height */
+  top: 70px; /* directly below header */
   left: 0;
-  width: 260px;
-  height: calc(100vh - 70px); /* fill space below header */
+  width: 240px; /* CHANGED: Made wider */
+  height: calc(100vh - 70px);
   background-color: #fff;
   box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
-  overflow-y: hidden; /* allow sidebar itself to scroll if many items */
+
+  /* Disabled scrollbar - sidebar items should fit without scrolling */
+  overflow-y: hidden;
   overflow-x: hidden;
-  z-index: 90;
+
+  z-index: 1000;
+  pointer-events: auto;
+
+  /* FIXED: Explicitly set all padding to ensure no left padding */
+  padding: 10px 0 0 0;
+  box-sizing: border-box;
+
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable both-edges;
+
+  /* Transition for mobile slide-in animation */
+  transition: left 0.3s ease;
 }
 
-/* Optional smooth scroll and custom scrollbar */
-.sidebar::-webkit-scrollbar {
-  width: 6px;
+/* ===== REDESIGNED BUTTON STYLES ===== */
+.sidebar-action-button {
+  display: block;
+  width: calc(100% - 30px);
+  margin: 16px auto; /* This centers the button */
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #3B82F6 0%, #2563EB 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
+  letter-spacing: 0.3px;
+  text-align: center;
 }
 
-.sidebar::-webkit-scrollbar-thumb {
-  background-color: rgba(0, 0, 0, 0.2);
-  border-radius: 10px;
+.sidebar-action-button:hover {
+  background: linear-gradient(135deg, #60A5FA 0%, #3B82F6 100%);
+  box-shadow: 0 4px 8px rgba(59, 130, 246, 0.4);
+  transform: translateY(-1px);
 }
 
-/* ===== Navigation ===== */
-.sidebar nav ul {
-  list-style: none;
+.sidebar-action-button:active {
+  transform: translateY(0px);
+  box-shadow: 0 1px 2px rgba(59, 130, 246, 0.3);
+}
+
+.sidebar-action-button:disabled {
+  background: linear-gradient(135deg, #E5E7EB 0%, #D1D5DB 100%);
+  box-shadow: none;
+  color: #9CA3AF;
+  transform: none;
+  cursor: not-allowed;
+}
+/* ===== END BUTTON STYLES ===== */
+
+.sidebar nav {
+  width: 100%;
   padding: 0;
   margin: 0;
 }
 
-/* No padding on left side at all */
-.sidebar nav ul li {
+.sidebar nav ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
   display: flex;
-  align-items: center;
-  gap: 10px;
-  padding: 10px 16px 10px 0;
-  font-size: 16px;
-  color: #333;
-  margin-bottom: 6px;
-  border-radius: 0 6px 6px 0;
-  cursor: pointer;
-  transition: all 0.25s ease;
+  flex-direction: column;
 }
 
-/* Hover + Active States */
+.sidebar nav ul li {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 18px;
+  padding: 12px 20px;
+  font-size: 15px;
+  font-weight: 500;
+  color: #3c4043;
+  margin-bottom: 2px;
+  margin-left: 0;
+  margin-right: 0;
+  border-radius: 0;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  width: 100%;
+  box-sizing: border-box;
+  position: relative;
+}
+
 .sidebar nav ul li:hover {
-  background-color: #f4f4ff;
-  color: #4f46e5;
+  background-color: #f1f3f4;
 }
 
 .sidebar nav ul li.active {
-  background-color: #f0f0ff;
-  color: #4f46e5;
+  background-color: #e8f0fe;
+  color: #1967d2;
   font-weight: 600;
-  box-shadow: none; /* no left line */
 }
 
-/* Icon flush-left alignment */
+.sidebar nav ul li.active .sidebar-icon {
+  color: #1967d2;
+}
+
 .sidebar-icon {
   font-size: 18px;
-  color: #4f46e5;
-  margin: 0;              /* remove all margin */
-  padding: 0;             /* no padding at all */
-  min-width: 40px;        /* keeps icon space consistent */
-  text-align: left;       /* icon touches left edge */
-}
-
-/* Text alignment adjustment */
-.sidebar nav ul li span,
-.sidebar nav ul li p,
-.sidebar nav ul li a {
-  margin-left: 0;
-}
-
-/* ===== Content beside Sidebar ===== */
-.content {
-  margin-left: 260px;
-  padding: 100px 60px 40px 60px; /* add top space for header */
-  background-color: #f9fbff;
-  min-height: 100vh;
-  overflow-x: hidden;
-  overflow-y: auto;
-  position: relative;
-
-  /* remove the container feel */
-  box-shadow: none;
-  border: none;
-}
-
-/* make table full width */
-.content table {
-  width: 100%;
-  border-collapse: collapse;
-  background: #fff;
-  border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-}
-
-/* section header alignment */
-.existing-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 25px;
-}
-
-.existing-header h3 {
+  color: #5f6368;
+  flex-shrink: 0;
+  padding: 0;
   margin: 0;
-  font-size: 1.6rem;
-  font-weight: 600;
-  color: #333;
+  position: relative;
+  z-index: 1;
 }
 
-/* make add button look clean */
-.add-button {
-  background-color: #4f46e5;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  padding: 10px 18px;
-  font-weight: 500;
-  cursor: pointer;
-  transition: 0.3s;
+.sidebar nav ul li > :not(.sidebar-icon) {
+  flex: 1;
+  text-align: left;
+  margin: 0;
+  padding: 0;
 }
 
-.add-button:hover {
-  background-color: #3e3acb;
-}
-
-/* ===== Mobile Responsive ===== */
+/* ===== Responsive Sidebar Adjustments ===== */
 @media (max-width: 1024px) {
+  /* Mobile: Sidebar hidden off-screen by default */
   .sidebar {
-    transform: translateX(-100%);
-    transition: transform 0.3s ease;
+    left: -240px; /* CHANGED: Matched to new width */
     box-shadow: none;
+    z-index: 2000;
+    padding: 10px 0 0 0;
   }
 
+  /* Mobile: Sidebar visible when active */
   .sidebar.active {
-    transform: translateX(0);
+    left: 0; /* Show sidebar */
     box-shadow: 3px 0 8px rgba(0, 0, 0, 0.1);
   }
+}
 
-  .content {
+@media (max-width: 768px) {
+  .sidebar nav ul li {
+    font-size: 14px;
+    padding: 10px 20px;
     margin-left: 0;
-    padding: 20px;
+    margin-right: 0;
+  }
+
+  .sidebar-icon {
+    font-size: 16px;
+    margin: 0;
+  }
+
+  .sidebar nav ul li > :not(.sidebar-icon) {
+    margin: 0;
+    padding: 0;
   }
 }

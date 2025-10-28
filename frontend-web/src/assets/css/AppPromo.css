@@ -1,284 +1,158 @@
-/* App Promo Styles - New file */
+/* ===== CLEAN PROMO LAYOUT ===== */
+
 .app-promo-container {
+  height: 100vh;
+  width: 100%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   display: flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: calc(100vh - 70px);
-  width: 100%;
-  padding: 40px 20px;
-  margin-top: 70px;
-  background: linear-gradient(135deg, #f5f9ff 0%, #ebf4ff 100%);
-  position: relative;
+  padding: 0 50px;
+  box-sizing: border-box;
   overflow: hidden;
 }
 
-/* Decorative elements */
-.app-promo-container:before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 15px;
-  background: linear-gradient(
-    90deg, 
-    #ff8a8a, 
-    #ffbe7b, 
-    #fff07b, 
-    #9affaf, 
-    #9ebbff, 
-    #c48aff, 
-    #ffb0ff
-  );
-  background-size: 400% 400%;
-  animation: rainbow-wave 5s linear infinite;
-  z-index: 10;
-}
-
 .app-promo-content {
-  display: flex;
   max-width: 1200px;
   width: 100%;
-  margin: 0 auto;
-  padding: 30px 0;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  gap: 80px;
 }
 
+/* LEFT SIDE */
 .app-promo-text {
-  flex: 1;
-  min-width: 300px;
-  padding: 20px;
+  color: white;
+  animation: fadeInLeft 0.8s ease-out;
 }
 
 .app-promo-text h1 {
-  font-size: 3rem;
-  font-weight: 800;
-  margin-bottom: 20px;
-  color: #4f46e5;
-  line-height: 1.1;
-  position: relative;
+  font-size: 3.4rem;
+  font-weight: 900;
+  margin-bottom: 15px;
+  background: linear-gradient(to right, #ffffff, #e0e7ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
-.app-promo-text h1:after {
-  content: '';
-  position: absolute;
-  bottom: -10px;
-  left: 0;
-  width: 80px;
-  height: 4px;
-  background-color: #4f46e5;
-  border-radius: 2px;
+.app-promo-text p {
+  font-size: 1.25rem;
+  color: rgba(255, 255, 255, 0.95);
+  margin-bottom: 35px; /* space between text and button */
+  line-height: 1.6;
 }
 
-.app-description {
-  font-size: 1.2rem;
-  line-height: 1.5;
-  margin-bottom: 30px;
-  color: #555;
-}
-
-/* App Features Section */
-.app-features {
-  margin: 40px 0;
-}
-
-.feature-item {
+.button-container {
   display: flex;
-  align-items: flex-start;
-  margin-bottom: 25px;
-  background-color: white;
-  padding: 15px;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  justify-content: flex-start;
 }
 
-.feature-item:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
-}
-
-.feature-icon {
-  font-size: 2.5rem;
-  margin-right: 15px;
-  color: #4f46e5;
-  background-color: #f0f0ff;
-  width: 60px;
-  height: 60px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 12px;
-}
-
-.feature-text h3 {
-  font-size: 1.2rem;
-  font-weight: 700;
-  margin-bottom: 5px;
-  color: #333;
-}
-
-.feature-text p {
-  font-size: 0.95rem;
-  color: #666;
-  margin: 0;
-}
-
-/* App Download Buttons */
-.app-buttons {
-  display: flex;
-  gap: 15px;
-  margin-top: 30px;
-  flex-wrap: wrap;
-}
-
-.app-store-btn, .google-play-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 12px 25px;
-  border-radius: 12px;
-  font-weight: 700;
-  font-size: 1rem;
-  color: white;
-  text-decoration: none;
-  transition: all 0.3s ease;
-}
-
-.app-store-btn {
-  background-color: #4f46e5;
-}
-
-.google-play-btn {
-  background-color: #333;
-}
-
-.app-store-btn:hover, .google-play-btn:hover {
-  transform: scale(1.05);
-  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
-}
-
-.app-store-btn svg, .google-play-btn svg {
-  margin-right: 10px;
-}
-
-/* Learn More Section */
-.learn-more {
-  margin-top: 30px;
-}
-
-.learn-more a {
+.download-now-btn {
   display: inline-flex;
   align-items: center;
-  color: #4f46e5;
-  font-weight: 600;
-  font-size: 1rem;
-  text-decoration: none;
-  transition: color 0.2s ease;
-}
-
-.learn-more a:hover {
-  color: #3730a3;
-}
-
-.arrow-icon {
-  margin-left: 8px;
-  transition: transform 0.2s ease;
-}
-
-.learn-more a:hover .arrow-icon {
-  transform: translateX(5px);
-}
-
-/* App Preview Image */
-.app-promo-image {
-  flex: 1;
-  min-width: 300px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
   justify-content: center;
-  padding: 20px;
-  position: relative;
+  padding: 18px 50px;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #667eea;
+  background: white;
+  border-radius: 40px;
+  text-decoration: none;
+  transition: all 0.3s ease;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.download-now-btn:hover {
+  transform: scale(1.05);
+  background: linear-gradient(135deg, #fff 0%, #f0f0ff 100%);
+}
+
+/* RIGHT SIDE */
+.app-promo-image {
+  display: flex;
+  align-items: flex-start; /* aligns image toward top */
+  justify-content: flex-start;
+  transform: translate(-55px, -30px); /* moves left a bit and higher */
 }
 
 .app-promo-image img {
-  max-width: 400px;
-  width: 100%;
+  width: 500px; /* image size */
   height: auto;
-  border-radius: 30px;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
-  border: 10px solid white;
 }
 
-/* QR Code Section */
-.app-qr-code {
-  margin-top: 30px;
-  text-align: center;
+/* Animations */
+@keyframes fadeInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
-.app-qr-code img {
-  width: 120px;
-  height: 120px;
-  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
-  border: 4px solid white;
-  border-radius: 10px;
+@keyframes fadeInRight {
+  from {
+    opacity: 0;
+    transform: translateX(50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
-.app-qr-code p {
-  margin-top: 10px;
-  font-size: 0.9rem;
-  color: #666;
-}
-
-/* Responsive Styles */
+/* RESPONSIVE */
 @media (max-width: 992px) {
   .app-promo-content {
-    flex-direction: column;
+    grid-template-columns: 1fr;
+    text-align: center;
+    gap: 50px;
   }
-  
+
   .app-promo-text h1 {
-    font-size: 2.5rem;
+    font-size: 2.8rem;
   }
-  
+
+  .app-promo-text p {
+    margin: 0 auto 30px auto;
+  }
+
+  .button-container {
+    justify-content: center;
+  }
+
   .app-promo-image {
-    margin-top: 40px;
-    order: -1;
-  }
-  
-  .app-promo-image img {
-    max-width: 300px;
-  }
+  display: flex;
+  align-items: flex-start; /* aligns image toward top */
+  justify-content: flex-start;
+  animation: fadeInRight 0.8s ease-out;
+  transform: translate(-35px, -60px); /* moves left a bit and higher */
 }
 
-@media (max-width: 768px) {
+.app-promo-image img {
+  width: px; /* image size */
+  height: auto;
+}
+}
+
+@media (max-width: 600px) {
   .app-promo-text h1 {
-    font-size: 2rem;
+    font-size: 2.2rem;
   }
-  
-  .feature-item {
-    padding: 12px;
-  }
-  
-  .feature-icon {
-    width: 50px;
-    height: 50px;
-    font-size: 2rem;
-  }
-  
-  .app-buttons {
-    flex-direction: column;
-  }
-  
-  .app-store-btn, .google-play-btn {
-    width: 100%;
-  }
-}
 
-/* Animation for rainbow gradient */
-@keyframes rainbow-wave {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
+  .app-promo-text p {
+    font-size: 1.1rem;
+  }
+
+  .app-promo-image img {
+    width: 300px;
+  }
+
+  .download-now-btn {
+    font-size: 1.1rem;
+    padding: 14px 36px;
+  }
 }

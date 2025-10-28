@@ -1,13 +1,9 @@
 import {
   faArrowLeft,
   faEdit,
-  faEnvelope,
-  faGraduationCap,
-  faLock,
   faSave,
   faTimes,
   faTrash,
-  faUser,
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useEffect, useState } from "react";
@@ -15,47 +11,53 @@ import { Link, useNavigate } from "react-router-dom";
 import "../assets/css/UserInformation.css";
 import studentIcon from "../assets/images/studenticon.png";
 import teacherIcon from "../assets/images/teachericon.png";
+import ModalSuccess from "../layout/ModalSuccess"; // ✅ Import modal component
 import { deleteUser, getUserById, updateUser } from "../services/userService";
 
 const UserInformation = () => {
-  const [userData, setUserData] = useState({ firstName: "", lastName: "", email: "", role: "" });
-  const [formData, setFormData] = useState({ firstName: "", lastName: "", email: "", password: "", confirmPassword: "" });
+  const [userData, setUserData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    role: "",
+  });
+  const [formData, setFormData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
   const [isEditing, setIsEditing] = useState(false);
   const [passwordError, setPasswordError] = useState("");
   const [saveError, setSaveError] = useState("");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [dataLoaded, setDataLoaded] = useState(false);
+
+  // ✅ Modal States
+  const [showModal, setShowModal] = useState(false);
+  const [modalType, setModalType] = useState("success");
+  const [modalMessage, setModalMessage] = useState("");
+  const [modalAction, setModalAction] = useState("");
+
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchUserData = async () => {
-      // Prevent unnecessary API calls if data is already loaded
-      if (dataLoaded) {
-        return;
-      }
+      if (dataLoaded) return;
 
       try {
         const token = localStorage.getItem("token");
         const storedUser = JSON.parse(localStorage.getItem("user"));
-        
+
         if (token && storedUser && storedUser.userId) {
-          // Check if we have complete cached user data
-          if (storedUser.firstName && storedUser.lastName && storedUser.email && storedUser.role) {
-            // Use cached data to avoid API call
-            setUserData(storedUser);
-            setFormData({ ...storedUser, password: "", confirmPassword: "" });
-            setDataLoaded(true);
-            return;
-          }
-          
-          // Only make API call if we don't have complete cached data
-          const userData = await getUserById(storedUser.userId, token);
-          setUserData(userData);
-          setFormData({ ...userData, password: "", confirmPassword: "" });
-          
-          // Cache the complete user data for future use
-          const updatedStoredUser = { ...storedUser, ...userData };
-          localStorage.setItem("user", JSON.stringify(updatedStoredUser));
+          const user =
+            storedUser.firstName && storedUser.email
+              ? storedUser
+              : await getUserById(storedUser.userId, token);
+
+          setUserData(user);
+          setFormData({ ...user, password: "", confirmPassword: "" });
           setDataLoaded(true);
         } else {
           throw new Error("User not found in localStorage");
@@ -73,43 +75,42 @@ const UserInformation = () => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-
-    if (name === "password" || name === "confirmPassword") {
+    setFormData((prev) => ({ ...prev, [name]: value }));
+    if (name === "password" || name === "confirmPassword")
       setPasswordError("");
-    }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    if (formData.password || formData.confirmPassword) {
-      if (formData.password !== formData.confirmPassword) {
-        setPasswordError("Passwords do not match");
-        return;
-      }
-
-      if (formData.password.length < 6) {
-        setPasswordError("Password must be at least 6 characters");
-        return;
-      }
-    }
+    if (formData.password && formData.password !== formData.confirmPassword)
+      return setPasswordError("Passwords do not match");
+    if (formData.password && formData.password.length < 6)
+      return setPasswordError("Password must be at least 6 characters");
 
     try {
-      const { password, confirmPassword, ...dataToUpdate } = formData;
       const token = localStorage.getItem("token");
-      const updatedUser = await updateUser(userData.id, { ...dataToUpdate, password }, token);
-
+      const { password, confirmPassword, ...dataToUpdate } = formData;
+      const updatedUser = await updateUser(
+        userData.id,
+        { ...dataToUpdate, password },
+        token
+      );
       setUserData(updatedUser);
       setFormData({ ...updatedUser, password: "", confirmPassword: "" });
       setIsEditing(false);
       setSaveError("");
+
+      // ✅ Show success modal
+      setModalType("success");
+      setModalMessage("Profile updated successfully!");
+      setModalAction("edit");
+      setShowModal(true);
     } catch (error) {
-      console.error("Failed to update user data:", error);
       setSaveError("Failed to save changes. Please try again.");
+      setModalType("error");
+      setModalMessage("Failed to update profile. Try again.");
+      setModalAction("edit");
+      setShowModal(true);
     }
   };
 
@@ -120,235 +121,232 @@ const UserInformation = () => {
     setIsEditing(false);
   };
 
-  const getRoleIcon = () => {
-    const role = userData.role;
-    if (role === "USER" || role === "STUDENT") {
-      return studentIcon;
-    }
-    if (role === "ADMIN" || role === "TEACHER") {
-      return teacherIcon;
-    }
-    return null;
-  };
-
-  const getRoleDisplayName = (role) => {
-    if (role === "USER" || role === "STUDENT") return "Student";
-    if (role === "ADMIN" || role === "TEACHER") return "Teacher";
-    return "Unknown";
-  };
-
   const handleDeleteAccount = async () => {
     try {
       const token = localStorage.getItem("token");
       await deleteUser(userData.id, token);
       localStorage.removeItem("user");
       localStorage.removeItem("token");
-      navigate("/");
+
+      // ✅ Show delete success modal
+      setModalType("success");
+      setModalMessage("Account deleted successfully!");
+      setModalAction("delete");
+      setShowModal(true);
+
+      // Smooth redirect after a short delay
+      setTimeout(() => navigate("/"), 2000);
     } catch (error) {
       console.error("Failed to delete user account:", error);
+      setModalType("error");
+      setModalMessage("Failed to delete account. Try again.");
+      setModalAction("delete");
+      setShowModal(true);
+      setShowDeleteModal(false);
     }
   };
 
-  if (!userData.firstName) {
-    return <div>Loading...</div>;
-  }
+  const getRoleIcon = () => {
+    if (userData.role === "STUDENT" || userData.role === "USER")
+      return studentIcon;
+    if (userData.role === "TEACHER" || userData.role === "ADMIN")
+      return teacherIcon;
+    return null;
+  };
+
+  const getRoleDisplayName = (role) => {
+    if (role === "STUDENT" || role === "USER") return "Student";
+    if (role === "TEACHER" || role === "ADMIN") return "Teacher";
+    return "Unknown";
+  };
+
+  if (!userData.firstName)
+    return <div className="loading-container">Loading...</div>;
 
   return (
-    <div className="profile-container">
-      <header className="profile-header">
-        <div className="container">
-          <div className="logo">
-            <a href="#" onClick={(e) => { e.preventDefault(); window.location.reload(); }}>
-              <img
-                src={require("../assets/images/logo.png")}
-                alt="Pronounce-IT Logo"
-                style={{ height: "60px" }}
+    <div className="userinfo-wrapper">
+      {/* LEFT PANEL */}
+      <div className="userinfo-form-side">
+        <div className="userinfo-box">
+          <Link
+            to={
+              userData.role === "ADMIN"
+                ? "/teacher-dashboard"
+                : "/user-dashboard"
+            }
+            className="userinfo-back"
+          >
+            <FontAwesomeIcon icon={faArrowLeft} /> Back
+          </Link>
+
+          <h2>User Information</h2>
+
+          <form onSubmit={handleSubmit} className="userinfo-form">
+            <div>
+              <label className="userinfo-label">First Name</label>
+              <input
+                name="firstName"
+                value={formData.firstName}
+                onChange={handleChange}
+                className="userinfo-input"
+                disabled={!isEditing}
               />
-            </a>
-          </div>
-        </div>
-      </header>
-
-      <div className="profile-content">
-        <div className={`profile-card ${isEditing ? "editing" : ""}`}>
-          <div className="profile-nav">
-            {!isEditing && (
-              <Link
-                to={userData.role === "ADMIN" ? "/teacher-dashboard" : "/user-dashboard"}
-                className="back-button"
-              >
-                <FontAwesomeIcon icon={faArrowLeft} />
-              </Link>
-            )}
-
-            <div className="profile-actions">
-              {!isEditing ? (
-                <>
-                  <button className="edit-button" onClick={() => setIsEditing(true)}>
-                    <FontAwesomeIcon icon={faEdit} /> Edit Profile
-                  </button>
-                  <button className="delete-button" onClick={() => setShowDeleteModal(true)}>
-                    <FontAwesomeIcon icon={faTrash} /> Delete Account
-                  </button>
-                </>
-              ) : (
-                <>
-                  <button className="save-button" onClick={handleSubmit}>
-                    <FontAwesomeIcon icon={faSave} /> Save
-                  </button>
-                  <button className="cancel-button" onClick={cancelEdit}>
-                    <FontAwesomeIcon icon={faTimes} /> Cancel
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
-
-          <div className="profile-header-section">
-            <h1>{isEditing ? "Edit Profile" : "User Profile"}</h1>
-          </div>
-
-          <div className="profile-avatar-section">
-            <div className={`profile-avatar ${getRoleIcon() ? 'has-icon' : ''}`}>
-              {getRoleIcon() ? (
-                <img src={getRoleIcon()} alt="Role Icon" className="profile-avatar-img" />
-              ) : (
-                <span>{userData.firstName.charAt(0)}</span>
-              )}
-            </div>
-          </div>
-
-          <div className="profile-details">
-            <div className="detail-item">
-              <div className="detail-icon">
-                <FontAwesomeIcon icon={faUser} />
-              </div>
-              <div className="detail-content">
-                <h3>First Name</h3>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    name="firstName"
-                    value={formData.firstName}
-                    onChange={handleChange}
-                    className="edit-in-place"
-                  />
-                ) : (
-                  <p>{userData.firstName}</p>
-                )}
-              </div>
             </div>
 
-            <div className="detail-item">
-              <div className="detail-icon">
-                <FontAwesomeIcon icon={faUser} />
-              </div>
-              <div className="detail-content">
-                <h3>Last Name</h3>
-                {isEditing ? (
-                  <input
-                    type="text"
-                    name="lastName"
-                    value={formData.lastName}
-                    onChange={handleChange}
-                    className="edit-in-place"
-                  />
-                ) : (
-                  <p>{userData.lastName}</p>
-                )}
-              </div>
+            <div>
+              <label className="userinfo-label">Last Name</label>
+              <input
+                name="lastName"
+                value={formData.lastName}
+                onChange={handleChange}
+                className="userinfo-input"
+                disabled={!isEditing}
+              />
             </div>
 
-            <div className="detail-item">
-              <div className="detail-icon">
-                <FontAwesomeIcon icon={faEnvelope} />
-              </div>
-              <div className="detail-content">
-                <h3>Email</h3>
-                {isEditing ? (
-                  <input
-                    type="email"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    className="edit-in-place"
-                  />
-                ) : (
-                  <p>{userData.email}</p>
-                )}
-              </div>
+            <div>
+              <label className="userinfo-label">Email</label>
+              <input
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                className="userinfo-input"
+                disabled={!isEditing}
+              />
             </div>
 
-            <div className="detail-item">
-              <div className="detail-icon">
-                <FontAwesomeIcon icon={faGraduationCap} />
-              </div>
-              <div className="detail-content">
-                <h3>Account Type</h3>
-                <p>{getRoleDisplayName(userData.role)}</p>
-              </div>
+            <div>
+              <label className="userinfo-label">Account Type</label>
+              <input
+                value={getRoleDisplayName(userData.role)}
+                className="userinfo-input"
+                disabled
+              />
             </div>
 
             {isEditing && (
               <>
-                <div className="detail-item">
-                  <div className="detail-icon">
-                    <FontAwesomeIcon icon={faLock} />
-                  </div>
-                  <div className="detail-content">
-                    <h3>New Password</h3>
-                    <input
-                      type="password"
-                      name="password"
-                      value={formData.password}
-                      onChange={handleChange}
-                      placeholder="Enter new password"
-                      className="edit-in-place"
-                    />
-                  </div>
+                <div className="userinfo-span-2">
+                  <label className="userinfo-label">New Password</label>
+                  <input
+                    type="password"
+                    name="password"
+                    placeholder="Enter new password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    className="userinfo-input"
+                  />
                 </div>
 
-                <div className="detail-item">
-                  <div className="detail-icon">
-                    <FontAwesomeIcon icon={faLock} />
-                  </div>
-                  <div className="detail-content">
-                    <h3>Confirm Password</h3>
-                    <input
-                      type="password"
-                      name="confirmPassword"
-                      value={formData.confirmPassword}
-                      onChange={handleChange}
-                      placeholder="Confirm new password"
-                      className="edit-in-place"
-                    />
-                    {passwordError && <div className="error-message">{passwordError}</div>}
-                  </div>
+                <div className="userinfo-span-2">
+                  <label className="userinfo-label">Confirm Password</label>
+                  <input
+                    type="password"
+                    name="confirmPassword"
+                    placeholder="Confirm new password"
+                    value={formData.confirmPassword}
+                    onChange={handleChange}
+                    className="userinfo-input"
+                  />
+                  {passwordError && (
+                    <p className="userinfo-error">{passwordError}</p>
+                  )}
                 </div>
               </>
             )}
-          </div>
 
-          {saveError && <div className="error-message">{saveError}</div>}
+            {isEditing && (
+              <div className="userinfo-form-actions userinfo-span-2">
+                <button type="submit" className="userinfo-save-btn">
+                  <FontAwesomeIcon icon={faSave} /> Save
+                </button>
+                <button
+                  type="button"
+                  onClick={cancelEdit}
+                  className="userinfo-cancel-btn"
+                >
+                  <FontAwesomeIcon icon={faTimes} /> Cancel
+                </button>
+              </div>
+            )}
+          </form>
         </div>
       </div>
 
+      {/* RIGHT PANEL */}
+      <div className="userinfo-gradient-side">
+        <div className="userinfo-gradient-content">
+          <h2>User Profile</h2>
+          <p>View your account details</p>
+
+          <div className="userinfo-role-section">
+            <img
+              src={getRoleIcon()}
+              alt="Role Icon"
+              className="userinfo-role-icon"
+            />
+            <div className="userinfo-role-info">
+              <h3>
+                {userData.firstName} {userData.lastName}
+              </h3>
+              <p>{getRoleDisplayName(userData.role)}</p>
+            </div>
+          </div>
+
+          {!isEditing && (
+            <div className="userinfo-actions">
+              <button
+                onClick={() => setIsEditing(true)}
+                className="userinfo-btn userinfo-edit-btn"
+              >
+                <FontAwesomeIcon icon={faEdit} /> Edit
+              </button>
+              <button
+                onClick={() => setShowDeleteModal(true)}
+                className="userinfo-btn userinfo-delete-btn"
+              >
+                <FontAwesomeIcon icon={faTrash} /> Delete
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* DELETE CONFIRMATION MODAL */}
       {showDeleteModal && (
         <div className="modal-overlay">
-          <div className="modal">
-            <h2>Confirm Account Deletion</h2>
-            <p>Are you sure you want to delete your account? This action cannot be undone.</p>
+          <div className="modal-content">
+            <h3>Confirm Account Deletion</h3>
+            <p>
+              Are you sure you want to delete your account? This action cannot
+              be undone and all your data will be permanently removed.
+            </p>
             <div className="modal-actions">
-              <button className="confirm-button" onClick={handleDeleteAccount}>
-                Yes, Delete
+              <button
+                onClick={handleDeleteAccount}
+                className="confirm-delete-btn"
+              >
+                <FontAwesomeIcon icon={faTrash} /> Yes, Delete Account
               </button>
-              <button className="cancel-button" onClick={() => setShowDeleteModal(false)}>
-                Cancel
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className="cancel-modal-btn"
+              >
+                <FontAwesomeIcon icon={faTimes} /> Cancel
               </button>
             </div>
           </div>
         </div>
       )}
+
+      {/* ✅ Notification Modal */}
+      <ModalSuccess
+        show={showModal}
+        type={modalType}
+        message={modalMessage}
+        actionType={modalAction}
+        onClose={() => setShowModal(false)}
+      />
     </div>
   );
 };

@@ -51,6 +51,55 @@ function Header({
     };
   }, [dropdownRef, userCardRef, isDashboard]);
 
+  // ✅ Smooth scroll for homepage navigation
+  const handleNavClick = (e) => {
+    e.preventDefault();
+    const href = e.currentTarget.getAttribute("href");
+
+    if (href && href.startsWith("#")) {
+      const isHomePage = window.location.pathname === "/";
+      const targetId = href.substring(1);
+
+      if (isHomePage) {
+        const targetElement = document.querySelector(href);
+        if (targetElement) {
+          const headerOffset = 80;
+          const elementPosition = targetElement.getBoundingClientRect().top;
+          const offsetPosition =
+            elementPosition + window.pageYOffset - headerOffset;
+
+          const start = window.scrollY;
+          const distance = offsetPosition - start;
+          const duration = 800;
+          let startTime = null;
+
+          const easeInOutCubic = (t) =>
+            t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
+
+          const animateScroll = (currentTime) => {
+            if (startTime === null) startTime = currentTime;
+            const timeElapsed = currentTime - startTime;
+            const progress = Math.min(timeElapsed / duration, 1);
+            const easedProgress = easeInOutCubic(progress);
+
+            window.scrollTo(0, start + distance * easedProgress);
+
+            if (timeElapsed < duration) {
+              requestAnimationFrame(animateScroll);
+            }
+          };
+
+          requestAnimationFrame(animateScroll);
+        }
+
+        if (closeMenu) setTimeout(closeMenu, 100);
+      } else {
+        window.location.href = `/${href}`;
+      }
+    }
+  };
+
+  // ✅ Dropdown rendering logic
   const renderDropdown = () => {
     if (!showDropdown) return null;
 
@@ -69,12 +118,23 @@ function Header({
       padding: "10px 0",
     };
 
+    const isAdminPage =
+      pageTitle === "User Management" || pageTitle === "Achievement Management";
+
     return ReactDOM.createPortal(
-      <div className="user-dropdown-portal" style={dropdownStyle} ref={dropdownRef}>
-        <Link to="/profile" className="dropdown-item">
-          <FontAwesomeIcon icon={faUser} className="dropdown-icon" />
-          Edit Profile
-        </Link>
+      <div
+        className="user-dropdown-portal"
+        style={dropdownStyle}
+        ref={dropdownRef}
+      >
+        {/* ✅ Hide Edit Profile for Admin, keep only Logout */}
+        {!isAdminPage && (
+          <Link to="/profile" className="dropdown-item">
+            <FontAwesomeIcon icon={faUser} className="dropdown-icon" />
+            Edit Profile
+          </Link>
+        )}
+
         <button
           onClick={(e) => {
             e.stopPropagation();
@@ -89,6 +149,10 @@ function Header({
       document.body
     );
   };
+
+  const displayName = user?.firstName
+    ? `${user.firstName} ${user.lastName}`
+    : "User";
 
   return (
     <>
@@ -110,11 +174,58 @@ function Header({
             </Link>
           </div>
 
-          {/* Centered title for dashboard */}
           {isDashboard && (
             <div className="dashboard-page-title">
               <h2>{pageTitle}</h2>
             </div>
+          )}
+
+          {!isDashboard && (
+            <nav className={menuOpen ? "active" : ""}>
+              <ul>
+                <li>
+                  <a href="#features" onClick={handleNavClick}>
+                    Features
+                  </a>
+                </li>
+                <li>
+                  <a href="#how-it-works" onClick={handleNavClick}>
+                    How It Works
+                  </a>
+                </li>
+                <li>
+                  <a href="#team" onClick={handleNavClick}>
+                    Developers
+                  </a>
+                </li>
+                <li>
+                  <a href="#testimonials" onClick={handleNavClick}>
+                    Testimonials
+                  </a>
+                </li>
+                <li>
+                  <a href="#faq" onClick={handleNavClick}>
+                    FAQ
+                  </a>
+                </li>
+              </ul>
+              <div className="mobile-buttons">
+                <Link
+                  to="/login"
+                  className="btn btn-secondary"
+                  onClick={closeMenu}
+                >
+                  Log In
+                </Link>
+                <Link
+                  to="/login?signup=true"
+                  className="btn btn-primary"
+                  onClick={closeMenu}
+                >
+                  Sign Up
+                </Link>
+              </div>
+            </nav>
           )}
 
           <div className="header-right">
@@ -161,7 +272,7 @@ function Header({
                     className="teacher-avatar-icon"
                   />
                   <div className="user-info">
-                    <p>{`${user.firstName} ${user.lastName}`}</p>
+                    <p>{displayName}</p>
                   </div>
                 </div>
               </>
@@ -170,6 +281,7 @@ function Header({
         </div>
       </header>
 
+      {/* ✅ Dropdown shows Logout only on admin side */}
       {isDashboard && renderDropdown()}
     </>
   );
