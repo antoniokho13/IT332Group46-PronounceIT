@@ -121,28 +121,6 @@
             android:textSize="24sp"
             android:textStyle="bold" />
 
-        <!-- Feedback TextView for "Correct!" or "Try again!" messages -->
-        <TextView
-            android:id="@+id/feedbackTextView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="8dp"
-            android:background="#33FFFFFF"
-            android:elevation="6dp"
-            android:fontFamily="@font/nunito"
-            android:gravity="center"
-            android:padding="12dp"
-            android:shadowColor="#000000"
-            android:shadowDx="2"
-            android:shadowDy="2"
-            android:shadowRadius="3"
-            android:text=""
-            android:textColor="#00FF00"
-            android:textSize="32sp"
-            android:textStyle="bold"
-            android:visibility="gone" />
-
-
         <FrameLayout
             android:id="@+id/imageFrameLayout"
             android:layout_width="319dp"
@@ -175,6 +153,32 @@
                     android:layout_height="296dp"
                     tools:layout_editor_absoluteX="2dp"
                     tools:layout_editor_absoluteY="2dp" />
+
+                <!-- Feedback TextView as popup overlay in the center -->
+                <TextView
+                    android:id="@+id/feedbackTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/curved_word_background"
+                    android:elevation="10dp"
+                    android:fontFamily="@font/nunito"
+                    android:gravity="center"
+                    android:padding="16dp"
+                    android:paddingStart="24dp"
+                    android:paddingEnd="24dp"
+                    android:shadowColor="#000000"
+                    android:shadowDx="3"
+                    android:shadowDy="3"
+                    android:shadowRadius="6"
+                    android:text=""
+                    android:textColor="#00FF00"
+                    android:textSize="28sp"
+                    android:textStyle="bold"
+                    android:visibility="gone"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
             </androidx.constraintlayout.widget.ConstraintLayout>
         </FrameLayout>
 
