@@ -1,374 +1,139 @@
-.analytics-container {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 2rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  min-height: 100vh;
-}
+/* ==================== ANALYTICS PAGE STYLING ==================== */
 
-.analytics-container h2 {
-  color: #ffffff;
-  font-size: 2.5rem;
-  font-weight: 700;
-  margin-bottom: 2.5rem;
-  text-align: center;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  letter-spacing: -0.5px;
-}
-
-/* Back Button / Lesson Name Link */
-.analytics-back-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: #ffffff;
-  text-decoration: none;
-  font-size: 1rem;
-  font-weight: 600;
-  padding: 0.75rem 1.5rem;
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(10px);
-  border-radius: 50px;
-  margin-bottom: 2rem;
-  transition: all 0.3s ease;
-  border: 2px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  cursor: pointer;
-}
-
-.analytics-back-link:hover {
-  background: rgba(255, 255, 255, 0.25);
-  border-color: rgba(255, 255, 255, 0.4);
-  transform: translateX(-5px);
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
-}
-
-.analytics-back-link:active {
-  transform: translateX(-3px);
-}
-
-.analytics-back-link svg {
-  width: 20px;
-  height: 20px;
-}
-
-/* Filter Section */
-.analytics-filter-section {
+/* Main container similar to .existing-items in Dashboard */
+.analytics-page {
   display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  margin-bottom: 2.5rem;
-  flex-wrap: wrap;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  background-color: #fff;
+  padding-top: 0;
+  margin-top: -40px; /* 🔼 Raised first table higher */
+  gap: 25px; /* 🔽 Space between both tables */
 }
 
-.analytics-filter-label {
-  color: #ffffff;
-  font-size: 1.1rem;
-  font-weight: 600;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+/* ===== Table Wrapper (mirrors .table-wrapper style) ===== */
+.analytics-table-wrapper {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: auto;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background-color: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08); /* subtle card shadow */
+  padding: 4px;
 }
 
-.analytics-filter-select {
-  padding: 0.75rem 2.5rem 0.75rem 1.25rem;
-  font-size: 1rem;
-  font-weight: 500;
-  color: #1f2937;
-  background: #ffffff;
-  border: 2px solid rgba(255, 255, 255, 0.3);
-  border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  cursor: pointer;
-  transition: all 0.3s ease;
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%23667eea' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
-  background-repeat: no-repeat;
-  background-position: right 0.75rem center;
-  background-size: 20px;
-  min-width: 200px;
+/* ===== Scrollbar Styles (same as Dashboard) ===== */
+.analytics-table-wrapper::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
 }
 
-.analytics-filter-select:hover {
-  border-color: #667eea;
-  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.2);
-  transform: translateY(-2px);
+.analytics-table-wrapper::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
 }
 
-.analytics-filter-select:focus {
-  outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+.analytics-table-wrapper::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
 }
 
-.analytics-filter-select option {
-  padding: 0.75rem;
-  font-weight: 500;
+.analytics-table-wrapper::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
 }
 
-.analytics-container h3 {
-  color: #ffffff;
-  font-size: 1.8rem;
-  font-weight: 600;
-  margin-top: 3rem;
-  margin-bottom: 1.5rem;
-  text-align: center;
-  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.analytics-container > p {
-  text-align: center;
-  color: #ffffff;
-  font-size: 1.2rem;
-  padding: 3rem;
-}
-
-/* Table Container with Card Style */
+/* ===== Analytics Table ===== */
 .analytics-table {
   width: 100%;
-  background: #ffffff;
-  border-radius: 16px;
-  overflow: hidden;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-  margin-bottom: 2rem;
-  border-collapse: separate;
-  border-spacing: 0;
-}
-
-/* Table Header */
-.analytics-table thead {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-
-.analytics-table thead tr th {
-  padding: 1.25rem 1.5rem;
-  text-align: left;
-  font-weight: 600;
-  font-size: 0.875rem;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  color: #ffffff;
+  border-collapse: collapse;
   border: none;
 }
 
-/* Table Body */
-.analytics-table tbody tr {
-  transition: all 0.3s ease;
+/* Sticky Header — same as Dashboard */
+.analytics-table th {
+  padding: 8px 12px;
+  text-align: center;
   border-bottom: 1px solid #e5e7eb;
+  background-color: #f9fafb;
+  font-weight: 600;
+  color: #5f6368;
+  font-size: 14px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
 }
 
-.analytics-table tbody tr:last-child {
-  border-bottom: none;
+.analytics-table td {
+  padding: 10px 12px;
+  text-align: center;
+  border-bottom: 1px solid #e5e7eb;
+  font-size: 14px;
+  color: #3c4043;
 }
 
+/* Hover row style for interactivity */
 .analytics-table tbody tr:hover {
-  background: linear-gradient(90deg, #f8f9ff 0%, #f3f4ff 100%);
-  transform: scale(1.01);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.1);
+  background-color: #f5f5f5;
+  box-shadow: inset 1px 0 0 #dadce0, inset -1px 0 0 #dadce0,
+    0 1px 2px 0 rgba(60, 64, 67, 0.3), 0 1px 3px 1px rgba(60, 64, 67, 0.15);
+  position: relative;
+  z-index: 2;
 }
 
-.analytics-table tbody tr td {
-  padding: 1.25rem 1.5rem;
-  color: #374151;
-  font-size: 0.95rem;
-  border: none;
+/* Empty state style */
+.analytics-table tbody tr td[colspan] {
+  text-align: center;
+  color: #5f6368;
+  padding: 40px 18px;
+  font-style: italic;
 }
 
-/* First column (Name/Word) styling */
-.analytics-table tbody tr td:first-child {
-  font-weight: 600;
-  color: #1f2937;
-}
-
-/* Status Badge Styling */
-.analytics-table tbody tr td:last-child {
-  font-weight: 600;
-  text-transform: uppercase;
-  font-size: 0.85rem;
-  letter-spacing: 0.5px;
-}
-
-/* Pass/Fail Status Colors - Applied via className in JSX */
+/* ===== Status Colors ===== */
 .status-pass {
-  color: #059669;
+  color: #16a34a;
+  font-weight: 500;
 }
 
 .status-fail {
   color: #dc2626;
+  font-weight: 500;
 }
 
-/* Empty State */
-.analytics-table tbody tr td[colspan] {
-  text-align: center;
-  color: #9ca3af;
-  font-style: italic;
-  padding: 3rem;
-  font-size: 1rem;
-}
-
-/* Score Highlighting */
-.analytics-table tbody tr td:nth-child(4) {
-  font-weight: 600;
-  color: #667eea;
-  font-size: 1rem;
-}
-
-/* Number Columns Alignment */
-.analytics-table tbody tr td:nth-child(3),
-.analytics-table tbody tr td:nth-child(4) {
-  text-align: center;
-}
-
-.analytics-table thead tr th:nth-child(3),
-.analytics-table thead tr th:nth-child(4) {
-  text-align: center;
-}
-
-/* Progress Bar for Word Statistics */
+/* ===== Progress Bar (Word Statistics) ===== */
 .progress-bar-container {
-  position: relative;
   width: 100%;
-  height: 24px;
-  background-color: #e9ecef;
-  border-radius: 12px;
+  min-width: 150px;
+  background-color: #e5e7eb;
+  border-radius: 4px;
   overflow: hidden;
+  position: relative;
+  height: 20px;
   display: flex;
   align-items: center;
-  min-width: 100px; /* Ensure it doesn't get too squished */
 }
 
 .progress-bar {
+  background-color: #3b82f6;
   height: 100%;
-  background: linear-gradient(90deg, #8e96f0 0%, #8a5fb5 100%);
-  border-radius: 12px;
-  transition: width 0.5s ease-in-out;
+  transition: width 0.3s ease;
 }
 
 .progress-bar-label {
   position: absolute;
-  left: 12px;
-  color: #ffffff;
-  font-weight: 600;
-  font-size: 0.8rem;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
-  white-space: nowrap;
-}
-
-/* Word Statistics Table Specific Styling */
-.analytics-table tbody tr td:nth-child(2),
-.analytics-table tbody tr td:nth-child(3),
-.analytics-table tbody tr td:nth-child(4) {
-  text-align: center;
+  left: 50%;
+  transform: translateX(-50%);
+  color: #111827;
   font-weight: 500;
+  font-size: 12px;
 }
 
-.analytics-table thead tr th:nth-child(2) {
+/* ===== Loading State ===== */
+.analytics-loading {
+  font-size: 1rem;
+  color: #6b7280;
   text-align: center;
+  padding: 40px;
 }
 
-/* Responsive Design */
-@media (max-width: 1024px) {
-  .analytics-container {
-    padding: 1.5rem;
-  }
-
-  .analytics-container h2 {
-    font-size: 2rem;
-  }
-
-  .analytics-container h3 {
-    font-size: 1.5rem;
-  }
-}
-
-@media (max-width: 768px) {
-  .analytics-container {
-    padding: 1rem;
-  }
-
-  .analytics-container h2 {
-    font-size: 1.5rem;
-    margin-bottom: 1.5rem;
-  }
-
-  .analytics-container h3 {
-    font-size: 1.25rem;
-    margin-top: 2rem;
-  }
-
-  .analytics-filter-section {
-    flex-direction: column;
-    gap: 0.75rem;
-  }
-
-  .analytics-filter-select {
-    width: 100%;
-    min-width: auto;
-  }
-
-  .analytics-table {
-    font-size: 0.875rem;
-    border-radius: 12px;
-  }
-
-  .analytics-table thead tr th,
-  .analytics-table tbody tr td {
-    padding: 0.875rem 0.75rem;
-    font-size: 0.8rem;
-  }
-
-  .analytics-table thead tr th {
-    font-size: 0.75rem;
-  }
-
-  /* Stack table on very small screens */
-  .analytics-table tbody tr {
-    display: block;
-    margin-bottom: 1rem;
-    border-radius: 8px;
-    overflow: hidden;
-  }
-
-  .analytics-table tbody tr td {
-    display: block;
-    text-align: right;
-    padding: 0.75rem;
-    border-bottom: 1px solid #f3f4f6;
-    position: relative;
-    padding-left: 50%;
-  }
-
-  .analytics-table tbody tr td:last-child {
-    border-bottom: none;
-  }
-
-  .analytics-table tbody tr td:before {
-    content: attr(data-label);
-    position: absolute;
-    left: 0.75rem;
-    font-weight: 600;
-    text-transform: uppercase;
-    font-size: 0.7rem;
-    color: #6b7280;
-    text-align: left;
-  }
-
-  .analytics-table thead {
-    display: none;
-  }
-}
-
-/* Loading Animation */
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.analytics-table {
-  animation: fadeIn 0.6s ease-out;
-}

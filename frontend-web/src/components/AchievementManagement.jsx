@@ -1,340 +1,283 @@
 import {
   faAward,
-  faCheckCircle,
   faEdit,
-  faExclamationCircle,
-  faInfoCircle,
-  faPlus,
-  faSignOutAlt,
-  faTimes,
-  faTrash,
-  faUser,
-  faUsers
+  faTrash
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { useEffect, useRef, useState } from "react";
 import ReactDOM from "react-dom";
-import { Link, useNavigate } from "react-router-dom";
-import "../assets/css/AchievementManagement.css";
-import "../assets/css/AchievementResponsive.css";
-import adminIcon from "../assets/images/adminicon.png";
-import logo from "../assets/images/logo.png";
+import { useNavigate } from "react-router-dom";
+
+// ✅ Use your unified dashboard styles
+import "../assets/css/Dashboard.css";
+
+// ✅ NEW: Import Achievement-specific modal styles
+import "../assets/css/AchievementModal.css";
+import "../assets/css/ModalSuccess.css";
+import ModalSuccess from "../layout/ModalSuccess";
+
+import Header from "../layout/Header";
+import Sidebar from "../layout/Sidebar";
+
 import {
   createAchievement,
   deleteAchievement,
   getAllAchievements,
-  updateAchievement
+  updateAchievement,
 } from "../services/achievementService";
-import {logout} from "../services/authService";
+import { logout } from "../services/authService";
 
 const AchievementManagement = () => {
-  const [showModal, setShowModal] = useState(false);
-  const [modalType, setModalType] = useState("");
-  const [editingItem, setEditingItem] = useState(null);
   const [achievements, setAchievements] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [notification, setNotification] = useState({ show: false, message: "", type: "" });
+  const [showModal, setShowModal] = useState(false);
+  const [editingItem, setEditingItem] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
-  const [activeSection, setActiveSection] = useState("achievements");
-  const [showDropdown, setShowDropdown] = useState(false);
-  const [user, setUser] = useState({ firstName: "Admin", lastName: "User", id: 1 });
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [previewImage, setPreviewImage] = useState(null);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const fileInputRef = useRef(null);
-  
+
+  // ✅ Pagination states
+  const [page, setPage] = useState(1);
+  const itemsPerPage = 5;
+
+  // ✅ ModalSuccess states
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [successModalData, setSuccessModalData] = useState({
+    message: "",
+    type: "",
+  });
+
   const modalRef = useRef(null);
   const deleteModalRef = useRef(null);
-  const dropdownRef = useRef(null);
-  const userCardRef = useRef(null);
+  const fileInputRef = useRef(null);
   const navigate = useNavigate();
 
-  // Reset preview image when modal opens/closes
-  useEffect(() => {
-    if (showModal) {
-      if (editingItem && editingItem.badgeUrl) {
-        setPreviewImage(editingItem.badgeUrl);
-      } else {
-        setPreviewImage(null);
-      }
-    }
-  }, [showModal, editingItem]);
-  
-  // Load achievements from backend on component mount
-  useEffect(() => {
-    const fetchAchievements = async () => {
-      // Only fetch if achievements haven't been loaded yet
-      if (achievements.length > 0) {
-        setLoading(false);
-        return;
-      }
+  const user = { firstName: "Admin", lastName: "User" };
 
+  // === Load all achievements ===
+  useEffect(() => {
+    const fetchData = async () => {
       try {
         const data = await getAllAchievements();
         setAchievements(data);
       } catch (error) {
         console.error("Error fetching achievements:", error);
-        setNotification({
-          show: true,
-          message: "Failed to load achievements. Please try again.",
-          type: "error"
-        });
       } finally {
         setLoading(false);
       }
     };
+    fetchData();
+  }, []);
 
-    fetchAchievements();
-  }, [achievements.length]);
-
-  // Force refresh function for when achievements are modified
+  // === Refresh ===
   const refreshAchievements = async () => {
     try {
-      setLoading(true);
       const data = await getAllAchievements();
       setAchievements(data);
     } catch (error) {
-      console.error("Error refreshing achievements:", error);
-      setNotification({
-        show: true,
-        message: "Failed to refresh achievements. Please try again.",
-        type: "error"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-  
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (
-        dropdownRef.current &&
-        !dropdownRef.current.contains(event.target) &&
-        userCardRef.current &&
-        !userCardRef.current.contains(event.target)
-      ) {
-        setShowDropdown(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [dropdownRef, userCardRef]);
-
-  // Close modal when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (
-        modalRef.current &&
-        !modalRef.current.contains(event.target) &&
-        showModal
-      ) {
-        setShowModal(false);
-        setEditingItem(null);
-        setPreviewImage(null);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [modalRef, showModal]);
-
-  // Close delete modal when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (
-        deleteModalRef.current &&
-        !deleteModalRef.current.contains(event.target) &&
-        showDeleteModal
-      ) {
-        setShowDeleteModal(false);
-        setItemToDelete(null);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [deleteModalRef, showDeleteModal]);
-
-  // Close sidebar when clicking outside on mobile
-  useEffect(() => {
-    const handleResize = () => {
-      if (window.innerWidth > 768 && isSidebarOpen) {
-        setIsSidebarOpen(false);
-      }
-    };
-
-    window.addEventListener("resize", handleResize);
-    return () => {
-      window.removeEventListener("resize", handleResize);
-    };
-  }, [isSidebarOpen]);
-
-  const toggleDropdown = (e) => {
-    e.stopPropagation();
-    setShowDropdown(!showDropdown);
-  };
-
-  const handleNavClick = (section) => {
-    if (section === "users") {
-      navigate("/user-management");
-    } else {
-      setActiveSection(section);
+      console.error("Error refreshing:", error);
     }
   };
 
+  // === Logout ===
   const handleLogout = async () => {
-      // This calls your authService.js function.
-      // That function will clear localStorage and call the backend.
-      await logout(); 
-      
-      // After the storage is cleared, navigate to the login page.
-      navigate("/login");
-    };
+    await logout();
+    navigate("/login");
+  };
 
-  // Function to handle image selection
+  // === Sidebar Navigation ===
+  const handleNavClick = (section) => {
+    if (section === "users") navigate("/user-management");
+  };
+
+  // === Add/Edit Achievement ===
+  const handleAddAchievement = async (e) => {
+    e.preventDefault();
+    try {
+      const name = e.target.name.value;
+      const description = e.target.description.value;
+      const pointsRequired = parseInt(e.target.pointsRequired.value, 10);
+      const isActive = e.target.isActive.value === "true";
+      const badgeFile = e.target.badgeImage.files[0];
+
+      const data = { name, description, pointsRequired, isActive, badgeFile };
+
+      if (editingItem) {
+        await updateAchievement(editingItem.id, data);
+        setSuccessModalData({
+          message: "Achievement updated successfully!",
+          type: "success",
+        });
+      } else {
+        await createAchievement(data);
+        setSuccessModalData({
+          message: "Achievement added successfully!",
+          type: "success",
+        });
+      }
+
+      setShowSuccessModal(true);
+      await refreshAchievements();
+      setShowModal(false);
+      setEditingItem(null);
+      setPreviewImage(null);
+    } catch (error) {
+      console.error("Error saving achievement:", error);
+      setSuccessModalData({
+        message: "Failed to save achievement.",
+        type: "error",
+      });
+      setShowSuccessModal(true);
+    }
+  };
+
+  // === Image Preview ===
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // Check file size - limit to 5MB
-      const maxSize = 5 * 1024 * 1024; // 5MB in bytes
-      if (file.size > maxSize) {
-        setNotification({
-          show: true,
-          message: "Image is too large. Please select an image smaller than 5MB.",
-          type: "error"
-        });
-        
-        // Reset file input
-        if (fileInputRef.current) {
-          fileInputRef.current.value = '';
-        }
-        return;
-      }
-      
-      // Preview the image
       const reader = new FileReader();
-      reader.onload = () => {
-        setPreviewImage(reader.result);
-      };
+      reader.onload = () => setPreviewImage(reader.result);
       reader.readAsDataURL(file);
     }
   };
 
-  // Function to open modal with specific type
-  const openModal = (type, item = null) => {
-    setModalType(type);
+  // === Modal Control ===
+  const openModal = (item = null) => {
     setEditingItem(item);
     setShowModal(true);
+    if (item && item.badgeUrl) setPreviewImage(item.badgeUrl);
+    else setPreviewImage(null);
   };
 
-  // Function to handle row click for editing
-  const handleRowClick = (item) => {
-    openModal("achievements", item);
-  };
-  
-  // Function to delete an item
-  const handleDelete = async (achievement) => {
+  const handleDelete = (achievement) => {
     setItemToDelete(achievement);
     setShowDeleteModal(true);
   };
 
-  // Function to confirm deletion
   const confirmDelete = async () => {
     try {
       await deleteAchievement(itemToDelete.id);
-      
-      // Refresh achievements from server
       await refreshAchievements();
-      
       setShowDeleteModal(false);
-      setItemToDelete(null);
-      
-      setNotification({
-        show: true,
-        message: `Achievement "${itemToDelete.name}" has been successfully deleted.`,
-        type: "success"
+      setSuccessModalData({
+        message: "Achievement deleted successfully!",
+        type: "success",
       });
-      
-      // Auto-hide notification after 5 seconds
-      setTimeout(() => {
-        setNotification({ show: false, message: "", type: "" });
-      }, 5000);
+      setShowSuccessModal(true);
     } catch (error) {
-      console.error("Error deleting achievement:", error);
-      setNotification({
-        show: true,
-        message: "Failed to delete achievement. Please try again.",
-        type: "error"
+      setSuccessModalData({
+        message: "Failed to delete achievement.",
+        type: "error",
       });
-      
-      // Auto-hide notification after 5 seconds
-      setTimeout(() => {
-        setNotification({ show: false, message: "", type: "" });
-      }, 5000);
+      setShowSuccessModal(true);
     }
   };
 
-  // Render modal content based on type
-  const renderModalContent = () => {
+  // === Pagination Logic ===
+  const totalPages = Math.ceil(achievements.length / itemsPerPage);
+  const startIndex = (page - 1) * itemsPerPage;
+  const currentItems = achievements.slice(startIndex, startIndex + itemsPerPage);
+  const pageNumbers = [...Array(totalPages).keys()].map((num) => num + 1);
+
+  // === Render Achievement Table ===
+  const renderAchievementsTable = () => {
+    if (loading)
+      return (
+        <tr>
+          <td colSpan="6" style={{ textAlign: "center" }}>
+            Loading...
+          </td>
+        </tr>
+      );
+
+    if (achievements.length === 0)
+      return (
+        <tr>
+          <td colSpan="6" style={{ textAlign: "center" }}>
+            No achievements found.
+          </td>
+        </tr>
+      );
+
+    return currentItems.map((achievement) => (
+      <tr key={achievement.id}>
+        <td>
+          {achievement.badgeUrl ? (
+            <img
+              src={achievement.badgeUrl}
+              alt="Badge"
+              style={{
+                width: "40px",
+                height: "40px",
+                borderRadius: "50%",
+                objectFit: "cover",
+              }}
+            />
+          ) : (
+            <FontAwesomeIcon icon={faAward} />
+          )}
+        </td>
+        <td>{achievement.name}</td>
+        <td>{achievement.description}</td>
+        <td>{achievement.pointsRequired}</td>
+        <td>{achievement.isActive ? "Active" : "Inactive"}</td>
+        <td className="action-buttons-cell">
+          <button
+            className="action-btn"
+            title="Edit"
+            onClick={() => openModal(achievement)}
+          >
+            <FontAwesomeIcon icon={faEdit} />
+          </button>
+          <button
+            className="action-btn delete"
+            title="Delete"
+            onClick={() => handleDelete(achievement)}
+          >
+            <FontAwesomeIcon icon={faTrash} />
+          </button>
+        </td>
+      </tr>
+    ));
+  };
+
+  // === Modals with NEW class names ===
+  const renderModal = () => {
+    if (!showModal) return null;
     const isEditing = editingItem !== null;
 
-    return (
-      <>
-        <h3>{isEditing ? "Edit Achievement" : "Add New Achievement"}</h3>
-        <form className="modal-form" onSubmit={handleAddAchievement}>
-          <div className="form-group">
-            <label htmlFor="name">Achievement Name</label>
-            <input
-              type="text"
-              id="name"
-              placeholder="Enter achievement name"
-              defaultValue={isEditing ? editingItem.name : ""}
-              required
-            />
-          </div>
-          <div className="form-group">
-            <label htmlFor="description">Description</label>
-            <textarea
-              id="description"
-              placeholder="Enter achievement description"
-              defaultValue={isEditing ? editingItem.description : ""}
-              required
-              rows={3}
-            />
-          </div>
-          
-          {/* Badge Image Upload */}
-          <div className="form-group">
-            <label htmlFor="badgeImage">Badge Image</label>
-            <div className="badge-image-container">
-              {previewImage ? (
-                <div className="badge-preview">
-                  <img src={previewImage} alt="Badge Preview" />
-                  <button 
-                    type="button" 
-                    className="remove-badge-btn"
-                    onClick={() => {
-                      setPreviewImage(null);
-                      if (fileInputRef.current) {
-                        fileInputRef.current.value = '';
-                      }
-                    }}
-                  >
-                    <FontAwesomeIcon icon={faTimes} />
-                  </button>
-                </div>
-              ) : (
-                <div className="badge-upload-placeholder">
-                  <FontAwesomeIcon icon={faAward} size="2x" />
-                  <span>Upload a badge image</span>
+    return ReactDOM.createPortal(
+      <div className="achievement-modal-overlay">
+        <div className="achievement-modal-container" ref={modalRef}>
+          <h3>{isEditing ? "Edit Achievement" : "Add New Achievement"}</h3>
+          <form className="achievement-modal-form" onSubmit={handleAddAchievement}>
+            <div className="achievement-form-group">
+              <label>Name</label>
+              <input
+                id="name"
+                name="name"
+                defaultValue={isEditing ? editingItem.name : ""}
+                required
+              />
+            </div>
+            <div className="achievement-form-group">
+              <label>Description</label>
+              <textarea
+                id="description"
+                name="description"
+                defaultValue={isEditing ? editingItem.description : ""}
+                required
+              />
+            </div>
+            <div className="achievement-form-group">
+              <label>Badge Image</label>
+              {previewImage && (
+                <div className="achievement-image-preview">
+                  <img
+                    src={previewImage}
+                    alt="Preview"
+                  />
                 </div>
               )}
               <input
@@ -344,109 +287,64 @@ const AchievementManagement = () => {
                 accept="image/*"
                 ref={fileInputRef}
                 onChange={handleImageChange}
-                className="file-input"
               />
-              <button 
-                type="button" 
-                className="browse-btn"
-                onClick={() => fileInputRef.current.click()}
+            </div>
+            <div className="achievement-form-group">
+              <label>Points Required</label>
+              <input
+                id="pointsRequired"
+                name="pointsRequired"
+                type="number"
+                defaultValue={isEditing ? editingItem.pointsRequired : 100}
+              />
+            </div>
+            <div className="achievement-form-group">
+              <label>Status</label>
+              <select
+                id="isActive"
+                name="isActive"
+                defaultValue={
+                  isEditing && !editingItem.isActive ? "false" : "true"
+                }
               >
-                Browse...
+                <option value="true">Active</option>
+                <option value="false">Inactive</option>
+              </select>
+            </div>
+            <div className="achievement-modal-actions">
+              <button
+                type="button"
+                className="achievement-cancel-btn"
+                onClick={() => setShowModal(false)}
+              >
+                Cancel
+              </button>
+              <button type="submit" className="achievement-submit-btn">
+                {isEditing ? "Update" : "Add"}
               </button>
             </div>
-          </div>
-          
-          <div className="form-group">
-            <label htmlFor="pointsRequired">Points Required to Unlock</label>
-            <input
-              type="number"
-              id="pointsRequired"
-              placeholder="Enter points required (e.g., 100, 250, 500)"
-              defaultValue={isEditing ? editingItem.pointsRequired : "100"}
-              min="1"
-              required
-            />
-            <small className="field-hint">Students will unlock this achievement when they accumulate this many points</small>
-          </div>
-          <div className="form-group">
-            <label htmlFor="isActive">Status</label>
-            <select
-              id="isActive"
-              defaultValue={isEditing ? (editingItem.isActive ? "true" : "false") : "true"}
-            >
-              <option value="true">Active</option>
-              <option value="false">Inactive</option>
-            </select>
-          </div>
-          <div className="modal-actions">
-            <button
-              type="button"
-              className="cancel-btn"
-              onClick={() => {
-                setShowModal(false);
-                setPreviewImage(null);
-              }}
-            >
-              Cancel
-            </button>
-            <button type="submit" className="submit-btn">
-              {isEditing ? "Update" : "Add"}
-            </button>
-          </div>
-        </form>
-      </>
-    );
-  };
-
-  // Modal component
-  const renderModal = () => {
-    if (!showModal) return null;
-
-    return ReactDOM.createPortal(
-      <div className="modal-overlay">
-        <div className="modal-container" ref={modalRef}>
-          {renderModalContent()}
+          </form>
         </div>
       </div>,
       document.body
     );
   };
 
-  // Delete confirmation modal
   const renderDeleteModal = () => {
     if (!showDeleteModal || !itemToDelete) return null;
-    
     return ReactDOM.createPortal(
-      <div className="modal-overlay">
-        <div className="modal-container" ref={deleteModalRef}>
-          <h3>Confirm Deletion</h3>
-          <p>Are you sure you want to delete the achievement "{itemToDelete.name}"?</p>
-          <p>This action cannot be undone.</p>
-          <div className="modal-actions">
+      <div className="achievement-modal-overlay">
+        <div className="achievement-delete-modal-container" ref={deleteModalRef}>
+          <h3>Confirm Delete</h3>
+          <p>Are you sure you want to delete "<strong>{itemToDelete.name}</strong>"? This action cannot be undone.</p>
+          <div className="achievement-modal-actions">
             <button
-              type="button"
-              className="cancel-btn"
-              onClick={() => {
-                setShowDeleteModal(false);
-                setItemToDelete(null);
-              }}
+              className="achievement-cancel-btn"
+              onClick={() => setShowDeleteModal(false)}
             >
               Cancel
             </button>
-            <button 
-              type="button" 
-              className="delete-btn"
-              style={{
-                backgroundColor: "rgba(229, 62, 62, 0.1)",
-                color: "#e53e3e",
-                border: "none",
-                borderRadius: "5px",
-                padding: "10px 20px", 
-                cursor: "pointer",
-                fontWeight: "500"
-              }}
-              onClick={confirmDelete}
-            >
+            <button className="achievement-delete-btn" onClick={confirmDelete}>
               Delete
             </button>
           </div>
@@ -456,322 +354,73 @@ const AchievementManagement = () => {
     );
   };
 
-  // Dropdown component
-  const renderDropdown = () => {
-    if (!showDropdown) return null;
-
-    const rect = userCardRef.current?.getBoundingClientRect();
-    if (!rect) return null;
-
-    const dropdownStyle = {
-      position: "fixed",
-      top: `${rect.bottom + 3}px`,
-      right: `${window.innerWidth - rect.right}px`,
-      background: "white",
-      borderRadius: "8px",
-      boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
-      zIndex: 9999,
-      width: "200px",
-      padding: "10px 0",
-    };
-
-    return ReactDOM.createPortal(
-      <div className="user-dropdown-portal" style={dropdownStyle} ref={dropdownRef}>
-        <Link to="/profile" className="dropdown-item">
-          <FontAwesomeIcon icon={faUser} className="dropdown-icon" />
-          Edit Profile
-        </Link>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            handleLogout();
-          }}
-          className="dropdown-item"
-        >
-          <FontAwesomeIcon icon={faSignOutAlt} className="dropdown-icon" />
-          Logout
-        </button>
-      </div>,
-      document.body
-    );
-  };
-
-  // Add a new function to render notifications
-  const renderNotification = () => {
-    if (!notification.show) return null;
-    
-    return ReactDOM.createPortal(
-      <div className={`notification-overlay`}>
-        <div className={`notification-modal ${notification.type}`}>
-          <div className="notification-icon">
-            {notification.type === 'success' && <FontAwesomeIcon icon={faCheckCircle} />}
-            {notification.type === 'error' && <FontAwesomeIcon icon={faExclamationCircle} />}
-            {notification.type === 'info' && <FontAwesomeIcon icon={faInfoCircle} />}
-          </div>
-          <div className="notification-content">
-            <p>{notification.message}</p>
-          </div>
-          <button 
-            className="notification-button" 
-            onClick={() => setNotification({ show: false, message: "", type: "" })}
-          >
-            <FontAwesomeIcon icon={faTimes} />
-          </button>
-        </div>
-      </div>,
-      document.body
-    );
-  };
-
-  // Handle form submission for adding/editing achievements
-  const handleAddAchievement = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    
-    try {
-      // Get form values
-      const name = e.target.name.value;
-      const description = e.target.description.value;
-      const pointsRequired = parseInt(e.target.pointsRequired.value, 10);
-      const isActive = e.target.isActive.value === "true";
-      const badgeFile = e.target.badgeImage.files[0];
-      
-      // Create achievement data object
-      const achievementData = {
-        name,
-        description,
-        pointsRequired,
-        isActive,
-        badgeFile
-      };
-      
-      if (editingItem) {
-        // Update existing achievement
-        await updateAchievement(editingItem.id, achievementData);
-        
-        setNotification({
-          show: true,
-          message: "Achievement updated successfully!",
-          type: "success"
-        });
-      } else {
-        // Create new achievement
-        await createAchievement(achievementData);
-        
-        setNotification({
-          show: true,
-          message: "Achievement added successfully!",
-          type: "success"
-        });
-      }
-
-      // Refresh achievements from server
-      await refreshAchievements();
-      
-      // Close modal and clean up
-      setShowModal(false);
-      setEditingItem(null);
-      setPreviewImage(null);
-      
-      // Auto-hide notification after 5 seconds
-      setTimeout(() => {
-        setNotification({ show: false, message: "", type: "" });
-      }, 5000);
-      
-    } catch (error) {
-      console.error("Error saving achievement:", error);
-      setNotification({
-        show: true,
-        message: `Failed to ${editingItem ? 'update' : 'create'} achievement: ${error.message}`,
-        type: "error"
-      });
-      
-      setTimeout(() => {
-        setNotification({ show: false, message: "", type: "" });
-      }, 5000);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const renderAchievementsTable = () => {
-    if (loading) {
-      return (
-        <tr>
-          <td colSpan="6" style={{ textAlign: 'center', padding: '20px' }}>Loading...</td>
-        </tr>
-      );
-    }
-
-    if (achievements.length === 0) {
-      return (
-        <tr>
-          <td colSpan="6" style={{ textAlign: 'center', padding: '20px' }}>No achievements found.</td>
-        </tr>
-      );
-    }
-
-    return achievements.map((achievement) => (
-      <tr key={achievement.id}>
-        <td className="achievement-icon">
-          <div className="achievement-icon-container">
-            {achievement.badgeUrl ? (
-              <img 
-                src={achievement.badgeUrl} 
-                alt={achievement.name}
-                className="badge-image"
-                onError={(e) => {
-                  console.error('Badge image failed to load:', achievement.badgeUrl);
-                  e.target.style.display = 'none';
-                  e.target.nextSibling.style.display = 'flex';
-                }}
-                onLoad={() => {
-                  console.log('Badge image loaded successfully:', achievement.badgeUrl);
-                }}
-              />
-            ) : null}
-            <FontAwesomeIcon 
-              icon={faAward} 
-              style={{ display: achievement.badgeUrl ? 'none' : 'flex' }}
-            />
-          </div>
-        </td>
-        <td>{achievement.name}</td>
-        <td className="achievement-description">{achievement.description}</td>
-        <td className="achievement-points">{achievement.pointsRequired} pts</td>
-        <td>{new Date(achievement.createdDate).toLocaleDateString()}</td>
-        <td className="action-buttons-cell">
-          <button
-            className="action-btn blue-btn"
-            style={{ backgroundColor: "#4f46e5" }}
-            onClick={(e) => {
-              e.stopPropagation();
-              openModal("achievements", achievement);
-            }}
-          >
-            <FontAwesomeIcon icon={faEdit} /> Edit
-          </button>
-          <button
-            className="action-btn blue-btn"
-            style={{ backgroundColor: "rgba(229, 62, 62, 0.8)", color: "white" }}
-            onClick={(e) => {
-              e.stopPropagation();
-              handleDelete(achievement);
-            }}
-          >
-            <FontAwesomeIcon icon={faTrash} /> Delete
-          </button>
-        </td>
-      </tr>
-    ));
-  };
-
-  const toggleSidebar = () => {
-    setIsSidebarOpen(!isSidebarOpen);
-  };
-
-  const closeSidebar = () => {
-    setIsSidebarOpen(false);
-  };
-
   return (
-    <div className="dashboard-container">
-      {/* Sidebar overlay for mobile */}
-      <div 
-        className={`sidebar-overlay ${isSidebarOpen ? 'active' : ''}`}
-        onClick={closeSidebar}
+    <>
+      <Header
+        isDashboard={true}
+        user={user}
+        onLogout={handleLogout}
+        toggleSidebar={() => setSidebarOpen(!sidebarOpen)}
+        sidebarOpen={sidebarOpen}
+        pageTitle="Achievement Management"
       />
-      
-      <header className="dashboard-header">
-        <div className="container">
-          {/* Add hamburger button here, visible on mobile */}
-          <button 
-            className={`hamburger-menu ${isSidebarOpen ? 'active' : ''}`} 
-            onClick={toggleSidebar}
-            aria-label="Toggle sidebar"
-          >
-            <span></span>
-            <span></span>
-            <span></span>
-          </button>
-          <div className="logo">
-            <a href="/achievement-management" onClick={(e) => { e.preventDefault(); window.location.reload(); }}>
-              <img src={logo} alt="Pronounceit Logo" />
-            </a>
-          </div>
-          <div className="dashboard-title-header">
-            <h1>ADMIN DASHBOARD</h1>
-          </div>
-          <div className="user-card" ref={userCardRef} onClick={toggleDropdown}>
-            <img src={adminIcon} alt="Admin" className="admin-avatar-icon" />
-            <div className="user-info">
-              <p>{`${user.firstName} ${user.lastName}`}</p>
-            </div>
-          </div>
-        </div>
-      </header>
 
-      <div className="dashboard single">
-        <aside className={`sidebar ${isSidebarOpen ? 'active' : ''}`}>
-          <nav>
-            <ul>
-              <li 
-                className={activeSection === "users" ? "active" : ""}
-                onClick={() => {
-                  handleNavClick("users");
-                  closeSidebar();
-                }}
-              >
-                <FontAwesomeIcon icon={faUsers} className="sidebar-icon" />
-                Users Management
-              </li>
-              <li 
-                className={activeSection === "achievements" ? "active" : ""}
-                onClick={() => {
-                  handleNavClick("achievements");
-                  closeSidebar();
-                }}
-              >
-                <FontAwesomeIcon icon={faAward} className="sidebar-icon" />
-                Achievements
-              </li>
-            </ul>
-          </nav>
-        </aside>
-
-        <main className="content">
-          <h2 className="dashboard-title">Achievements Management</h2>
-          <div className="section-header">
-            <button className="add-button" onClick={() => openModal('achievements')}>
-              <FontAwesomeIcon icon={faPlus} /> Add New Achievement
-            </button>
-          </div>
-          <div className="existing-items">
-            <h3>Existing Achievements</h3>
+      <Sidebar
+        activeSection="achievements"
+        handleNavClick={handleNavClick}
+        sidebarOpen={sidebarOpen}
+        onAddButtonClick={() => openModal(null)}
+        customItems={[
+          { key: "achievements", label: "Achievements" },
+          { key: "users", label: "Users" },
+        ]}
+      >
+        <div className="existing-items">
+          <div className="table-container">
             <table className="items-table">
               <thead>
                 <tr>
-                  <th>Icon</th>
+                  <th>Badge</th>
                   <th>Name</th>
                   <th>Description</th>
-                  <th>Points Required</th>
-                  <th>Created Date</th>
+                  <th>Points</th>
+                  <th>Status</th>
                   <th>Actions</th>
                 </tr>
               </thead>
-              <tbody>
-                {renderAchievementsTable()}
-              </tbody>
+              <tbody>{renderAchievementsTable()}</tbody>
             </table>
-          </div>
-        </main>
-      </div>
 
-      {renderDropdown()}
+            {/* Pagination */}
+            <div className="pagination-container right">
+              {pageNumbers.map((num) => (
+                <button
+                  key={num}
+                  className={`pagination-number ${
+                    page === num ? "active" : ""
+                  }`}
+                  onClick={() => setPage(num)}
+                >
+                  {num}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </Sidebar>
+
       {renderModal()}
       {renderDeleteModal()}
-      {renderNotification()}
-    </div>
+
+      {/* ✅ Success modal integration */}
+      <ModalSuccess
+        show={showSuccessModal}
+        message={successModalData.message}
+        type={successModalData.type}
+        role="success"
+        onClose={() => setShowSuccessModal(false)}
+      />
+    </>
   );
 };
 
