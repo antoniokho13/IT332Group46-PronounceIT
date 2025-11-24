@@ -59,7 +59,9 @@ const TeacherDashboard = () => {
   });
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  
+  // ✅ NEW: filter state for lessons
+  const [lessonCategoryFilter, setLessonCategoryFilter] = useState("");
+
   const ITEMS_PER_PAGE = 5;
   const [pageLessons, setPageLessons] = useState(1);
   const [pageCategories, setPageCategories] = useState(1);
@@ -544,42 +546,41 @@ const TeacherDashboard = () => {
   };
 
   const Pagination = ({ total, page, setPage }) => {
-  const totalPages = Math.ceil(total / ITEMS_PER_PAGE);
-  if (totalPages === 0) return null;
+    const totalPages = Math.ceil(total / ITEMS_PER_PAGE);
+    if (totalPages === 0) return null;
 
-  // Generate page numbers
-  const pageNumbers = Array.from({ length: totalPages }, (_, i) => i + 1);
+    // Generate page numbers
+    const pageNumbers = Array.from({ length: totalPages }, (_, i) => i + 1);
 
-  return (
-    <div className="pagination-container right">
-      {pageNumbers.map((num) => (
-        <button
-          key={num}
-          className={`pagination-number ${page === num ? "active" : ""}`}
-          onClick={() => setPage(num)}
-        >
-          {num}
-        </button>
-      ))}
-    </div>
-  );
-};
-
+    return (
+      <div className="pagination-container right">
+        {pageNumbers.map((num) => (
+          <button
+            key={num}
+            className={`pagination-number ${page === num ? "active" : ""}`}
+            onClick={() => setPage(num)}
+          >
+            {num}
+          </button>
+        ))}
+      </div>
+    );
+  };
 
   /* ===============================
      LESSONS, CATEGORIES & ANALYTICS TABLES
   =============================== */
-  const renderLessonsTable = () =>
+  const renderLessonsTable = (lessonList) =>
     loading ? (
       <tr>
         <td colSpan="7">Loading...</td>
       </tr>
-    ) : lessons.length === 0 ? (
+    ) : lessonList.length === 0 ? (
       <tr>
         <td colSpan="7">No lessons found.</td>
       </tr>
     ) : (
-      paginate(lessons, pageLessons).map((lesson) => (
+      paginate(lessonList, pageLessons).map((lesson) => (
         <tr key={lesson.lessonId}>
           <td>{lesson.name}</td>
           <td>{lesson.focus}</td>
@@ -693,9 +694,8 @@ const TeacherDashboard = () => {
               ) : (
                 paginate(filtered, pageAnalytics).map((lesson) => (
                   <tr key={lesson.lessonId}>
-                    {/* --- THIS IS THE CHANGED LINE --- */}
                     <td
-                      className="analytics-lesson-link" /* <-- USE CLASS INSTEAD OF STYLE */
+                      className="analytics-lesson-link"
                       onClick={() =>
                         navigate(`/analytics/${lesson.lessonId}`, {
                           state: { lessonName: lesson.name },
@@ -704,7 +704,6 @@ const TeacherDashboard = () => {
                     >
                       {lesson.name}
                     </td>
-                    {/* --- END OF CHANGE --- */}
                     <td>{lesson.category.name}</td>
                     <td>{lesson.attempts}</td>
                   </tr>
@@ -727,12 +726,40 @@ const TeacherDashboard = () => {
   /* ===============================
      SECTION RENDER LOGIC
   =============================== */
-  /* === MODIFIED THIS FUNCTION === */
   const renderContent = () => {
     switch (activeSection) {
-      case "lessons":
+      case "lessons": {
+        // ✅ apply filter here
+        const filteredLessons = lessonCategoryFilter
+          ? lessons.filter(
+              (l) =>
+                l.category.categoryId ===
+                parseInt(lessonCategoryFilter, 10)
+            )
+          : lessons;
+
         return (
           <div className="existing-items">
+            {/* ✅ filter dropdown right above table */}
+           <div className="lesson-filter-container">
+  <span className="lesson-filter-label">Filter by Category:</span>
+  <select
+    className="lesson-filter-select"
+    value={lessonCategoryFilter}
+    onChange={(e) => {
+      setLessonCategoryFilter(e.target.value);
+      setPageLessons(1);
+    }}
+  >
+    <option value="">All Categories</option>
+    {categories.map((c) => (
+      <option key={c.categoryId} value={c.categoryId}>
+        {c.name}
+      </option>
+    ))}
+  </select>
+</div>
+
             <div className="table-wrapper">
               <table className="items-table">
                 <thead>
@@ -746,16 +773,17 @@ const TeacherDashboard = () => {
                     <th>Actions</th>
                   </tr>
                 </thead>
-                <tbody>{renderLessonsTable()}</tbody>
+                <tbody>{renderLessonsTable(filteredLessons)}</tbody>
               </table>
             </div>
             <Pagination
-              total={lessons.length}
+              total={filteredLessons.length}
               page={pageLessons}
               setPage={setPageLessons}
             />
           </div>
         );
+      }
       case "categories":
         return (
           <div className="existing-items">
@@ -781,7 +809,7 @@ const TeacherDashboard = () => {
           </div>
         );
       case "analytics":
-        return renderAnalyticsTable(); // This function now builds the full section
+        return renderAnalyticsTable();
       default:
         return null;
     }
