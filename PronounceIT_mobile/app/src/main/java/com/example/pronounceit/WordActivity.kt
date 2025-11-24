@@ -36,6 +36,7 @@ import android.graphics.Color
 import android.os.Handler
 import android.os.Looper
 import android.view.animation.AnimationUtils
+import android.media.AudioManager
 import com.example.pronounceit.network.models.PronounciationAttemptPostDTO
 import com.example.pronounceit.network.models.ScoreRecordDTO
 import nl.dionsegijn.konfetti.KonfettiView
@@ -85,6 +86,9 @@ class WordActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
     private val wordResults = mutableListOf<WordResult>()
     private val streakUpdateManager by lazy { StreakUpdateManager(this) }
+    
+    // Audio management during recording
+    private lateinit var audioManager: AudioManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -114,6 +118,9 @@ class WordActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         }
 
         tts = TextToSpeech(this, this)
+        
+        // Initialize audio manager
+        audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
 
         fetchWords(lessonId)
 
@@ -439,6 +446,10 @@ class WordActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         }
         audioFile = File(recordingDir, fileName)
         Log.d("WordActivity", "Recording to: ${audioFile?.absolutePath}")
+        
+        // Mute TTS and MediaPlayer during recording to prevent interference
+        mutePlaybackAudio()
+        isRecording = true
 
         // Set up MediaRecorder for MP4/AAC
         mediaRecorder = MediaRecorder().apply {
@@ -463,6 +474,11 @@ class WordActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     }
 
     private fun stopRecording() {
+        isRecording = false
+        
+        // Restore audio playback
+        restorePlaybackAudio()
+        
         mediaRecorder?.apply {
             try {
                 stop()
@@ -1005,6 +1021,44 @@ class WordActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         updateUI()
         updateScoreTracker()
     }
+    
+    private fun mutePlaybackAudio() {
+        // Stop TTS if it's currently speaking to prevent interference with recording
+        if (::tts.isInitialized && tts.isSpeaking) {
+            tts.stop()
+            Log.d("WordActivity", "TTS stopped during recording")
+        }
+        
+        // Pause any playing MediaPlayer instances to prevent interference
+        mediaPlayer?.let { mp ->
+            if (mp.isPlaying) {
+                mp.pause()
+                Log.d("WordActivity", "MediaPlayer paused during recording")
+            }
+        }
+        
+        correctSoundEffect?.let { mp ->
+            if (mp.isPlaying) {
+                mp.pause()
+                Log.d("WordActivity", "Correct sound effect paused during recording")
+            }
+        }
+        
+        errorSoundEffect?.let { mp ->
+            if (mp.isPlaying) {
+                mp.pause()
+                Log.d("WordActivity", "Error sound effect paused during recording")
+            }
+        }
+    }
+    
+    private fun restorePlaybackAudio() {
+        // Audio playback is automatically restored when new audio is played
+        // No need to explicitly restore paused MediaPlayer instances
+        // They will be managed by their respective play methods when needed
+        Log.d("WordActivity", "Playback audio restored after recording")
+    }
+    
     override fun onDestroy() {
         super.onDestroy()
         
