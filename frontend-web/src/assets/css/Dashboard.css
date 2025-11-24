@@ -261,6 +261,64 @@
   position: relative;
 }
 
+.lesson-filter-container {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  margin-bottom: 12px;
+  gap: 8px;
+}
+
+.lesson-filter-label {
+  font-size: 14px;
+  color: #1e3a8a; /* deep blue text */
+  font-weight: 600;
+}
+
+.lesson-filter-select {
+  padding: 6px 14px;
+  border-radius: 8px;
+  border: 1.5px solid #2563eb;
+  background-color: #eff6ff; /* soft blue background */
+  font-size: 14px;
+  color: #1e40af; /* strong blue text */
+  font-weight: 500;
+  cursor: pointer;
+  outline: none;
+  transition: all 0.25s ease;
+  min-width: 200px;
+  box-shadow: 0 2px 5px rgba(37, 99, 235, 0.15);
+}
+
+.lesson-filter-select:hover {
+  background-color: #dbeafe; /* lighter blue hover */
+  border-color: #1d4ed8;
+  box-shadow: 0 3px 6px rgba(37, 99, 235, 0.25);
+}
+
+.lesson-filter-select:focus {
+  background-color: #ffffff;
+  border-color: #1e40af;
+  color: #1e3a8a;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.4);
+}
+
+/* optional subtle animation for nicer entry */
+@keyframes fadeInFilter {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.lesson-filter-container {
+  animation: fadeInFilter 0.4s ease;
+}
+
 .analytics-lesson-link::after {
   content: "↗"; /* small arrow icon hinting it's clickable */
   margin-left: 6px;
