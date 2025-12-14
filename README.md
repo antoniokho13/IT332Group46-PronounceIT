@@ -1,131 +1,161 @@
-PronounceIT: AI-Driven Pronunciation E-Learning System
+# 📘 PronounceIT: AI-Driven Pronunciation E-Learning System
 
 ## 1. Project Overview
-   
-PronounceIT is an interactive, AI-driven educational application designed to assist kindergarten students (ages 3 to 5) in improving their English pronunciation and expanding their vocabulary. The system is intended to supplement, not replace, traditional classroom instruction.
 
-The core functionality relies on integrating Google Cloud Speech-to-Text (STT) API for real-time pronunciation analysis and Google Cloud Text-to-Speech (TTS) API for providing correct audio playback. The application features a gamified learning environment, user profile management, lesson progression based on performance, and administrative dashboards for teachers to manage content and track student analytics.
+**PronounceIT** is an interactive, AI-driven educational application designed to assist kindergarten students (ages 3 to 5) in improving their English pronunciation and expanding their vocabulary. The system is intended to supplement, not replace, traditional classroom instruction.
 
-Key Modules
-1. User Authentication & Authorization (Student, Teacher, Admin Roles)
-2. User Profile Management (Progress Tracking, Account Editing)
-3. Gameplay (Category/Lesson Selection, Core Pronunciation Evaluation)
-4. Teacher Management (Content CRUD: Categories, Lessons, Words, Analytics)
-5. Admin Management (User Management, Achievement Management)
+The core functionality relies on the integration of **Google Cloud Speech-to-Text (STT) API** for real-time pronunciation analysis and **Google Cloud Text-to-Speech (TTS) API** for providing correct audio playback. The application features a gamified learning environment, user profile management, lesson progression based on learner performance, and administrative dashboards for teachers to manage content and track student analytics.
 
+### Key Modules
+- User Authentication & Authorization (Student, Teacher, Admin roles)
+- User Profile Management (Progress tracking, account editing)
+- Gameplay Module (Category and lesson selection, pronunciation evaluation)
+- Teacher Management Module
+  - CRUD operations for categories, lessons, and words
+  - Student analytics and performance tracking
+- Admin Management Module
+  - User account management
+  - Achievement and system data management
 
-## 2. Technology Stack & Architectural Design
-PronounceIT follows a Multi-Layered Architecture supporting both web and mobile clients.
+---
 
+## 2. Complete Technology Stack
 
+### Frontend (Web Application)
+- React.js – v18.x  
+- Create React App – v5.x  
+- Node.js – v18.x  
+- npm – v9.x  
+- HTML5 / CSS3 / JavaScript (ES6+)
 
-## 2.1. Core Technologies
+### Mobile Application
+- Android Studio – Latest stable release  
+- Java – JDK 17  
+- Android SDK – API Level 33+
 
-| Component            | Technology              | Specific Version / Implementation           | Notes                                                     |
-|----------------------|--------------------------|----------------------------------------------|-----------------------------------------------------------|
-| **Backend**          | Spring Boot (Java)       | JPA, Hibernate                               | Handles business logic, security, and API management.     |
-| **Frontend (Web)**   | React.js                 | Material UI                                  | Teacher and Admin dashboards.                             |
-| **Frontend (Mobile)**| Kotlin                   | Android Activity, Jetpack components         | Primary client for student gameplay.                      |
-| **Database**         | MySQL                    | Railway-hosted relational database           | Persistent storage for user data, progress, and content.  |
-| **Security**         | Spring Security          | JWT Authentication                           | Role-based access control (RBAC) and session management.  |
+### Backend
+- Spring Boot – v3.x  
+- Java – JDK 17  
+- Spring Security – Authentication and role-based authorization  
+- Spring Data JPA – ORM and database interaction  
+- RESTful API Architecture
 
+### Database
+- MySQL – v8.0  
+- Hibernate ORM
 
+### Cloud & APIs
+- Google Cloud Speech-to-Text API  
+- Google Cloud Text-to-Speech API
 
-## 2.2. Critical External Services
+### Development & Tools
+- Git & GitHub – Source code version control  
+- Postman – API testing  
+- VS Code / IntelliJ IDEA – Development IDEs
 
-| Service           | API Used                                | Purpose                                                                 |
-|-------------------|-------------------------------------------|-------------------------------------------------------------------------|
-| **Speech Analysis** | Google Cloud Speech-to-Text (STT)         | Real-time transcription of student audio for pronunciation scoring.     |
-| **Audio Guidance**  | Google Cloud Text-to-Speech (TTS)         | Generates clear audio for correct word pronunciations.                  |
-| **Storage**         | Cloudify (Cloud Storage)                  | Content delivery for images, audio files, and lesson metadata.          |
+---
 
+## 3. Deployment Instructions
 
-## 2.3. Non-Functional Requirements Summary
+### 3.1 Frontend Deployment (React)
 
-- **Performance:** Pronunciation analysis must complete within **3 seconds**. General app response time ≤ **3 seconds**.
+#### Prerequisites
+- Node.js v18+
+- npm installed
 
-- **Accuracy:** Google Cloud STT accuracy target is ≥ **75%** for pronunciation validation.
+#### Steps
+1. Install dependencies:
+   npm install
+2. Start the development server:
+   npm start
 
-- **Reliability:** System target is **99.5% uptime**. Failsafe mechanism implemented to retry failed API requests **3 times**.
+The frontend application will run at:
+http://localhost:3000
 
-- **Security & Compliance:** Must comply with **COPPA** and **GDPR-K**. Uses **JWT** for secure authentication. **No PII** (Personally Identifiable Information) is stored.
+To create a production build:
+npm run build
 
-## 3. Deployment Instructions 
-The system is designed for a layered deployment approach, separating the backend API and the frontend clients.
+---
 
-## 3.1. Prerequisites
-1. Java Environment: Java Development Kit (JDK) for Spring Boot backend.
-2. Node.js/npm: For building the React frontend.
-3. MySQL Client: For database access and management.
-4. Google Cloud Access: Credentials for STT, TTS, and Cloudify (storage) must be configured in the backend environment variables.
+### 3.2 Backend Deployment (Spring Boot)
 
+#### Prerequisites
+- Java JDK 17
+- MySQL 8.0
+- Maven
 
-## 3.2. Backend Deployment (Spring Boot / Java)
-The backend handles the core logic, security, and integration with Google Cloud APIs.
+#### Steps
+1. Open the backend project in IntelliJ IDEA or Eclipse
+2. Configure the database connection in application.properties:
 
-## Configuration
-Create application.properties (or equivalent .env file) with necessary secrets:
+spring.datasource.url=jdbc:mysql://localhost:3306/pronounceit_db
+spring.datasource.username=root
+spring.datasource.password=yourpassword
+spring.jpa.hibernate.ddl-auto=update
 
-## Example Backend Configuration
+3. Run the backend server:
+   mvn spring-boot:run
 
-| Setting                                  | Value / Description |
-|------------------------------------------|---------------------|
-| **spring.datasource.url**                | `[YOUR_MYSQL_URL]` |
-| **spring.datasource.username**           | `[DB_USER]` |
-| **spring.datasource.password**           | `[DB_PASSWORD]` |
-| **jwt.secret**                            | `[YOUR_LONG_JWT_SECRET_KEY]` |
-| **google.cloud.api.key**                 | `[YOUR_GC_API_KEY]` |
-| **Service Account File (Optional)**      | Point to a mounted GCP service account file for secure deployments |
+The backend API will be available at:
+http://localhost:8080
 
+---
 
-## Build & Run Commands
+### 3.3 Mobile Application Deployment (Android)
 
-| Action                  | Command |
-|-------------------------|---------|
-| **Build the JAR file**  | `./gradlew clean build` |
-| **Run the application** | `java -jar build/libs/[app-name].jar` |
+1. Open Android Studio
+2. Select Open Existing Project
+3. Sync Gradle files
+4. Run the application using:
+   - Android Emulator, or
+   - Physical Android device with USB debugging enabled
 
+---
 
-## 3.3 Frontend Deployment (React Web & Kotlin Mobile)
+## 4. Sample / Dummy User Accounts (Existing Server)
 
-## Web Frontend (Teacher/Admin Dashboard)
-1. Navigate to the web project directory: **cd frontend-web**
-2. install dependencies: **npm install**
-3. Set the API URL environment variable:
+The following test accounts are provided for system evaluation and demonstration purposes:
 
-## Example `.env` Configuration for React
+Admin  
+Username: admin1@gmail.com  
+Password: admin123  
 
-| Variable              | Value / Description                    |
-|-----------------------|-----------------------------------------|
-| **REACT_APP_API_URL** | `[http://your-backend-api-url]/api`     |
+Teacher  
+Username: teacher1@gmail.com  
+Password: teacher1  
 
-4. Build and serve the application:
-   
-                  
-## Frontend Build & Deployment Commands
+Student  
+Username: student1@gmail.com  
+Password: student1  
 
-| Action                                | Command / Description |
-|----------------------------------------|-------------------------|
-| **Build the production bundle**        | `npm run` |
+Note: These credentials are for academic testing and evaluation purposes only.
 
+---
 
-## Mobile Frontend (Student App)
-1. Opent the project in Android Studio.
-2. Ensure Kotlin/Jetpack dependencies are up-to-date
-3. configure the backend API URL in the mobile application's config files
-4. build and deploy the APK to target devices
+## 5. Database Export / Dump
 
+Database Name: pronounceit_db  
+Database Engine: MySQL 8.0  
+Export Format: .sql  
 
-## 4. Sample Credentials (Development/Testing Only)
+### Restore Instructions
+mysql -u root -p pronounceit_db < pronounceit_db.sql
 
-These credentials are used for local testing and validation as detailed in the Software Test Document.
+The database dump includes:
+- User accounts
+- Categories, lessons, and vocabulary words
+- Student pronunciation records
+- Progress tracking and analytics data
 
-| User Type            | Email (Username)              | Password          | Notes                                                           |
-|----------------------|-------------------------------|-------------------|-----------------------------------------------------------------|
-| **Admin**            | admin@[project-domain].com     | SecureAdmin123!   | Used for Achievement and User Management.                       |
-| **Teacher**          | michael.johnson@school.edu     | TeacherPass456@   | Used for Category, Lesson, Word CRUD, and Student Analytics.    |
-| **Student**          | emma.wilson@test.com           | TestPass123!      | Used for Gameplay, Pronunciation Practice, and Score Tracking.  |
+---
 
+## 6. Notes for Evaluators
 
+- Internet connection is required for Google Cloud STT/TTS services
+- Microphone permission must be enabled for pronunciation evaluation
+- Default system ports:
+  - Frontend: 3000
+  - Backend: 8080
+  - MySQL: 3306
 
-
+---
