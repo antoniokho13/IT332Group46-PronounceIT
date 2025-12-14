@@ -117,7 +117,7 @@ http://localhost:8080
 The following test accounts are provided for system evaluation and demonstration purposes:
 
 Admin  
-Username: admin1@gmail.com  
+Username: admin@gmail.com  
 Password: admin123  
 
 Teacher  
