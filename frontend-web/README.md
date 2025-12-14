@@ -1,70 +1,162 @@
-# Getting Started with Create React App
+# 📘 PronounceIT: AI-Driven Pronunciation E-Learning System
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## 1. Project Overview
 
-## Available Scripts
+**PronounceIT** is an interactive, AI-driven educational application designed to assist kindergarten students (ages 3 to 5) in improving their English pronunciation and expanding their vocabulary. The system is intended to supplement, not replace, traditional classroom instruction.
 
-In the project directory, you can run:
+The core functionality relies on the integration of **Google Cloud Speech-to-Text (STT) API** for real-time pronunciation analysis and **Google Cloud Text-to-Speech (TTS) API** for providing correct audio playback. The application features a gamified learning environment, user profile management, lesson progression based on learner performance, and administrative dashboards for teachers to manage content and track student analytics.
 
-### `npm start`
+### Key Modules
+- User Authentication & Authorization (Student, Teacher, Admin roles)
+- User Profile Management (Progress tracking, account editing)
+- Gameplay Module (Category and lesson selection, pronunciation evaluation)
+- Teacher Management Module
+  - CRUD operations for categories, lessons, and words
+  - Student analytics and performance tracking
+- Admin Management Module
+  - User account management
+  - Achievement and system data management
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+---
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## 2. Complete Technology Stack
 
-### `npm test`
+### Frontend (Web Application)
+- React.js – v18.x  
+- Create React App – v5.x  
+- Node.js – v18.x  
+- npm – v9.x  
+- HTML5 / CSS3 / JavaScript (ES6+)
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+### Mobile Application
+- Android Studio – Latest stable release  
+- Java – JDK 17  
+- Android SDK – API Level 33+
 
-### `npm run build`
+### Backend
+- Spring Boot – v3.x  
+- Java – JDK 17  
+- Spring Security – Authentication and role-based authorization  
+- Spring Data JPA – ORM and database interaction  
+- RESTful API Architecture
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+### Database
+- MySQL – v8.0  
+- Hibernate ORM
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+### Cloud & APIs
+- Google Cloud Speech-to-Text API  
+- Google Cloud Text-to-Speech API
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+### Development & Tools
+- Git & GitHub – Source code version control  
+- Postman – API testing  
+- VS Code / IntelliJ IDEA – Development IDEs
 
-### `npm run eject`
+---
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+## 3. Deployment Instructions
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### 3.1 Frontend Deployment (React)
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+#### Prerequisites
+- Node.js v18+
+- npm installed
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+#### Steps
+1. Install dependencies:
+   npm install
+2. Start the development server:
+   npm start
 
-## Learn More
+The frontend application will run at:
+http://localhost:3000
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+To create a production build:
+npm run build
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+---
 
-### Code Splitting
+### 3.2 Backend Deployment (Spring Boot)
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+#### Prerequisites
+- Java JDK 17
+- MySQL 8.0
+- Maven
 
-### Analyzing the Bundle Size
+#### Steps
+1. Open the backend project in IntelliJ IDEA or Eclipse
+2. Configure the database connection in application.properties:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+spring.datasource.url=jdbc:mysql://localhost:3306/pronounceit_db
+spring.datasource.username=root
+spring.datasource.password=yourpassword
+spring.jpa.hibernate.ddl-auto=update
 
-### Making a Progressive Web App
+3. Run the backend server:
+   mvn spring-boot:run
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+The backend API will be available at:
+http://localhost:8080
 
-### Advanced Configuration
+---
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+### 3.3 Mobile Application Deployment (Android)
 
-### Deployment
+1. Open Android Studio
+2. Select Open Existing Project
+3. Sync Gradle files
+4. Run the application using:
+   - Android Emulator, or
+   - Physical Android device with USB debugging enabled
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+---
 
-### `npm run build` fails to minify
+## 4. Sample / Dummy User Accounts (Existing Server)
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+The following test accounts are provided for system evaluation and demonstration purposes:
+
+Admin  
+Username: admin1@gmail.com  
+Password: admin123  
+
+Teacher  
+Username: teacher1@gmail.com  
+Password: teacher1  
+
+Student  
+Username: student1@gmail.com  
+Password: student1  
+
+Note: These credentials are for academic testing and evaluation purposes only.
+
+---
+
+## 5. Database Export / Dump
+
+Database Name: pronounceit_db  
+Database Engine: MySQL 8.0  
+Export Format: .sql  
+
+### Restore Instructions
+mysql -u root -p pronounceit_db < pronounceit_db.sql
+
+The database dump includes:
+- User accounts
+- Categories, lessons, and vocabulary words
+- Student pronunciation records
+- Progress tracking and analytics data
+
+---
+
+## 6. Notes for Evaluators
+
+- Internet connection is required for Google Cloud STT/TTS services
+- Microphone permission must be enabled for pronunciation evaluation
+- Default system ports:
+  - Frontend: 3000
+  - Backend: 8080
+  - MySQL: 3306
+
+---
+
