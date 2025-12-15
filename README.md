@@ -1,161 +1,152 @@
-# 📘 PronounceIT: AI-Driven Pronunciation E-Learning System
+# PronounceIT  
+### English Vocabulary & Pronunciation E-Learning System for Kindergarten
 
-## 1. Project Overview
-
-**PronounceIT** is an interactive, AI-driven educational application designed to assist kindergarten students (ages 3 to 5) in improving their English pronunciation and expanding their vocabulary. The system is intended to supplement, not replace, traditional classroom instruction.
-
-The core functionality relies on the integration of **Google Cloud Speech-to-Text (STT) API** for real-time pronunciation analysis and **Google Cloud Text-to-Speech (TTS) API** for providing correct audio playback. The application features a gamified learning environment, user profile management, lesson progression based on learner performance, and administrative dashboards for teachers to manage content and track student analytics.
-
-### Key Modules
-- User Authentication & Authorization (Student, Teacher, Admin roles)
-- User Profile Management (Progress tracking, account editing)
-- Gameplay Module (Category and lesson selection, pronunciation evaluation)
-- Teacher Management Module
-  - CRUD operations for categories, lessons, and words
-  - Student analytics and performance tracking
-- Admin Management Module
-  - User account management
-  - Achievement and system data management
+PronounceIT is an interactive, AI-driven educational application designed to assist kindergarten students (ages 3–5) in improving their English pronunciation and expanding their vocabulary. The system is intended to supplement, not replace, traditional classroom instruction.
 
 ---
 
-## 2. Complete Technology Stack
+## Tech Stack
 
-### Frontend (Web Application)
-- React.js – v18.x  
-- Create React App – v5.x  
-- Node.js – v18.x  
-- npm – v9.x  
-- HTML5 / CSS3 / JavaScript (ES6+)
+### Web Frontend
+| Technology | Version / Release |
+|----------|------------------|
+| React.js | 18.x |
+| Node.js | 18.x |
+| CSS | 3 (CSS3) |
+| React Router | 6.x |
+| Axios | 1.x |
 
-### Mobile Application
-- Android Studio – Latest stable release  
-- Java – JDK 17  
-- Android SDK – API Level 33+
+---
+
+### Mobile Frontend
+| Technology | Version / Release |
+|----------|------------------|
+| Android Studio | Latest Stable Release |
+| Java | 17 |
+| Android SDK | API Level 33+ |
+
+---
 
 ### Backend
-- Spring Boot – v3.x  
-- Java – JDK 17  
-- Spring Security – Authentication and role-based authorization  
-- Spring Data JPA – ORM and database interaction  
-- RESTful API Architecture
+| Technology | Version / Release |
+|----------|------------------|
+| Spring Boot | 3.x |
+| Java | 17 |
+| Spring Security | 6.x |
+| JWT (JSON Web Tokens) | Latest |
+| MySQL | 8.x |
+| Railway (Backend Hosting) | Hobby Tier (USD $5 minimum usage) |
+| Railway – MySQL (Database) | Hobby Tier (USD $5 minimum usage) |
 
-### Database
-- MySQL – v8.0  
-- Hibernate ORM
-
-### Cloud & APIs
-- Google Cloud Speech-to-Text API  
-- Google Cloud Text-to-Speech API
+---
 
 ### Development & Tools
-- Git & GitHub – Source code version control  
-- Postman – API testing  
-- VS Code / IntelliJ IDEA – Development IDEs
+| Technology | Version / Release |
+|----------|------------------|
+| Postman | Latest |
+| GitHub | Latest |
+| Vercel (Frontend Hosting) | Latest |
 
 ---
 
-## 3. Deployment Instructions
+## Deployment Instructions
 
-### 3.1 Frontend Deployment (React)
-
-#### Prerequisites
-- Node.js v18+
-- npm installed
-
-#### Steps
-1. Install dependencies:
-   npm install
-2. Start the development server:
-   npm start
-
-The frontend application will run at:
-http://localhost:3000
-
-To create a production build:
-npm run build
+Below are the steps to deploy both frontend and backend based on the current repository structure.
 
 ---
 
-### 3.2 Backend Deployment (Spring Boot)
+## Backend Deployment (Spring Boot + Railway)
 
-#### Prerequisites
-- Java JDK 17
-- MySQL 8.0
-- Maven
+### 1. Clone the Repository
+```bash
+git clone https://github.com/antoniukho13/IT332Group46-PronounceIT.git
+cd IT332Group46-PronounceIT/backend
+```
 
-#### Steps
-1. Open the backend project in IntelliJ IDEA or Eclipse
-2. Configure the database connection in application.properties:
+---
 
-spring.datasource.url=jdbc:mysql://localhost:3306/pronounceit_db
-spring.datasource.username=root
-spring.datasource.password=yourpassword
+### 2. Configure application.properties
+```properties
+spring.application.name=PronounceIT
+spring.datasource.url=jdbc:mysql://${MYSQLHOST}:${MYSQLPORT}/${MYSQLDATABASE}
+spring.datasource.username=${MYSQLUSER}
+spring.datasource.password=${MYSQLPASSWORD}
+
 spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
 
-3. Run the backend server:
-   mvn spring-boot:run
+jwt.secret=${JWT_SECRET}
+jwt.expiration=${JWT_EXPIRATION:86400000}
 
-The backend API will be available at:
-http://localhost:8080
+spring.web.resources.static-locations=file:/app/uploads/,classpath:/static/
 
----
+server.address=0.0.0.0
+server.port=${PORT:8080}
 
-### 3.3 Mobile Application Deployment (Android)
-
-1. Open Android Studio
-2. Select Open Existing Project
-3. Sync Gradle files
-4. Run the application using:
-   - Android Emulator, or
-   - Physical Android device with USB debugging enabled
+spring.cloud.gcp.credentials.location=file:${GOOGLE_APPLICATION_CREDENTIALS}
+```
 
 ---
 
-## 4. Sample / Dummy User Accounts (Existing Server)
+### 3. Set Up Railway (Backend + Database)
+1. Go to Railway → Create a New Project  
+2. Click Add → Database → MySQL  
+3. Copy generated database variables  
 
-The following test accounts are provided for system evaluation and demonstration purposes:
+---
 
-Admin  
-Username: admin@gmail.com  
-Password: admin123  
+### 4. Configure Railway Environment Variables
+```
+MYSQLHOST
+MYSQLPORT
+MYSQLDATABASE
+MYSQLUSER
+MYSQLPASSWORD
+JWT_SECRET
+JWT_EXPIRATION
+GOOGLE_APPLICATION_CREDENTIALS=/app/credentials.json
+GOOGLE_CREDENTIALS_JSON
+```
 
-Teacher  
-Username: teacher1@gmail.com  
-Password: teacher1  
+---
 
-Student  
-Username: student1@gmail.com  
+### 5. Deploy Backend on Railway
+- Add GitHub Repo in Railway  
+- Set Root Directory to `backend`  
+- Deploy automatically  
+
+---
+
+## Frontend Deployment (React + Vercel)
+
+```bash
+cd frontend
+npm install
+npm start
+```
+
+Deploy using:
+```bash
+vercel
+```
+
+---
+
+## Sample User Accounts
+
+**Student**  
+Email: student1@gmail.com  
 Password: student1  
 
-Note: These credentials are for academic testing and evaluation purposes only.
+**Teacher**  
+Email: teacher1@gmail.com  
+Password: teacher1  
+
+**Admin**  
+Email: admin@gmail.com  
+Password: admin123  
 
 ---
 
-## 5. Database Export / Dump
-
-Database Name: pronounceit_db  
-Database Engine: MySQL 8.0  
-Export Format: .sql  
-
-### Restore Instructions
-mysql -u root -p pronounceit_db < pronounceit_db.sql
-
-The database dump includes:
-- User accounts
-- Categories, lessons, and vocabulary words
-- Student pronunciation records
-- Progress tracking and analytics data
-
----
-
-## 6. Notes for Evaluators
-
-- Internet connection is required for Google Cloud STT/TTS services
-- Microphone permission must be enabled for pronunciation evaluation
-- Default system ports:
-  - Frontend: 3000
-  - Backend: 8080
-  - MySQL: 3306
-
----
+## License
+Academic and research use only.
